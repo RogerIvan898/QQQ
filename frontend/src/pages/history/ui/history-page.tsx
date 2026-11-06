@@ -1,14 +1,12 @@
 import React from 'react';
 
-import type { MessageDescriptor } from '@lingui/core';
-import { msg } from '@lingui/core/macro';
 import { useLingui } from '@lingui/react/macro';
 import { Link } from '@tanstack/react-router';
 import {
   ArrowDownLeft,
   ArrowUpRight,
   ChevronLeft,
-  ExternalLink,
+  ChevronRight,
   Inbox,
 } from 'lucide-react';
 
@@ -20,18 +18,13 @@ import {
   HISTORY_FILTERS,
   historyFilterLabel,
   MOCK_TRANSACTIONS,
+  STATUS_LABELS,
   type HistoryFilter,
   type Transaction,
-  type TransactionStatus,
 } from '../model';
 
 import styles from './history-page.module.css';
-
-const STATUS_LABELS = {
-  completed: msg`Completed`,
-  pending: msg`Pending`,
-  failed: msg`Failed`,
-} as const satisfies Record<TransactionStatus, MessageDescriptor>;
+import { TransactionDetails } from './transaction-details';
 
 const DAY_MS = 86_400_000;
 
@@ -58,9 +51,10 @@ const groupByDay = (transactions: Transaction[]) => {
 
 interface RowProps {
   transaction: Transaction;
+  onSelect: (transaction: Transaction) => void;
 }
 
-const TransactionRow = ({ transaction }: RowProps) => {
+const TransactionRow = ({ transaction, onSelect }: RowProps) => {
   const { i18n, t } = useLingui();
   const isDeposit = transaction.type === 'deposit';
   const Icon = isDeposit ? ArrowDownLeft : ArrowUpRight;
@@ -70,55 +64,57 @@ const TransactionRow = ({ transaction }: RowProps) => {
   }).format(new Date(transaction.createdAt));
 
   return (
-    <li className={styles.row}>
-      <span
-        className={cn(
-          styles.icon,
-          isDeposit ? styles.iconDeposit : styles.iconWithdrawal
-        )}
+    <li>
+      <button
+        type="button"
+        className={styles.row}
+        onClick={() => onSelect(transaction)}
       >
-        <Icon size={18} strokeWidth={2.5} />
-      </span>
-
-      <div className={styles.rowMain}>
-        <span className={styles.rowTitle}>
-          {isDeposit
-            ? t({ message: 'Deposit', context: 'transaction' })
-            : t({ message: 'Withdrawal', context: 'transaction' })}
-        </span>
-        <span className={styles.rowSub}>
-          {time}
-          {transaction.txHash ? (
-            <a
-              className={styles.txLink}
-              href={`https://tonviewer.com/transaction/${transaction.txHash}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {truncateMiddle(transaction.txHash, 4)}
-              <ExternalLink size={11} />
-            </a>
-          ) : null}
-        </span>
-      </div>
-
-      <div className={styles.rowSide}>
         <span
           className={cn(
-            styles.amount,
-            isDeposit && styles.amountDeposit,
-            transaction.status === 'failed' && styles.amountFailed
+            styles.icon,
+            isDeposit ? styles.iconDeposit : styles.iconWithdrawal
           )}
         >
-          {isDeposit ? '+' : '−'}
-          {formatBalance(transaction.amount, i18n.locale)} TON
+          <Icon size={18} strokeWidth={2.5} />
         </span>
-        {transaction.status !== 'completed' ? (
-          <span className={cn(styles.status, styles[transaction.status])}>
-            {i18n._(STATUS_LABELS[transaction.status])}
+
+        <div className={styles.rowMain}>
+          <span className={styles.rowTitle}>
+            {isDeposit
+              ? t({ message: 'Deposit', context: 'transaction' })
+              : t({ message: 'Withdrawal', context: 'transaction' })}
           </span>
-        ) : null}
-      </div>
+          <span className={styles.rowSub}>
+            {time}
+            {transaction.txHash ? (
+              <span className={styles.txHash}>
+                {truncateMiddle(transaction.txHash, 4)}
+              </span>
+            ) : null}
+          </span>
+        </div>
+
+        <div className={styles.rowSide}>
+          <span
+            className={cn(
+              styles.amount,
+              isDeposit && styles.amountDeposit,
+              transaction.status === 'failed' && styles.amountFailed
+            )}
+          >
+            {isDeposit ? '+' : '−'}
+            {formatBalance(transaction.amount, i18n.locale)} TON
+          </span>
+          {transaction.status !== 'completed' ? (
+            <span className={cn(styles.status, styles[transaction.status])}>
+              {i18n._(STATUS_LABELS[transaction.status])}
+            </span>
+          ) : null}
+        </div>
+
+        <ChevronRight size={18} className={styles.chevron} />
+      </button>
     </li>
   );
 };
@@ -126,6 +122,7 @@ const TransactionRow = ({ transaction }: RowProps) => {
 export const HistoryPage = () => {
   const { i18n, t } = useLingui();
   const [filter, setFilter] = React.useState<HistoryFilter>('all');
+  const [selected, setSelected] = React.useState<Transaction | null>(null);
   const groups = groupByDay(filterTransactions(MOCK_TRANSACTIONS, filter));
   const today = startOfDay(new Date());
 
@@ -181,6 +178,7 @@ export const HistoryPage = () => {
                   <TransactionRow
                     key={transaction.id}
                     transaction={transaction}
+                    onSelect={setSelected}
                   />
                 ))}
               </ul>
@@ -188,6 +186,11 @@ export const HistoryPage = () => {
           ))
         )}
       </div>
+
+      <TransactionDetails
+        transaction={selected}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 };

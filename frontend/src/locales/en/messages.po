@@ -179,6 +179,9 @@ msgstr "Failed"
 msgid "Failed to copy address"
 msgstr "Failed to copy address"
 
+msgid "Fee"
+msgstr "Fee"
+
 msgid "Fold"
 msgstr "Fold"
 
@@ -236,6 +239,9 @@ msgstr "Need {missing} more"
 msgid "No transactions yet"
 msgstr "No transactions yet"
 
+msgid "Not enough balance to cover the amount and the network fee."
+msgstr "Not enough balance to cover the amount and the network fee."
+
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
 msgstr "Pay {amount, number} TON with wallet"
@@ -273,6 +279,9 @@ msgstr "Quick add amount"
 msgid "Raise"
 msgstr "Raise"
 
+msgid "Recipient address"
+msgstr "Recipient address"
+
 msgid "Required"
 msgstr "Required"
 
@@ -281,6 +290,9 @@ msgstr "Retry"
 
 msgid "SB"
 msgstr "SB"
+
+msgid "Sender address"
+msgstr "Sender address"
 
 msgid "Setting up the table..."
 msgstr "Setting up the table..."
@@ -312,11 +324,20 @@ msgstr "Texas Hold’em"
 msgid "The dealer is counting the cards..."
 msgstr "The dealer is counting the cards..."
 
+msgid "The deposit will be credited after network confirmation, usually within a minute."
+msgstr "The deposit will be credited after network confirmation, usually within a minute."
+
 msgid "The jack is late to the deal again..."
 msgstr "The jack is late to the deal again..."
 
 msgid "The king is looking for his queen..."
 msgstr "The king is looking for his queen..."
+
+msgid "The transfer was rejected by the network."
+msgstr "The transfer was rejected by the network."
+
+msgid "The transfer was sent without the required memo. Contact support to get it credited."
+msgstr "The transfer was sent without the required memo. Contact support to get it credited."
 
 msgid "Today"
 msgstr "Today"
@@ -329,6 +350,9 @@ msgstr "Tonkeeper / Telegram Wallet"
 
 msgid "Top up"
 msgstr "Top up"
+
+msgid "Transaction"
+msgstr "Transaction"
 
 msgid "Waiting for next hand..."
 msgstr "Waiting for next hand..."
@@ -370,6 +394,9 @@ msgstr "Withdrawals"
 
 msgid "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
 msgstr "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
+
+msgid "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
+msgstr "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
 
 msgid "Yesterday"
 msgstr "Yesterday"

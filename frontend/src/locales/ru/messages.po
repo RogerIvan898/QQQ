@@ -180,6 +180,9 @@ msgstr "Ошибка"
 msgid "Failed to copy address"
 msgstr "Не удалось скопировать адрес"
 
+msgid "Fee"
+msgstr "Комиссия"
+
 msgid "Fold"
 msgstr "Фолд"
 
@@ -237,6 +240,9 @@ msgstr "Не хватает {missing}"
 msgid "No transactions yet"
 msgstr "Операций пока нет"
 
+msgid "Not enough balance to cover the amount and the network fee."
+msgstr "Недостаточно средств на сумму и комиссию сети."
+
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
 msgstr "Оплатить {amount, number} TON кошельком"
@@ -274,6 +280,9 @@ msgstr "Быстро добавить"
 msgid "Raise"
 msgstr "Рейз"
 
+msgid "Recipient address"
+msgstr "Адрес получателя"
+
 msgid "Required"
 msgstr "Обязательно"
 
@@ -282,6 +291,9 @@ msgstr "Повторить"
 
 msgid "SB"
 msgstr "МБ"
+
+msgid "Sender address"
+msgstr "Адрес отправителя"
 
 msgid "Setting up the table..."
 msgstr "Подготавливаем стол..."
@@ -313,11 +325,20 @@ msgstr "Texas Hold’em"
 msgid "The dealer is counting the cards..."
 msgstr "Дилер пересчитывает карты..."
 
+msgid "The deposit will be credited after network confirmation, usually within a minute."
+msgstr "Пополнение зачислится после подтверждения в сети, обычно в течение минуты."
+
 msgid "The jack is late to the deal again..."
 msgstr "Валет опять опаздывает на раздачу..."
 
 msgid "The king is looking for his queen..."
 msgstr "Король ищет даму..."
+
+msgid "The transfer was rejected by the network."
+msgstr "Сеть отклонила перевод."
+
+msgid "The transfer was sent without the required memo. Contact support to get it credited."
+msgstr "Перевод отправлен без обязательного комментария (memo). Напишите в поддержку, чтобы его зачислили."
 
 msgid "Today"
 msgstr "Сегодня"
@@ -330,6 +351,9 @@ msgstr "Tonkeeper / Telegram Wallet"
 
 msgid "Top up"
 msgstr "Пополнить"
+
+msgid "Transaction"
+msgstr "Транзакция"
 
 msgid "Waiting for next hand..."
 msgstr "Ожидание следующей раздачи..."
@@ -371,6 +395,9 @@ msgstr "Выводы"
 
 msgid "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
 msgstr "Выводы необратимы. Отправляйте только на TON-адрес — неправильная сеть или опечатка означают безвозвратную потерю средств."
+
+msgid "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
+msgstr "Вывод обрабатывается в течение нескольких минут. Сумма уже зарезервирована на балансе."
 
 msgid "Yesterday"
 msgstr "Вчера"
