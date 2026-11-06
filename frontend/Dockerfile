@@ -5,7 +5,7 @@
 # --- build ---
 FROM node:22-alpine AS build
 WORKDIR /app
-RUN npm i -g bun@1.3.14
+RUN npm i -g bun@1.4.4
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 COPY . .

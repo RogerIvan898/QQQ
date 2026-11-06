@@ -10,7 +10,7 @@ backend/    C++ сервер (CMake) — в разработке
 
 ## Фронтенд
 
-Нужны Node ≥ 22.19 и [Bun](https://bun.sh) 1.3.
+Нужны Node ≥ 22.19 и [Bun](https://bun.sh) 1.4.
 
 ```bash
 cd frontend
