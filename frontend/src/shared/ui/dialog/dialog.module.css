@@ -16,7 +16,9 @@
 .panel {
   width: 440px;
   max-width: calc(100vw - 32px);
-  max-height: calc(100dvh - var(--tg-safe-area-top) - var(--tg-safe-area-bottom));
+  max-height: calc(
+    100dvh - var(--tg-safe-area-top) - var(--tg-safe-area-bottom)
+  );
   display: flex;
   flex-direction: column;
   background: var(--color-bg-surface);
@@ -121,11 +123,21 @@
 }
 
 @keyframes modalIn {
-  from { opacity: 0; transform: translateY(15px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes sheetSlideUp {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }

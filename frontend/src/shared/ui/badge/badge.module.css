@@ -16,7 +16,11 @@
 }
 
 .neutral {
-  background: color-mix(in srgb, var(--color-secondary) 40%, var(--color-bg-elevated));
+  background: color-mix(
+    in srgb,
+    var(--color-secondary) 40%,
+    var(--color-bg-elevated)
+  );
   color: var(--color-text);
   box-shadow:
     0 6px 16px var(--color-shadow),
@@ -58,7 +62,11 @@
 }
 
 .danger {
-  background: color-mix(in srgb, var(--color-danger) 18%, var(--color-bg-elevated));
+  background: color-mix(
+    in srgb,
+    var(--color-danger) 18%,
+    var(--color-bg-elevated)
+  );
   color: var(--color-danger);
   box-shadow:
     0 6px 16px var(--color-shadow),
@@ -66,7 +74,11 @@
 }
 
 .highlight {
-  background: linear-gradient(135deg, var(--color-info), var(--color-primary-light));
+  background: linear-gradient(
+    135deg,
+    var(--color-info),
+    var(--color-primary-light)
+  );
   color: var(--color-text-on-primary);
   box-shadow:
     0 6px 16px var(--color-shadow),
@@ -74,7 +86,7 @@
 }
 
 .active {
-  background:var(--color-primary-active);
+  background: var(--color-primary-active);
   color: var(--color-text-on-primary);
   box-shadow:
     0 6px 16px var(--color-shadow),

@@ -3,4 +3,4 @@ dist
 build
 coverage
 target
-*.lock
+*.lockpublic/mockServiceWorker.js

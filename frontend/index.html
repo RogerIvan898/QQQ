@@ -1,116 +1,135 @@
 <!doctype html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vite + React + TS</title>
-  <style>
-    /* Boot screen: a static copy of shared/ui/preloader, painted before any
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React + TS</title>
+    <style>
+      /* Boot screen: a static copy of shared/ui/preloader, painted before any
        JS so slow networks never show a blank page. React replaces it when
        the app mounts into #root, so the hand-off looks seamless. */
-    html,
-    body {
-      margin: 0;
-      background: #0d1117;
-    }
-
-    .boot {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      /* dvh = the visible screen on phones; plain vh includes the area under
-         the browser bars and causes a scrollbar. vh is the fallback. */
-      min-height: 100vh;
-      min-height: 100dvh;
-      color: #f0f6fc;
-      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      user-select: none;
-    }
-
-    .boot__content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .boot__icon {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 80px;
-      height: 80px;
-    }
-
-    .boot__spade {
-      color: #38bdf8;
-      opacity: 0.85;
-    }
-
-    .boot__spinner {
-      position: absolute;
-      color: #0284c7;
-      animation: boot-spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-    }
-
-    .boot__label {
-      margin: 0;
-      color: #94a3b8;
-      font-size: 0.95rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-    }
-
-    @keyframes boot-spin {
-      to {
-        transform: rotate(360deg);
+      html,
+      body {
+        margin: 0;
+        background: #0d1117;
       }
-    }
-  </style>
-</head>
 
-<body>
-  <div id="root">
-    <div class="boot" role="status">
-      <div class="boot__content">
-        <div class="boot__icon">
-          <svg class="boot__spade" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 18v4" />
-            <path
-              d="M2 14.499a5.5 5.5 0 0 0 9.591 3.675.6.6 0 0 1 .818.001A5.5 5.5 0 0 0 22 14.5c0-2.29-1.5-4-3-5.5l-5.492-5.312a2 2 0 0 0-3-.02L5 8.999c-1.5 1.5-3 3.2-3 5.5" />
-          </svg>
-          <svg class="boot__spinner" width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-          </svg>
+      .boot {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* dvh = the visible screen on phones; plain vh includes the area under
+         the browser bars and causes a scrollbar. vh is the fallback. */
+        min-height: 100vh;
+        min-height: 100dvh;
+        color: #f0f6fc;
+        font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+        user-select: none;
+      }
+
+      .boot__content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .boot__icon {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+      }
+
+      .boot__spade {
+        color: #38bdf8;
+        opacity: 0.85;
+      }
+
+      .boot__spinner {
+        position: absolute;
+        color: #0284c7;
+        animation: boot-spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      }
+
+      .boot__label {
+        margin: 0;
+        color: #94a3b8;
+        font-size: 0.95rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+      }
+
+      @keyframes boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root">
+      <div class="boot" role="status">
+        <div class="boot__content">
+          <div class="boot__icon">
+            <svg
+              class="boot__spade"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 18v4" />
+              <path
+                d="M2 14.499a5.5 5.5 0 0 0 9.591 3.675.6.6 0 0 1 .818.001A5.5 5.5 0 0 0 22 14.5c0-2.29-1.5-4-3-5.5l-5.492-5.312a2 2 0 0 0-3-.02L5 8.999c-1.5 1.5-3 3.2-3 5.5"
+              />
+            </svg>
+            <svg
+              class="boot__spinner"
+              width="72"
+              height="72"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          </div>
+          <p class="boot__label" id="boot-label">Loading…</p>
         </div>
-        <p class="boot__label" id="boot-label">Loading…</p>
       </div>
     </div>
-  </div>
-  <script>
-    // Same order as detectLocale(): saved choice, then browser language.
-    // (Telegram's language isn't available yet: its script loads below.)
-    (function () {
-      var locale = '';
-      try {
-        locale = localStorage.getItem('poker:locale') || '';
-      } catch (e) { }
-      if (!locale) locale = (navigator.language || '').slice(0, 2);
-      if (locale === 'ru') {
-        document.getElementById('boot-label').textContent = 'Загрузка…';
-        document.documentElement.lang = 'ru';
-      }
-    })();
-  </script>
-  <!-- Kept synchronous (the app reads window.Telegram on start) but placed
+    <script>
+      // Same order as detectLocale(): saved choice, then browser language.
+      // (Telegram's language isn't available yet: its script loads below.)
+      (function () {
+        var locale = '';
+        try {
+          locale = localStorage.getItem('poker:locale') || '';
+        } catch (e) {}
+        if (!locale) locale = (navigator.language || '').slice(0, 2);
+        if (locale === 'ru') {
+          document.getElementById('boot-label').textContent = 'Загрузка…';
+          document.documentElement.lang = 'ru';
+        }
+      })();
+    </script>
+    <!-- Kept synchronous (the app reads window.Telegram on start) but placed
        after the boot screen so a slow telegram.org doesn't block first paint. -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script type="module" src="/src/main.tsx"></script>
-</body>
-
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
