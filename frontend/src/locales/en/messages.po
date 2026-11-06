@@ -88,6 +88,9 @@ msgstr "Checking that the dealer is ready..."
 msgid "Close"
 msgstr "Close"
 
+msgid "Completed"
+msgstr "Completed"
+
 msgid "Confirm in wallet…"
 msgstr "Confirm in wallet…"
 
@@ -130,11 +133,18 @@ msgstr "Deepstack Pro"
 msgid "Deposit"
 msgstr "Deposit"
 
+msgctxt "transaction"
+msgid "Deposit"
+msgstr "Deposit"
+
 msgid "Deposit address is missing"
 msgstr "Deposit address is missing"
 
 msgid "Deposit TON"
 msgstr "Deposit TON"
+
+msgid "Deposits"
+msgstr "Deposits"
 
 msgid "Destination"
 msgstr "Destination"
@@ -163,6 +173,9 @@ msgstr "Exceeds available balance"
 msgid "Exchange"
 msgstr "Exchange"
 
+msgid "Failed"
+msgstr "Failed"
+
 msgid "Failed to copy address"
 msgstr "Failed to copy address"
 
@@ -177,6 +190,9 @@ msgstr "Full transfer link with address, amount and memo."
 
 msgid "Heads-Up"
 msgstr "Heads-Up"
+
+msgid "History"
+msgstr "History"
 
 msgid "HU Classic"
 msgstr "HU Classic"
@@ -217,6 +233,9 @@ msgstr "My wallet"
 msgid "Need {missing} more"
 msgstr "Need {missing} more"
 
+msgid "No transactions yet"
+msgstr "No transactions yet"
+
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
 msgstr "Pay {amount, number} TON with wallet"
@@ -235,6 +254,9 @@ msgstr "Payment failed or rejected in wallet"
 
 msgid "Payment method"
 msgstr "Payment method"
+
+msgid "Pending"
+msgstr "Pending"
 
 msgid "Play"
 msgstr "Play"
@@ -296,6 +318,9 @@ msgstr "The jack is late to the deal again..."
 msgid "The king is looking for his queen..."
 msgstr "The king is looking for his queen..."
 
+msgid "Today"
+msgstr "Today"
+
 msgid "TON address"
 msgstr "TON address"
 
@@ -336,8 +361,18 @@ msgstr "Withdraw to"
 msgid "Withdraw TON"
 msgstr "Withdraw TON"
 
+msgctxt "transaction"
+msgid "Withdrawal"
+msgstr "Withdrawal"
+
+msgid "Withdrawals"
+msgstr "Withdrawals"
+
 msgid "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
 msgstr "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
+
+msgid "Yesterday"
+msgstr "Yesterday"
 
 msgid "You folded"
 msgstr "You folded"

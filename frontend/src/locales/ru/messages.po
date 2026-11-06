@@ -89,6 +89,9 @@ msgstr "Проверяем готовность дилера..."
 msgid "Close"
 msgstr "Закрыть"
 
+msgid "Completed"
+msgstr "Выполнено"
+
 msgid "Confirm in wallet…"
 msgstr "Подтвердить в кошельке…"
 
@@ -131,11 +134,18 @@ msgstr "Deepstack Pro"
 msgid "Deposit"
 msgstr "Пополнить"
 
+msgctxt "transaction"
+msgid "Deposit"
+msgstr "Пополнение"
+
 msgid "Deposit address is missing"
 msgstr "Адрес для пополнения не указан"
 
 msgid "Deposit TON"
 msgstr "Пополнение TON"
+
+msgid "Deposits"
+msgstr "Пополнения"
 
 msgid "Destination"
 msgstr "Куда отправить"
@@ -164,6 +174,9 @@ msgstr "Превышает доступный баланс"
 msgid "Exchange"
 msgstr "Биржа"
 
+msgid "Failed"
+msgstr "Ошибка"
+
 msgid "Failed to copy address"
 msgstr "Не удалось скопировать адрес"
 
@@ -178,6 +191,9 @@ msgstr "Полная ссылка для перевода с адресом, с�
 
 msgid "Heads-Up"
 msgstr "Хедз-ап"
+
+msgid "History"
+msgstr "История"
 
 msgid "HU Classic"
 msgstr "HU Classic"
@@ -218,6 +234,9 @@ msgstr "Мой кошелёк"
 msgid "Need {missing} more"
 msgstr "Не хватает {missing}"
 
+msgid "No transactions yet"
+msgstr "Операций пока нет"
+
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
 msgstr "Оплатить {amount, number} TON кошельком"
@@ -236,6 +255,9 @@ msgstr "Платёж не выполнен или отклонён в кошел
 
 msgid "Payment method"
 msgstr "Способ оплаты"
+
+msgid "Pending"
+msgstr "В обработке"
 
 msgid "Play"
 msgstr "Играть"
@@ -297,6 +319,9 @@ msgstr "Валет опять опаздывает на раздачу..."
 msgid "The king is looking for his queen..."
 msgstr "Король ищет даму..."
 
+msgid "Today"
+msgstr "Сегодня"
+
 msgid "TON address"
 msgstr "TON-адрес"
 
@@ -337,8 +362,18 @@ msgstr "Вывод на"
 msgid "Withdraw TON"
 msgstr "Вывод TON"
 
+msgctxt "transaction"
+msgid "Withdrawal"
+msgstr "Вывод"
+
+msgid "Withdrawals"
+msgstr "Выводы"
+
 msgid "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
 msgstr "Выводы необратимы. Отправляйте только на TON-адрес — неправильная сеть или опечатка означают безвозвратную потерю средств."
+
+msgid "Yesterday"
+msgstr "Вчера"
 
 msgid "You folded"
 msgstr "Вы сбросили карты"

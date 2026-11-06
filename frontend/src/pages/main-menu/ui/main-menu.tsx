@@ -126,6 +126,9 @@ export const MenuPage = () => {
           <main className={styles.contentArea}>
             <div className={styles.stickyHeader}>
               <Filters active={roomFilter} onChange={setRoomFilter} />
+            </div>
+
+            <div className={styles.roomScroll}>
               {DevServerSwitch ? (
                 <React.Suspense fallback={null}>
                   <DevServerSwitch />
@@ -134,9 +137,6 @@ export const MenuPage = () => {
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>{t`Available tables`}</h2>
               </div>
-            </div>
-
-            <div className={styles.roomScroll}>
               <div className={styles.roomGrid}>
                 {visibleRooms.map(room => {
                   const shortfall = Math.max(0, room.minBuy - mockUser.balance);

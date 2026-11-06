@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as SplatRouteImport } from './routes/$';
+import { Route as HistoryRouteImport } from './routes/history';
 import { Route as GameRoomIdRouteImport } from './routes/game.$roomId';
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const SplatRoute = SplatRouteImport.update({
   path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any);
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any);
 const GameRoomIdRoute = GameRoomIdRouteImport.update({
   id: '/game/$roomId',
   path: '/game/$roomId',
@@ -32,30 +38,34 @@ const GameRoomIdRoute = GameRoomIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/history': typeof HistoryRoute;
   '/game/$roomId': typeof GameRoomIdRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/history': typeof HistoryRoute;
   '/game/$roomId': typeof GameRoomIdRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/history': typeof HistoryRoute;
   '/game/$roomId': typeof GameRoomIdRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/' | '/$' | '/game/$roomId';
+  fullPaths: '/' | '/$' | '/history' | '/game/$roomId';
   fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '/$' | '/game/$roomId';
-  id: '__root__' | '/' | '/$' | '/game/$roomId';
+  to: '/' | '/$' | '/history' | '/game/$roomId';
+  id: '__root__' | '/' | '/$' | '/history' | '/game/$roomId';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   SplatRoute: typeof SplatRoute;
+  HistoryRoute: typeof HistoryRoute;
   GameRoomIdRoute: typeof GameRoomIdRoute;
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SplatRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/history': {
+      id: '/history';
+      path: '/history';
+      fullPath: '/history';
+      preLoaderRoute: typeof HistoryRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/game/$roomId': {
       id: '/game/$roomId';
       path: '/game/$roomId';
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
+  HistoryRoute: HistoryRoute,
   GameRoomIdRoute: GameRoomIdRoute,
 };
 export const routeTree = rootRouteImport

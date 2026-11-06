@@ -1,8 +1,9 @@
 import React from 'react';
 
 import { useLingui } from '@lingui/react/macro';
+import { Link } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
-import { Minus, Plus, Settings } from 'lucide-react';
+import { History, Minus, Plus, Settings } from 'lucide-react';
 
 import { $currentLocale } from 'shared/lib/i18n';
 import { $tonWallet } from 'shared/lib/ton-connect';
@@ -87,15 +88,26 @@ export const Header = ({
         </div>
       </div>
 
-      <button
-        type="button"
-        className={styles.settingsBtn}
-        onClick={() => setIsSettingsOpened(true)}
-        aria-label={t`Settings`}
-        title={t`Settings`}
-      >
-        <Settings size={28} />
-      </button>
+      <div className={styles.headerRight}>
+        <Link
+          to="/history"
+          className={styles.historyBtn}
+          aria-label={t`History`}
+          title={t`History`}
+        >
+          <History size={26} />
+        </Link>
+
+        <button
+          type="button"
+          className={styles.settingsBtn}
+          onClick={() => setIsSettingsOpened(true)}
+          aria-label={t`Settings`}
+          title={t`Settings`}
+        >
+          <Settings size={28} />
+        </button>
+      </div>
 
       <SettingsDialog
         open={isSettingsOpened}
