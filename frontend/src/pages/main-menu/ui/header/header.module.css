@@ -169,31 +169,11 @@
 .historyBtn:hover {
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-text) 8%, transparent);
-}
-
-/* "Rewind": one full counter-clockwise turn that eases out. */
-.historyBtn:hover svg {
-  animation: history-rewind 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  transform: scale(1.1);
 }
 
 .historyBtn:active {
-  transform: scale(0.9);
-}
-
-@keyframes history-rewind {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(-360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .historyBtn:hover svg {
-    animation: none;
-  }
+  transform: scale(0.92);
 }
 
 .historyBtn:focus-visible {
@@ -225,11 +205,11 @@
 .settingsBtn:hover {
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-text) 8%, transparent);
-  transform: rotate(30deg);
+  transform: scale(1.1);
 }
 
 .settingsBtn:active {
-  transform: scale(0.9) rotate(30deg);
+  transform: scale(0.92);
 }
 
 /* Extend the 36px buttons to a ~44px tap target. */
