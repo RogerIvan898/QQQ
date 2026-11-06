@@ -104,7 +104,8 @@ frontend:docker:
   extends: .docker
   variables:
     APP: frontend
-    BUILD_ARGS: --build-arg VITE_APP_URL --build-arg VITE_API_URL
+    BUILD_ARGS: --target prebuilt
+  needs: [frontend:lint, frontend:test, frontend:build]
   before_script:
     - '[ -n "$VITE_APP_URL" ] || { echo "VITE_APP_URL is not set (Settings > CI/CD > Variables)"; exit 1; }'
     - !reference [.docker, before_script]
