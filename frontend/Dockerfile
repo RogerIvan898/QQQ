@@ -6,7 +6,8 @@ COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 COPY . .
 ARG VITE_APP_URL
-ENV VITE_APP_URL=$VITE_APP_URL
+ARG VITE_API_URL
+ENV VITE_APP_URL=$VITE_APP_URL VITE_API_URL=$VITE_API_URL
 RUN bun run i18n:compile && bun run build
 
 # --- serve ---
