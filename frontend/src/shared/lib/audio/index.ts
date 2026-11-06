@@ -1,4 +1,10 @@
-export { getAudioContext, playBuffered, preloadSounds } from './audio';
+export {
+  canPlaySound,
+  getAudioContext,
+  playBuffered,
+  preloadSounds,
+  suspendAudioContext,
+} from './audio';
 export {
   $soundEnabled,
   isSoundEnabled,

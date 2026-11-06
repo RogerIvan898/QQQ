@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 import { useLingui } from '@lingui/react/macro';
-import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import { useUnit } from 'effector-react';
 import {
   Check,
@@ -21,6 +20,7 @@ import {
   supportedLocales,
   $currentLocale,
 } from 'shared/lib/i18n';
+import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 import { Dialog } from 'shared/ui/dialog';
 import { cn } from 'shared/utils/cn';
 import { truncateMiddle } from 'shared/utils/format';
@@ -39,8 +39,7 @@ type WalletAction = 'connect' | 'disconnect';
 
 export const SettingsDialog = ({ open, onClose }: Props) => {
   const { t } = useLingui();
-  const walletAddress = useTonAddress();
-  const [tonConnectUI] = useTonConnectUI();
+  const walletAddress = useUnit($tonWallet)?.friendlyAddress ?? '';
   const [currentLocale, setLocale] = useUnit([$currentLocale, changeLocale]);
   const [soundEnabled, toggleSound] = useUnit([$soundEnabled, setSoundEnabled]);
 
@@ -56,6 +55,8 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
 
     setWalletAction(action);
     try {
+      const tonConnectUI = await getTonConnectUI();
+
       if (action === 'connect') await tonConnectUI.openModal();
       else await tonConnectUI.disconnect();
     } catch {

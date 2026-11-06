@@ -79,8 +79,13 @@
 .amountLogo {
   color: var(--color-primary-light);
   flex-shrink: 0;
-  filter: drop-shadow(
-    0 0 4px color-mix(in srgb, var(--color-primary) 60%, transparent)
+  /* Glow as a plain background: a drop-shadow filter here is re-rasterized
+     on every frame of the badge's scale animation. */
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-primary) 45%, transparent) 0%,
+    transparent 72%
   );
 }
 

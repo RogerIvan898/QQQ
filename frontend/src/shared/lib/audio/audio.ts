@@ -11,6 +11,13 @@ export const getAudioContext = () => {
   return audioContext;
 };
 
+/** Pauses the context if one exists, without creating it. */
+export const suspendAudioContext = () => {
+  if (audioContext?.state === 'running') {
+    void audioContext.suspend().catch(() => undefined);
+  }
+};
+
 export const loadBuffer = (url: string) => {
   const cached = bufferCache.get(url);
 
@@ -48,8 +55,16 @@ export const loadBuffer = (url: string) => {
   return promise;
 };
 
+/**
+ * Sound is off, or the app is in the background. Waking the context from a
+ * hidden page would undo the suspend done on visibilitychange and keep the
+ * audio thread running for nothing.
+ */
+export const canPlaySound = () =>
+  isSoundEnabled() && !(typeof document !== 'undefined' && document.hidden);
+
 export const startBuffer = (buffer: AudioBuffer, volume = 1) => {
-  if (!isSoundEnabled()) {
+  if (!canPlaySound()) {
     return;
   }
 

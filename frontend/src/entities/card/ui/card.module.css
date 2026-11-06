@@ -160,3 +160,9 @@
     opacity: 1;
   }
 }
+
+/* Drop the layer hint once the deal animation is over: a table holds up to
+   21 cards, and a permanent layer each (with its shadow) costs GPU memory. */
+.settled {
+  will-change: auto;
+}

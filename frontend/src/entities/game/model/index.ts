@@ -4,6 +4,7 @@ export {
   $bigBlindSeat,
   $collectingBets,
   $community,
+  $connectionLost,
   $currentBet,
   $dealerSeat,
   $debugHoles,

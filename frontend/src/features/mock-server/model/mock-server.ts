@@ -27,6 +27,9 @@ mockServerChanged.watch(enabled => {
 });
 
 export const setMockServerEnabled = async (enabled: boolean) => {
+  // Constant-false in production, so the MSW chunk is tree-shaken away.
+  if (!import.meta.env.DEV) return;
+
   const { applyMockServer } = await import('../../../mocks/runtime');
 
   await applyMockServer(enabled);
@@ -34,6 +37,8 @@ export const setMockServerEnabled = async (enabled: boolean) => {
 };
 
 export const bootstrapMockServer = async () => {
+  if (!import.meta.env.DEV) return;
+
   if (!readMockServerEnabled()) {
     return;
   }

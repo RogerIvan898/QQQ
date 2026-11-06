@@ -1,11 +1,11 @@
 import React from 'react';
 
 import { useLingui } from '@lingui/react/macro';
-import { useTonWallet } from '@tonconnect/ui-react';
 import { useUnit } from 'effector-react';
 import { Minus, Plus, Settings } from 'lucide-react';
 
 import { $currentLocale } from 'shared/lib/i18n';
+import { $tonWallet } from 'shared/lib/ton-connect';
 import { Logo } from 'shared/ui/logo';
 import { cn } from 'shared/utils/cn';
 import { formatBalance, getInitialLetter } from 'shared/utils/format';
@@ -32,8 +32,8 @@ export const Header = ({
   const { t, i18n } = useLingui();
   const [isSettingsOpened, setIsSettingsOpened] = React.useState(false);
   const locale = useUnit($currentLocale);
-  const wallet = useTonWallet();
-  const walletAddress = wallet?.account.address;
+  const wallet = useUnit($tonWallet);
+  const walletAddress = wallet?.address;
   const formattedBalance = formatBalance(balance, i18n.locale);
 
   return (

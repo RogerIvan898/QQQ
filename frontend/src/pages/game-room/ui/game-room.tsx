@@ -28,7 +28,10 @@ export const GameRoomPage = () => {
   useGate(GamePageGate);
 
   const navigate = useNavigate();
-  const [isLoading] = useUnit([gameModel.$isGameLoading]);
+  const [isLoading, connectionLost] = useUnit([
+    gameModel.$isGameLoading,
+    gameModel.$connectionLost,
+  ]);
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   if (isLoading) {
@@ -37,6 +40,12 @@ export const GameRoomPage = () => {
 
   return (
     <div className={styles.container}>
+      {connectionLost && (
+        <div className={styles.connectionBanner} role="status">
+          {t`Connection lost, reconnecting…`}
+        </div>
+      )}
+
       <button
         type="button"
         dir="auto"

@@ -18,7 +18,9 @@
 .subtitle {
   color: color-mix(in srgb, var(--color-text) 60%, transparent);
   font-size: 13px;
-  animation: pulse 2.2s ease-in-out infinite;
+  /* A few breaths are enough; an endless one keeps compositing frames for
+     the rest of the hand. */
+  animation: pulse 2.2s ease-in-out 3;
 }
 
 @keyframes noticeIn {

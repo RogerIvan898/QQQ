@@ -1,10 +1,9 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 
-import { useUnit } from 'effector-react';
+import { useStoreMap, useUnit } from 'effector-react';
 
 import { gameModel } from 'entities/game';
-import { findPlayerById, Player } from 'entities/player';
 import { sessionModel } from 'entities/session';
 import { $raisePanelTop } from 'features/player-actions';
 import { useElementSize } from 'shared/hooks/use-element-size';
@@ -13,6 +12,7 @@ import { cn } from 'shared/utils/cn';
 import { formatCompactNumber } from 'shared/utils/format';
 
 import styles from './players-layer.module.css';
+import { Seat } from './seat';
 import { computeSeats } from './seating';
 import { useCollectFlights } from './use-collect-flights';
 import { usePotFlights } from './use-pot-flights';
@@ -22,52 +22,100 @@ interface Props {
   onHidePot: (hidden: boolean) => void;
 }
 
+interface FlightProps {
+  amount: number;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  arrived: boolean;
+  className?: string;
+}
+
+/**
+ * Moves on transform only: the outer box animates X and the inner one Y with
+ * different easings, which together trace an arc without touching layout.
+ */
+const ChipFlight = ({
+  amount,
+  fromX,
+  fromY,
+  toX,
+  toY,
+  arrived,
+  className,
+}: FlightProps) => (
+  <div
+    className={cn(styles.flightX, className, arrived && styles.arrived)}
+    style={
+      {
+        left: fromX,
+        top: fromY,
+        '--dx': `${toX - fromX}px`,
+        '--dy': `${toY - fromY}px`,
+      } as React.CSSProperties
+    }
+  >
+    <div className={styles.flightY}>
+      <div className={styles.potFlight}>
+        <Logo size={16} className={styles.potFlightLogo} />
+        <span>{formatCompactNumber(amount)}</span>
+      </div>
+    </div>
+  </div>
+);
+
 export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
-  const [
-    players,
-    dealerSeat,
-    smallBlindSeat,
-    bigBlindSeat,
-    round,
-    activeSeat,
-    viewerId,
-    myCards,
-    debugHoles,
-    collecting,
-  ] = useUnit([
-    gameModel.$players,
-    gameModel.$dealerSeat,
-    gameModel.$smallBlindSeat,
-    gameModel.$bigBlindSeat,
-    gameModel.$round,
-    gameModel.$activeSeat,
+  const [viewerId, collecting, raisePanelTop] = useUnit([
     sessionModel.$currentUserId,
-    gameModel.$myCards,
-    gameModel.$debugHoles,
     gameModel.$collectingBets,
+    $raisePanelTop,
   ]);
+  // Primitive selections: the layer re-renders only when seating changes,
+  // per-player updates are handled inside <Seat>.
+  // "seat:playerId" pairs; the id keeps a seat remounting when someone else
+  // sits down, as keying by player id did before.
+  const seatingKey = useStoreMap(gameModel.$players, players =>
+    Object.values(players)
+      .map(player => `${player.seat}:${player.id}`)
+      .join(',')
+  );
+  const seatPlayerIds = React.useMemo(
+    () =>
+      new Map(
+        seatingKey
+          .split(',')
+          .filter(Boolean)
+          .map(entry => {
+            const [seat, ...id] = entry.split(':');
+
+            return [Number(seat), id.join(':')] as const;
+          })
+      ),
+    [seatingKey]
+  );
+  const viewerSeat = useStoreMap({
+    store: gameModel.$players,
+    keys: [viewerId],
+    fn: (players, [id]) =>
+      (id
+        ? Object.values(players).find(player => player.id === id)?.seat
+        : null) ?? null,
+  });
 
   const tableSize = useElementSize(tableElement);
   const { collectFlights, collectAtPot } = useCollectFlights(
     collecting,
     tableElement
   );
-  const playerList = Object.values(players);
-  const viewerSeat = findPlayerById(players, viewerId)?.seat ?? null;
-  const raisePanelTop = useUnit($raisePanelTop);
   const viewerSeatRef = React.useRef<HTMLDivElement | null>(null);
   const [viewerLift, setViewerLift] = React.useState(0);
-  const seatNumbersKey = playerList.map(player => player.seat).join(',');
 
   const seats = React.useMemo(() => {
-    if (!tableSize || !seatNumbersKey) return [];
+    if (!tableSize || !seatPlayerIds.size) return [];
 
-    return computeSeats(
-      seatNumbersKey.split(',').map(Number),
-      viewerSeat,
-      tableSize
-    );
-  }, [seatNumbersKey, viewerSeat, tableSize]);
+    return computeSeats([...seatPlayerIds.keys()], viewerSeat, tableSize);
+  }, [seatPlayerIds, viewerSeat, tableSize]);
 
   const { wins, flights, flightId, atWinner } = usePotFlights(
     tableElement,
@@ -103,79 +151,37 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
   return createPortal(
     <div className={styles.playersLayer}>
       {collectFlights?.map(flight => (
-        <div
+        <ChipFlight
           key={`collect-${flight.seat}`}
-          className={cn(
-            styles.potFlight,
-            styles.collectFlight,
-            collectAtPot && styles.arrived
-          )}
-          style={{
-            left: collectAtPot ? flight.toX : flight.fromX,
-            top: collectAtPot ? flight.toY : flight.fromY,
-          }}
-        >
-          <Logo size={16} className={styles.potFlightLogo} />
-          <span>{formatCompactNumber(flight.amount)}</span>
-        </div>
+          {...flight}
+          arrived={collectAtPot}
+          className={styles.collectFlight}
+        />
       ))}
       {flights?.map(flight => (
-        <div
+        <ChipFlight
           key={`${flightId}-${flight.seat}`}
-          className={cn(styles.potFlight, atWinner && styles.arrived)}
-          style={{
-            left: atWinner ? flight.toX : flight.fromX,
-            top: atWinner ? flight.toY : flight.fromY,
-          }}
-        >
-          <Logo size={16} className={styles.potFlightLogo} />
-          <span>{formatCompactNumber(flight.amount)}</span>
-        </div>
+          {...flight}
+          arrived={atWinner}
+        />
       ))}
       {seats.map(({ seat, towardCenter, x, y }) => {
-        const player = players[seat];
-
-        if (!player) return null;
-
-        const isViewer = player.id === viewerId;
-        const revealed = debugHoles[player.seat];
-        const hand = isViewer && myCards ? myCards : (revealed ?? player.hand);
-        const blindPosted = round === 'PREFLOP' && player.committed > 0;
-        const blindRole = !blindPosted
-          ? null
-          : player.seat === smallBlindSeat
-            ? 'sb'
-            : player.seat === bigBlindSeat
-              ? 'bb'
-              : null;
+        const isViewer = seat === viewerSeat;
 
         return (
-          <div
-            key={player.id}
+          <Seat
+            key={`${seat}:${seatPlayerIds.get(seat)}`}
             ref={isViewer ? viewerSeatRef : undefined}
-            className={styles.seatWrapper}
-            style={{
-              left: x,
-              top: y,
-              ...(isViewer && viewerLift
-                ? { translate: `0 -${viewerLift}px` }
-                : undefined),
-            }}
-          >
-            <Player
-              player={player}
-              hand={hand}
-              dealer={player.seat === dealerSeat}
-              blindRole={blindRole}
-              currentPlayer={isViewer}
-              turn={player.seat === activeSeat}
-              towardCenter={towardCenter}
-              reveal={!isViewer && Boolean(revealed)}
-              winAmount={wins[player.seat]?.amount}
-              winId={wins[player.seat]?.id}
-              collecting={collecting}
-            />
-          </div>
+            seat={seat}
+            x={x}
+            y={y}
+            towardCenter={towardCenter}
+            isViewer={isViewer}
+            lift={isViewer ? viewerLift : 0}
+            collecting={collecting}
+            winAmount={wins[seat]?.amount}
+            winId={wins[seat]?.id}
+          />
         );
       })}
     </div>,

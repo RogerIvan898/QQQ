@@ -1,6 +1,7 @@
 import { lingui } from '@lingui/vite-plugin';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
+import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
@@ -14,6 +15,23 @@ const createTonConnectManifest = (origin: string) => {
     url: appOrigin,
     name: 'GRAM Poker',
     iconUrl: `${appOrigin}/ton-icon.png`,
+  };
+};
+
+// MSW only runs in dev (see features/mock-server), so its service worker
+// from public/ must not ship with the production build.
+const stripMockServiceWorkerPlugin = (): Plugin => {
+  let outDir = 'dist';
+
+  return {
+    name: 'strip-mock-service-worker',
+    apply: 'build',
+    configResolved(config) {
+      outDir = resolve(config.root, config.build.outDir);
+    },
+    closeBundle() {
+      rmSync(resolve(outDir, 'mockServiceWorker.js'), { force: true });
+    },
   };
 };
 
@@ -67,6 +85,7 @@ export default defineConfig({
       include: ['buffer'],
     }),
     tonConnectManifestPlugin(),
+    stripMockServiceWorkerPlugin(),
   ],
   resolve: {
     alias: {

@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
 import { beginCell, toNano } from '@ton/core';
-import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
+import { useUnit } from 'effector-react';
 import { Loader2, Wallet } from 'lucide-react';
+
+import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 
 interface Props {
   amount: number;
@@ -24,11 +26,12 @@ export const PayViaWalletButton = ({
   className,
 }: Props) => {
   const { t } = useLingui();
-  const [tonConnectUI] = useTonConnectUI();
-  const wallet = useTonWallet();
+  const wallet = useUnit($tonWallet);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async () => {
+    const tonConnectUI = await getTonConnectUI();
+
     if (!wallet) {
       await tonConnectUI.openModal();
       return;

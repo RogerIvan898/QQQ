@@ -35,6 +35,7 @@ export const Card = ({ card, flat = false, onReveal }: Props) => {
       element.style.transform = flat
         ? 'none'
         : `rotate(${(Math.random() * 10 - 5).toFixed(2)}deg)`;
+      element.classList.add(styles.settled);
       element.removeEventListener('animationend', onEnd);
     };
 

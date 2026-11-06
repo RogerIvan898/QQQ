@@ -20,6 +20,7 @@ declare module '@lingui/core' {
       | '6V3Ea3'
       | '6_z3QH'
       | '6gRgw8'
+      | '7XQCvZ'
       | '8-4V8D'
       | '8LedSp'
       | '8hvxGX'

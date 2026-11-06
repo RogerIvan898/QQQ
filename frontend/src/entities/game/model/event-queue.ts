@@ -61,6 +61,28 @@ export const enqueueServerEvent = (event: ServerGameEvent) => {
 const SHOWDOWN_PAUSE_MS = 500;
 const WIN_ANIMATION_MS = 1000;
 
+// Animations are paced with timers, which a hidden WebView throttles to one
+// per second (one per minute after a while). Without this the queue would keep
+// growing in the background and replay minutes of old hands on return.
+const BACKLOG_LIMIT = 12;
+
+const shouldFastForward = () =>
+  (typeof document !== 'undefined' && document.hidden) ||
+  queue.length > BACKLOG_LIMIT;
+
+/** Applies everything queued at once, without pauses, animations or sounds. */
+const flushQueue = () => {
+  collectingBets(false);
+
+  while (queue.length) {
+    const event = queue.shift();
+
+    if (event) {
+      emit(event);
+    }
+  }
+};
+
 const isStreetEvent = (event: ServerGameEvent | undefined) =>
   event?.type === SERVER_EVENTS.STREET_CONCLUDED ||
   event?.type === SERVER_EVENTS.BOARD_DEALT;
@@ -73,6 +95,11 @@ const run = async (gen: number) => {
   running = true;
 
   while (queue.length && gen === generation) {
+    if (shouldFastForward()) {
+      flushQueue();
+      break;
+    }
+
     if (isStreetEvent(queue[0])) {
       await delay(0);
 
@@ -97,7 +124,10 @@ const run = async (gen: number) => {
         playBuffered(Sound.CARD_REVEAL);
       }
 
-      await delay(SHOWDOWN_PAUSE_MS);
+      if (!shouldFastForward()) {
+        await delay(SHOWDOWN_PAUSE_MS);
+      }
+
       continue;
     }
 
@@ -108,7 +138,10 @@ const run = async (gen: number) => {
         emit(completed);
       }
 
-      await delay(WIN_ANIMATION_MS);
+      if (!shouldFastForward()) {
+        await delay(WIN_ANIMATION_MS);
+      }
+
       continue;
     }
 
@@ -173,6 +206,8 @@ const playRunout = async (gen: number) => {
   clearActiveSeat();
 
   let streetApplied = false;
+  let handsRevealed = false;
+  let winnerDeclared = false;
   const applyStreet = () => {
     if (streetApplied || !street) {
       return;
@@ -183,7 +218,7 @@ const playRunout = async (gen: number) => {
     emit(street);
   };
 
-  await playAllInRunout(
+  const finished = await playAllInRunout(
     {
       hadBets,
       potSize,
@@ -191,7 +226,7 @@ const playRunout = async (gen: number) => {
       streets: boards.map(board => board.payload),
     },
     {
-      cancelled: () => gen !== generation,
+      cancelled: () => gen !== generation || shouldFastForward(),
       collectToPot: () => {
         collectingBets(true);
         playBuffered(Sound.CHIPS, 0.12);
@@ -202,6 +237,7 @@ const playRunout = async (gen: number) => {
           return;
         }
 
+        handsRevealed = true;
         emit(showdown);
         playBuffered(Sound.CARD_REVEAL);
       },
@@ -210,6 +246,7 @@ const playRunout = async (gen: number) => {
       },
       declareWinner: () => {
         if (completed) {
+          winnerDeclared = true;
           emit(completed);
         }
       },
@@ -222,6 +259,22 @@ const playRunout = async (gen: number) => {
 
   collectingBets(false);
   applyStreet();
+
+  if (finished) {
+    return;
+  }
+
+  // Fast-forwarded: apply whatever the script did not get to. Board events
+  // are idempotent, showdown and the result must not be emitted twice.
+  if (showdown && !handsRevealed) {
+    emit(showdown);
+  }
+
+  boards.forEach(board => emit(board));
+
+  if (completed && !winnerDeclared) {
+    emit(completed);
+  }
 };
 
 const playStreet = async (gen: number) => {
@@ -267,7 +320,7 @@ const playStreet = async (gen: number) => {
     nextCards,
     potSize,
     {
-      cancelled: () => gen !== generation,
+      cancelled: () => gen !== generation || shouldFastForward(),
       collectToPot: () => {
         collectingBets(true);
         playBuffered(Sound.CHIPS, 0.12);

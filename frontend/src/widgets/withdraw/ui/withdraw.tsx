@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 
 import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
-import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
+import { useUnit } from 'effector-react';
 
+import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 import { Dialog } from 'shared/ui/dialog';
 import { formatBalance } from 'shared/utils/format';
 
@@ -23,8 +24,7 @@ interface Props {
 
 export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
   const { t, i18n } = useLingui();
-  const connectedAddress = useTonAddress();
-  const [tonConnectUI] = useTonConnectUI();
+  const connectedAddress = useUnit($tonWallet)?.friendlyAddress ?? '';
 
   const [amount, setAmount] = useState(0);
   const [draft, setDraft] = useState('');
@@ -144,7 +144,9 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
           customAddress={customAddress}
           onDestinationChange={setDestination}
           onCustomAddressChange={setCustomAddress}
-          onConnectWallet={() => void tonConnectUI.openModal()}
+          onConnectWallet={() =>
+            void getTonConnectUI().then(ui => ui.openModal())
+          }
         />
 
         <button

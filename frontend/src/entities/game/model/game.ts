@@ -4,7 +4,12 @@ import type { CardType as Card } from 'entities/card';
 import type { PlayerType as Player } from 'entities/player';
 
 import { watchPlayerActionSounds } from './action-sounds';
-import { closeOpenGameSocket, openGameSocket } from './connection';
+import {
+  closeOpenGameSocket,
+  connectionLost,
+  openGameSocket,
+  sendToGameSocket,
+} from './connection';
 import { INITIAL_GAME_STATE } from './constants';
 import {
   bindGameQueue,
@@ -31,17 +36,13 @@ const initializeGameFx = createEffect((params: GameConnectParams) =>
   openGameSocket(params)
 );
 
-const sendClientCommandFx = createEffect(
-  ({ socket, command }: { socket: WebSocket | null; command: unknown }) => {
-    if (!socket) {
-      console.warn('[WS] Cannot send action: socket is disconnected');
-
-      return;
-    }
-
-    socket.send(JSON.stringify(command));
+const sendClientCommandFx = createEffect((command: unknown) => {
+  // Goes to the live socket, which changes on reconnect; sending to a closed
+  // one would drop the command silently.
+  if (!sendToGameSocket(command)) {
+    console.warn('[WS] Cannot send action: socket is not open');
   }
-);
+});
 
 export const connectGame = createEvent<GameConnectParams>();
 export const sendClientCommand = createEvent<ClientGameEvent>();
@@ -52,6 +53,10 @@ const $socketClient = createStore<WebSocket | null>(null)
   .reset(disconnectGame);
 
 export const $isGameLoading = initializeGameFx.pending;
+
+export const $connectionLost = createStore(false)
+  .on(connectionLost, (_, lost) => lost)
+  .reset(disconnectGame);
 
 export const $gameState = createStore(INITIAL_GAME_STATE)
   .on(incomingEvent, reduceGameEvent)
@@ -94,8 +99,6 @@ sample({
 
 sample({
   clock: sendClientCommand,
-  source: $socketClient,
-  fn: (socket, command) => ({ socket, command }),
   target: sendClientCommandFx,
 });
 

@@ -8,6 +8,7 @@ import { bootstrapMockServer } from 'features/mock-server/model';
 import { appStarted } from 'shared/config/init';
 import { initTelegramWebApp } from 'shared/config/telegram-webapp';
 import { prepareI18n } from 'shared/lib/i18n';
+import { preloadTonConnect } from 'shared/lib/ton-connect';
 
 import './index.css';
 
@@ -36,4 +37,5 @@ void (async () => {
   ]);
 
   createRoot(root).render(<App />);
+  preloadTonConnect();
 })();

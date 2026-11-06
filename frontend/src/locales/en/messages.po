@@ -113,6 +113,9 @@ msgstr "Connected"
 msgid "Connecting…"
 msgstr "Connecting…"
 
+msgid "Connection lost, reconnecting…"
+msgstr "Connection lost, reconnecting…"
+
 msgid "Continue"
 msgstr "Continue"
 

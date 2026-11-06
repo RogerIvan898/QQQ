@@ -114,6 +114,9 @@ msgstr "Подключено"
 msgid "Connecting…"
 msgstr "Подключение…"
 
+msgid "Connection lost, reconnecting…"
+msgstr "Нет связи, переподключаемся…"
+
 msgid "Continue"
 msgstr "Продолжить"
 
