@@ -1,9 +1,9 @@
 .card {
   position: relative;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 20px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -32,27 +32,48 @@
   opacity: 1;
 }
 
-.cardFull::before {
-  background: var(--color-danger);
+/* Full and unaffordable tables stay readable but recede next to playable ones. */
+.cardFull,
+.cardLocked {
+  background: color-mix(in srgb, var(--color-bg-elevated) 60%, transparent);
 }
 
-.cardFull:hover {
+.cardFull .info,
+.cardLocked .meta,
+.cardLocked .titleRow {
+  opacity: 0.6;
+}
+
+.cardFull:hover,
+.cardLocked:hover {
   border-color: var(--color-border);
   box-shadow: none;
 }
 
-.header {
+.cardFull:hover::before,
+.cardLocked:hover::before {
+  opacity: 0;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.titleRow {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .name {
   margin: 0;
   min-width: 0;
-  flex: 1;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--color-text);
   white-space: nowrap;
@@ -61,15 +82,15 @@
 }
 
 .badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 6px 10px;
+  letter-spacing: 0.4px;
+  padding: 3px 6px;
   border-radius: var(--radius-sm);
 }
 
@@ -85,76 +106,53 @@
 
 .meta {
   display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-top: 4px;
+  flex-wrap: wrap;
+  column-gap: 14px;
+  row-gap: 2px;
+  margin: 0;
 }
 
 .metaItem {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: baseline;
+  gap: 5px;
 }
 
-.metaDivider {
-  width: 1px;
-  height: 28px;
-  background: var(--color-border);
-}
-
-.metaLabel {
-  font-size: 13px;
+.metaItem dt {
+  font-size: 12px;
   font-weight: 500;
   color: var(--color-text-secondary);
 }
 
-.metaValue {
-  font-size: 15px;
+.metaItem dd {
+  margin: 0;
+  font-size: 13px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
+  white-space: nowrap;
 }
 
-.footer {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 8px;
-}
-
-.playersSection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-  padding-bottom: 2px;
-}
-
-.playersCount {
+.statusRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-secondary);
+  gap: 10px;
+  min-width: 0;
 }
 
-.usersIcon {
+.players {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   color: var(--color-text-muted);
 }
 
-.playersFull {
-  color: var(--color-danger);
-}
-
-.playersFull .usersIcon {
-  color: var(--color-danger);
-}
-
 .occupancy {
+  flex: 1;
+  max-width: 120px;
   height: 4px;
   border-radius: var(--radius-xl);
   background: var(--color-bg-muted);
@@ -165,13 +163,21 @@
   height: 100%;
   border-radius: var(--radius-xl);
   background: var(--color-primary);
-  transition:
-    width 0.4s ease,
-    background 0.3s ease;
+  transition: width 0.4s ease;
 }
 
+/* Full is a normal state, not an error: neutral grey instead of red. */
 .occupancyFull {
-  background: var(--color-danger);
+  background: var(--color-text-muted);
+}
+
+.shortfall {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-warning);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .action {
@@ -182,29 +188,6 @@
   .card,
   .card::before,
   .occupancyFill {
-    animation: none;
     transition: none;
-  }
-}
-
-@media (max-width: 768px) {
-  .card {
-    gap: 10px;
-    padding: 12px 14px;
-  }
-
-  .meta {
-    gap: 12px;
-    margin-top: 0;
-  }
-
-  .footer {
-    margin-top: 0;
-    gap: 12px;
-    align-items: center;
-  }
-
-  .playersSection {
-    gap: 6px;
   }
 }

@@ -137,25 +137,35 @@ export const MenuPage = () => {
             </div>
 
             <div className={styles.roomGrid}>
-              {visibleRooms.map(room => (
-                <RoomCard
-                  key={room.id}
-                  room={{
-                    name: i18n._(room.name),
-                    mode: room.mode,
-                    blinds: room.blinds,
-                    players: room.players,
-                    max: room.max,
-                    minBuy: room.minBuy,
-                  }}
-                  action={
-                    <JoinRoomButton
-                      roomId={String(room.id)}
-                      isFull={room.players >= room.max}
-                    />
-                  }
-                />
-              ))}
+              {visibleRooms.map(room => {
+                const shortfall = Math.max(0, room.minBuy - mockUser.balance);
+
+                return (
+                  <RoomCard
+                    key={room.id}
+                    shortfall={shortfall}
+                    room={{
+                      name: i18n._(room.name),
+                      mode: room.mode,
+                      blinds: room.blinds,
+                      players: room.players,
+                      max: room.max,
+                      minBuy: room.minBuy,
+                    }}
+                    action={
+                      <JoinRoomButton
+                        roomId={String(room.id)}
+                        isFull={room.players >= room.max}
+                        onTopUp={
+                          shortfall > 0
+                            ? () => setIsDepositOpen(true)
+                            : undefined
+                        }
+                      />
+                    }
+                  />
+                );
+              })}
             </div>
 
             <div className={styles.bottomSpacer} />

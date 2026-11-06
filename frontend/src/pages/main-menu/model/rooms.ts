@@ -9,7 +9,7 @@ export type RoomListItem = {
   blinds: string;
   players: number;
   max: number;
-  minBuy: string;
+  minBuy: number;
 };
 
 export const ROOMS: RoomListItem[] = [
@@ -20,7 +20,7 @@ export const ROOMS: RoomListItem[] = [
     blinds: '0.1/0.2',
     players: 6,
     max: 8,
-    minBuy: '10 TON',
+    minBuy: 10,
   },
   {
     id: 2,
@@ -29,7 +29,7 @@ export const ROOMS: RoomListItem[] = [
     blinds: '1/2',
     players: 5,
     max: 8,
-    minBuy: '50 TON',
+    minBuy: 50,
   },
   {
     id: 4,
@@ -38,7 +38,7 @@ export const ROOMS: RoomListItem[] = [
     blinds: '0.05/0.1',
     players: 4,
     max: 6,
-    minBuy: '2 TON',
+    minBuy: 2,
   },
   {
     id: 5,
@@ -47,7 +47,7 @@ export const ROOMS: RoomListItem[] = [
     blinds: '2/4',
     players: 3,
     max: 8,
-    minBuy: '100 TON',
+    minBuy: 100,
   },
   {
     id: 3,
@@ -56,7 +56,7 @@ export const ROOMS: RoomListItem[] = [
     blinds: '0.1/0.2',
     players: 1,
     max: 2,
-    minBuy: '5 TON',
+    minBuy: 5,
   },
   {
     id: 6,
@@ -65,7 +65,7 @@ export const ROOMS: RoomListItem[] = [
     blinds: '5/10',
     players: 2,
     max: 2,
-    minBuy: '250 TON',
+    minBuy: 250,
   },
 ];
 

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { useNavigate } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
-import { Loader2, Users } from 'lucide-react';
+import { Loader2, Plus, Users } from 'lucide-react';
 
 import { cn } from 'shared/utils/cn';
 
@@ -14,9 +14,11 @@ import styles from './join-room-button.module.css';
 interface Props {
   roomId: string;
   isFull: boolean;
+  /** When set, the player can't afford this table: offer a top-up instead of joining. */
+  onTopUp?: () => void;
 }
 
-export const JoinRoomButton = ({ roomId, isFull }: Props) => {
+export const JoinRoomButton = ({ roomId, isFull, onTopUp }: Props) => {
   const { t } = useLingui();
   const navigate = useNavigate();
   const [join, joiningRoomId] = useUnit([joinRoomFx, $joiningRoomId]);
@@ -54,6 +56,19 @@ export const JoinRoomButton = ({ roomId, isFull }: Props) => {
       console.error('Failed to join room', error);
     }
   };
+
+  if (onTopUp && !isFull) {
+    return (
+      <button
+        type="button"
+        className={cn(styles.button, styles.topUp)}
+        onClick={onTopUp}
+      >
+        <Plus size={16} strokeWidth={2.5} />
+        {t`Top up`}
+      </button>
+    );
+  }
 
   return (
     <button

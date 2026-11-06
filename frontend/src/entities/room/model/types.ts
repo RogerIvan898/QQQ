@@ -6,7 +6,7 @@ export interface RoomCardInfo {
   blinds: string;
   players: number;
   max: number;
-  minBuy: string;
+  minBuy: number;
 }
 
 export interface JoinRoomResponse {

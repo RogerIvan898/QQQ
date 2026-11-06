@@ -11,10 +11,6 @@ msgstr ""
 msgid "— or scan with Tonkeeper —"
 msgstr "— или отсканируйте в Tonkeeper —"
 
-#. placeholder {0}: room.max
-msgid "{0, plural, one {player} other {players}}"
-msgstr "{0, plural, one {игрок} few {игрока} many {игроков} other {игрока}}"
-
 msgid "Aces are taking their seats..."
 msgstr "Тузы занимают свои места..."
 
@@ -219,6 +215,9 @@ msgstr "Бай-ин от"
 msgid "My wallet"
 msgstr "Мой кошелёк"
 
+msgid "Need {missing} more"
+msgstr "Не хватает {missing}"
+
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
 msgstr "Оплатить {amount, number} TON кошельком"
@@ -303,6 +302,9 @@ msgstr "TON-адрес"
 
 msgid "Tonkeeper / Telegram Wallet"
 msgstr "Tonkeeper / Telegram Wallet"
+
+msgid "Top up"
+msgstr "Пополнить"
 
 msgid "Waiting for next hand..."
 msgstr "Ожидание следующей раздачи..."

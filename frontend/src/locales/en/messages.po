@@ -10,10 +10,6 @@ msgstr ""
 msgid "— or scan with Tonkeeper —"
 msgstr "— or scan with Tonkeeper —"
 
-#. placeholder {0}: room.max
-msgid "{0, plural, one {player} other {players}}"
-msgstr "{0, plural, one {player} other {players}}"
-
 msgid "Aces are taking their seats..."
 msgstr "Aces are taking their seats..."
 
@@ -218,6 +214,9 @@ msgstr "Min buy-in"
 msgid "My wallet"
 msgstr "My wallet"
 
+msgid "Need {missing} more"
+msgstr "Need {missing} more"
+
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
 msgstr "Pay {amount, number} TON with wallet"
@@ -302,6 +301,9 @@ msgstr "TON address"
 
 msgid "Tonkeeper / Telegram Wallet"
 msgstr "Tonkeeper / Telegram Wallet"
+
+msgid "Top up"
+msgstr "Top up"
 
 msgid "Waiting for next hand..."
 msgstr "Waiting for next hand..."
