@@ -67,9 +67,10 @@ export const RoomCard = ({ room, action, shortfall = 0 }: Props) => {
             </dd>
           </div>
           <div className={styles.metaItem}>
-            <dt>{t`Min buy-in`}</dt>
+            <dt>{t`Buy-in`}</dt>
             <dd>
-              {formatBalance(room.minBuy, i18n.locale)} {CURRENCY}
+              {formatBalance(room.minBuy, i18n.locale)}–
+              {formatBalance(room.maxBuy, i18n.locale)} {CURRENCY}
             </dd>
           </div>
         </dl>

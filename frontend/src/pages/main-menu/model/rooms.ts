@@ -6,66 +6,106 @@ export type RoomListItem = {
   id: number;
   name: ReturnType<typeof msg>;
   mode: RoomMode;
+  /** "SB/BB" in TON. */
   blinds: string;
   players: number;
   max: number;
+  /** Buy-in range in TON: 40–100 big blinds. */
   minBuy: number;
+  maxBuy: number;
 };
 
+// NLH cash grid, micro to VIP; every table buys in for 40–100 BB.
 export const ROOMS: RoomListItem[] = [
   {
     id: 1,
-    name: msg`Texas Hold’em`,
+    name: msg`Micro`,
     mode: 'cash',
-    blinds: '0.1/0.2',
-    players: 6,
+    blinds: '0.01/0.02',
+    players: 5,
     max: 8,
-    minBuy: 10,
+    minBuy: 0.8,
+    maxBuy: 2,
   },
   {
     id: 2,
-    name: msg`Mid Stakes`,
+    name: msg`Micro+`,
     mode: 'cash',
-    blinds: '1/2',
-    players: 5,
+    blinds: '0.02/0.05',
+    players: 7,
     max: 8,
-    minBuy: 50,
-  },
-  {
-    id: 4,
-    name: msg`Beginners`,
-    mode: 'cash',
-    blinds: '0.05/0.1',
-    players: 4,
-    max: 6,
     minBuy: 2,
-  },
-  {
-    id: 5,
-    name: msg`Deepstack Pro`,
-    mode: 'cash',
-    blinds: '2/4',
-    players: 3,
-    max: 8,
-    minBuy: 100,
+    maxBuy: 5,
   },
   {
     id: 3,
-    name: msg`HU Classic`,
-    mode: 'heads-up',
-    blinds: '0.1/0.2',
-    players: 1,
-    max: 2,
-    minBuy: 5,
+    name: msg`Low`,
+    mode: 'cash',
+    blinds: '0.05/0.10',
+    players: 6,
+    max: 8,
+    minBuy: 4,
+    maxBuy: 10,
+  },
+  {
+    id: 4,
+    name: msg`Low+`,
+    mode: 'cash',
+    blinds: '0.10/0.20',
+    players: 4,
+    max: 8,
+    minBuy: 8,
+    maxBuy: 20,
+  },
+  {
+    id: 5,
+    name: msg`Medium`,
+    mode: 'cash',
+    blinds: '0.25/0.50',
+    players: 3,
+    max: 6,
+    minBuy: 20,
+    maxBuy: 50,
   },
   {
     id: 6,
+    name: msg`High`,
+    mode: 'cash',
+    blinds: '0.50/1',
+    players: 4,
+    max: 6,
+    minBuy: 40,
+    maxBuy: 100,
+  },
+  {
+    id: 7,
+    name: msg`VIP`,
+    mode: 'cash',
+    blinds: '1/2',
+    players: 1,
+    max: 6,
+    minBuy: 80,
+    maxBuy: 200,
+  },
+  {
+    id: 8,
+    name: msg`HU Classic`,
+    mode: 'heads-up',
+    blinds: '0.10/0.20',
+    players: 1,
+    max: 2,
+    minBuy: 8,
+    maxBuy: 20,
+  },
+  {
+    id: 9,
     name: msg`HU High Roller`,
     mode: 'heads-up',
     blinds: '5/10',
     players: 2,
     max: 2,
-    minBuy: 250,
+    minBuy: 400,
+    maxBuy: 1000,
   },
 ];
 

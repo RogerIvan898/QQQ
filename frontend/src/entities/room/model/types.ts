@@ -7,6 +7,7 @@ export interface RoomCardInfo {
   players: number;
   max: number;
   minBuy: number;
+  maxBuy: number;
 }
 
 export interface JoinRoomResponse {

@@ -152,6 +152,7 @@ export const MenuPage = () => {
                         players: room.players,
                         max: room.max,
                         minBuy: room.minBuy,
+                        maxBuy: room.maxBuy,
                       }}
                       action={
                         <JoinRoomButton

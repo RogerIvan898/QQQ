@@ -43,14 +43,14 @@ msgstr "Back"
 msgid "BB"
 msgstr "BB"
 
-msgid "Beginners"
-msgstr "Beginners"
-
 msgid "Bet"
 msgstr "Bet"
 
 msgid "Blinds"
 msgstr "Blinds"
+
+msgid "Buy-in"
+msgstr "Buy-in"
 
 msgid "Call"
 msgstr "Call"
@@ -127,9 +127,6 @@ msgstr "Copy address"
 msgid "Couldn't load the page"
 msgstr "Couldn't load the page"
 
-msgid "Deepstack Pro"
-msgstr "Deepstack Pro"
-
 msgid "Deposit"
 msgstr "Deposit"
 
@@ -194,6 +191,9 @@ msgstr "Full transfer link with address, amount and memo."
 msgid "Heads-Up"
 msgstr "Heads-Up"
 
+msgid "High"
+msgstr "High"
+
 msgid "History"
 msgstr "History"
 
@@ -215,20 +215,29 @@ msgstr "Language"
 msgid "Loading…"
 msgstr "Loading…"
 
+msgid "Low"
+msgstr "Low"
+
+msgid "Low+"
+msgstr "Low+"
+
 msgid "Making room for new players..."
 msgstr "Making room for new players..."
 
 msgid "Max"
 msgstr "Max"
 
+msgid "Medium"
+msgstr "Medium"
+
 msgid "Memo"
 msgstr "Memo"
 
-msgid "Mid Stakes"
-msgstr "Mid Stakes"
+msgid "Micro"
+msgstr "Micro"
 
-msgid "Min buy-in"
-msgstr "Min buy-in"
+msgid "Micro+"
+msgstr "Micro+"
 
 msgid "My wallet"
 msgstr "My wallet"
@@ -318,9 +327,6 @@ msgstr "Tables"
 msgid "Tap to use max"
 msgstr "Tap to use max"
 
-msgid "Texas Hold’em"
-msgstr "Texas Hold’em"
-
 msgid "The dealer is counting the cards..."
 msgstr "The dealer is counting the cards..."
 
@@ -353,6 +359,9 @@ msgstr "Top up"
 
 msgid "Transaction"
 msgstr "Transaction"
+
+msgid "VIP"
+msgstr "VIP"
 
 msgid "Waiting for next hand..."
 msgstr "Waiting for next hand..."

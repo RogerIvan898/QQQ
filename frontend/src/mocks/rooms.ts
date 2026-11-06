@@ -5,13 +5,17 @@ export interface MockRoomConfig {
   botCount: number;
 }
 
+// Blinds in chips, 1 chip = 0.01 TON (mirrors pages/main-menu ROOMS).
 const ROOMS: Record<string, MockRoomConfig> = {
-  '1': { id: '1', smallBlind: 10, bigBlind: 20, botCount: 2 },
-  '2': { id: '2', smallBlind: 100, bigBlind: 200, botCount: 3 },
-  '3': { id: '3', smallBlind: 10, bigBlind: 20, botCount: 1 },
-  '4': { id: '4', smallBlind: 5, bigBlind: 10, botCount: 2 },
-  '5': { id: '5', smallBlind: 200, bigBlind: 400, botCount: 2 },
-  '6': { id: '6', smallBlind: 500, bigBlind: 1000, botCount: 1 },
+  '1': { id: '1', smallBlind: 1, bigBlind: 2, botCount: 3 },
+  '2': { id: '2', smallBlind: 2, bigBlind: 5, botCount: 3 },
+  '3': { id: '3', smallBlind: 5, bigBlind: 10, botCount: 3 },
+  '4': { id: '4', smallBlind: 10, bigBlind: 20, botCount: 3 },
+  '5': { id: '5', smallBlind: 25, bigBlind: 50, botCount: 2 },
+  '6': { id: '6', smallBlind: 50, bigBlind: 100, botCount: 2 },
+  '7': { id: '7', smallBlind: 100, bigBlind: 200, botCount: 2 },
+  '8': { id: '8', smallBlind: 10, bigBlind: 20, botCount: 1 },
+  '9': { id: '9', smallBlind: 500, bigBlind: 1000, botCount: 1 },
 };
 
 export const getMockRoom = (roomId: string): MockRoomConfig =>

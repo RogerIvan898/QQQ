@@ -44,14 +44,14 @@ msgstr "Назад"
 msgid "BB"
 msgstr "ББ"
 
-msgid "Beginners"
-msgstr "Новички"
-
 msgid "Bet"
 msgstr "Бет"
 
 msgid "Blinds"
 msgstr "Блайнды"
+
+msgid "Buy-in"
+msgstr "Бай-ин"
 
 msgid "Call"
 msgstr "Колл"
@@ -128,9 +128,6 @@ msgstr "Скопировать адрес"
 msgid "Couldn't load the page"
 msgstr "Не удалось загрузить страницу"
 
-msgid "Deepstack Pro"
-msgstr "Deepstack Pro"
-
 msgid "Deposit"
 msgstr "Пополнить"
 
@@ -195,6 +192,9 @@ msgstr "Полная ссылка для перевода с адресом, с�
 msgid "Heads-Up"
 msgstr "Хедз-ап"
 
+msgid "High"
+msgstr "High"
+
 msgid "History"
 msgstr "История"
 
@@ -216,20 +216,29 @@ msgstr "Язык"
 msgid "Loading…"
 msgstr "Загрузка…"
 
+msgid "Low"
+msgstr "Low"
+
+msgid "Low+"
+msgstr "Low+"
+
 msgid "Making room for new players..."
 msgstr "Готовим места для новых игроков..."
 
 msgid "Max"
 msgstr "Макс"
 
+msgid "Medium"
+msgstr "Medium"
+
 msgid "Memo"
 msgstr "Memo"
 
-msgid "Mid Stakes"
-msgstr "Mid Stakes"
+msgid "Micro"
+msgstr "Micro"
 
-msgid "Min buy-in"
-msgstr "Бай-ин от"
+msgid "Micro+"
+msgstr "Micro+"
 
 msgid "My wallet"
 msgstr "Мой кошелёк"
@@ -319,9 +328,6 @@ msgstr "Столы"
 msgid "Tap to use max"
 msgstr "Ввести максимум"
 
-msgid "Texas Hold’em"
-msgstr "Texas Hold’em"
-
 msgid "The dealer is counting the cards..."
 msgstr "Дилер пересчитывает карты..."
 
@@ -354,6 +360,9 @@ msgstr "Пополнить"
 
 msgid "Transaction"
 msgstr "Транзакция"
+
+msgid "VIP"
+msgstr "VIP"
 
 msgid "Waiting for next hand..."
 msgstr "Ожидание следующей раздачи..."
