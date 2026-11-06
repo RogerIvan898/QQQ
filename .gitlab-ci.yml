@@ -1,5 +1,8 @@
 include:
   - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
 
 stages:
   - lint
@@ -7,6 +10,17 @@ stages:
   - test
   - secret-detection
   - docker
+  - scan
+
+# Scan the freshly pushed frontend image (runs only when the image was built).
+container_scanning:
+  stage: scan
+  needs: [frontend:docker]
+  variables:
+    CS_IMAGE: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
+  rules:
+    - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG)
+      changes: [frontend/**/*]
 
 workflow:
   rules:
@@ -56,6 +70,16 @@ frontend:test:
   needs: []
   script:
     - bun run test
+
+# GitLab's dependency scanner may not read bun.lock, so audit with bun itself.
+# Non-blocking for now: there are known high-severity advisories to triage.
+frontend:audit:
+  extends: .frontend
+  stage: test
+  needs: []
+  allow_failure: true
+  script:
+    - bun audit --prod --audit-level=high
 
 # ---------- backend (C++, CMake) ----------
 # Dormant until backend/CMakeLists.txt exists.
