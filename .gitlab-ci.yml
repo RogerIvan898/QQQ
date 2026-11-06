@@ -1,7 +1,11 @@
+include:
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+
 stages:
   - lint
   - build
   - test
+  - secret-detection
   - docker
 
 workflow:
@@ -100,7 +104,7 @@ frontend:docker:
   extends: .docker
   variables:
     APP: frontend
-    BUILD_ARGS: --build-arg VITE_APP_URL
+    BUILD_ARGS: --build-arg VITE_APP_URL --build-arg VITE_API_URL
   before_script:
     - '[ -n "$VITE_APP_URL" ] || { echo "VITE_APP_URL is not set (Settings > CI/CD > Variables)"; exit 1; }'
     - !reference [.docker, before_script]
