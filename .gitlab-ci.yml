@@ -72,12 +72,10 @@ frontend:test:
     - bun run test
 
 # GitLab's dependency scanner may not read bun.lock, so audit with bun itself.
-# Non-blocking for now: there are known high-severity advisories to triage.
 frontend:audit:
   extends: .frontend
   stage: test
   needs: []
-  allow_failure: true
   script:
     - bun audit --prod --audit-level=high
 
