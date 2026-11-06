@@ -22,22 +22,25 @@
 
 .contentArea {
   flex: 1;
-  overflow-y: auto;
-  padding: 0 16px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
+/* Filters stay put; only the room list below scrolls (and owns the scrollbar). */
 .stickyHeader {
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  flex-shrink: 0;
   background: var(--color-bg-subtle);
-  padding-top: 16px;
-  padding-bottom: 12px;
-  margin: 0 -16px;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding: 16px 16px 0;
+}
+
+.roomScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 16px;
 }
 
 .tabsContainer {
@@ -137,12 +140,8 @@
 }
 
 @media (min-width: 768px) {
-  .contentArea {
-    padding: 0 32px;
-  }
-
-  .stickyHeader {
-    margin: 0 -32px;
+  .stickyHeader,
+  .roomScroll {
     padding-left: 32px;
     padding-right: 32px;
   }
