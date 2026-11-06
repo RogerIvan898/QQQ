@@ -28,6 +28,7 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
     dealerSeat,
     smallBlindSeat,
     bigBlindSeat,
+    round,
     activeSeat,
     viewerId,
     myCards,
@@ -38,6 +39,7 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
     gameModel.$dealerSeat,
     gameModel.$smallBlindSeat,
     gameModel.$bigBlindSeat,
+    gameModel.$round,
     gameModel.$activeSeat,
     sessionModel.$currentUserId,
     gameModel.$myCards,
@@ -138,8 +140,10 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
         const isViewer = player.id === viewerId;
         const revealed = debugHoles[player.seat];
         const hand = isViewer && myCards ? myCards : (revealed ?? player.hand);
-        const blindRole =
-          player.seat === smallBlindSeat
+        const blindPosted = round === 'PREFLOP' && player.committed > 0;
+        const blindRole = !blindPosted
+          ? null
+          : player.seat === smallBlindSeat
             ? 'sb'
             : player.seat === bigBlindSeat
               ? 'bb'

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "dev:server": "bun --cwd server run dev",
+    "dev:server": "bun --cwd ../backend run dev",
     "build": "node ./node_modules/@typescript/native/bin/tsc -b && vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -21,7 +21,7 @@
     "i18n:compile": "lingui compile --strict && bun scripts/generate-message-ids.ts",
     "i18n:compile:watch": "lingui compile --watch",
     "i18n:check": "lingui extract --clean && lingui compile --strict",
-    "prepare": "husky"
+    "prepare": "cd .. && husky"
   },
   "dependencies": {
     "@lingui/core": "^6.10.0",

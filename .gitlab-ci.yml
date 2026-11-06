@@ -1,0 +1,98 @@
+stages:
+  - lint
+  - build
+  - test
+  - docker
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+# ---------- frontend ----------
+.frontend:
+  image: oven/bun:1.3.14
+  before_script:
+    - cd frontend
+    - bun install --frozen-lockfile
+  cache:
+    key:
+      files: [frontend/bun.lock]
+    paths: [frontend/node_modules/]
+  rules:
+    - changes: [frontend/**/*, .gitlab-ci.yml]
+
+frontend:lint:
+  extends: .frontend
+  stage: lint
+  script:
+    - bun run format:check
+    - bun run lint
+
+frontend:build:
+  extends: .frontend
+  stage: build
+  script:
+    - bun run i18n:compile
+    - bun run build
+  artifacts:
+    paths: [frontend/dist/]
+    expire_in: 1 week
+
+# ---------- backend (C++, CMake) ----------
+# Dormant until backend/CMakeLists.txt exists.
+.backend:
+  image: gcc:14
+  variables:
+    BUILD_DIR: backend/build
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq cmake ninja-build >/dev/null
+  rules:
+    - exists: [backend/CMakeLists.txt]
+      changes: [backend/**/*, .gitlab-ci.yml]
+
+backend:build:
+  extends: .backend
+  stage: build
+  script:
+    - cmake -S backend -B $BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Release
+    - cmake --build $BUILD_DIR -j
+  artifacts:
+    paths: [backend/build/]
+    expire_in: 1 day
+
+backend:test:
+  extends: .backend
+  stage: test
+  needs: [backend:build]
+  script:
+    - ctest --test-dir $BUILD_DIR --output-on-failure
+
+# ---------- docker images (push to GitLab registry on default branch / tags) ----------
+.docker:
+  stage: docker
+  image: docker:27
+  services: [docker:27-dind]
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/$APP:$CI_COMMIT_SHORT_SHA $APP
+    - docker push $CI_REGISTRY_IMAGE/$APP:$CI_COMMIT_SHORT_SHA
+
+frontend:docker:
+  extends: .docker
+  variables: { APP: frontend }
+  rules:
+    - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG)
+      changes: [frontend/**/*]
+
+backend:docker:
+  extends: .docker
+  variables: { APP: backend }
+  rules:
+    - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG)
+      exists: [backend/Dockerfile]
+      changes: [backend/**/*]
