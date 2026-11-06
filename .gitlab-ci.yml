@@ -12,6 +12,9 @@ workflow:
     - if: $CI_COMMIT_BRANCH
     - if: $CI_COMMIT_TAG
 
+default:
+  interruptible: true
+
 # ---------- frontend ----------
 .frontend:
   image: node:22-alpine
@@ -42,6 +45,13 @@ frontend:build:
   artifacts:
     paths: [frontend/dist/]
     expire_in: 1 week
+
+frontend:test:
+  extends: .frontend
+  stage: test
+  needs: []
+  script:
+    - bun run test
 
 # ---------- backend (C++, CMake) ----------
 # Dormant until backend/CMakeLists.txt exists.
@@ -80,13 +90,20 @@ backend:test:
   before_script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   script:
-    - docker build --build-arg VITE_APP_URL -t $CI_REGISTRY_IMAGE/$APP:$CI_COMMIT_SHORT_SHA -t $CI_REGISTRY_IMAGE/$APP:latest $APP
-    - docker push $CI_REGISTRY_IMAGE/$APP:latest
-    - docker push $CI_REGISTRY_IMAGE/$APP:$CI_COMMIT_SHORT_SHA
+    - IMAGE=$CI_REGISTRY_IMAGE/$APP
+    - TAGS="-t $IMAGE:$CI_COMMIT_SHORT_SHA -t $IMAGE:latest"
+    - if [ -n "$CI_COMMIT_TAG" ]; then TAGS="$TAGS -t $IMAGE:$CI_COMMIT_TAG"; fi
+    - docker build $BUILD_ARGS $TAGS $APP
+    - docker push --all-tags $IMAGE
 
 frontend:docker:
   extends: .docker
-  variables: { APP: frontend }
+  variables:
+    APP: frontend
+    BUILD_ARGS: --build-arg VITE_APP_URL
+  before_script:
+    - '[ -n "$VITE_APP_URL" ] || { echo "VITE_APP_URL is not set (Settings > CI/CD > Variables)"; exit 1; }'
+    - !reference [.docker, before_script]
   rules:
     - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG)
       changes: [frontend/**/*]
