@@ -161,20 +161,39 @@
   border-radius: 50%;
   color: var(--color-text-secondary);
   transition:
-    color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.15s ease;
 }
 
-/* Mirrors the gear's spin, but counter-clockwise: "back in time". */
 .historyBtn:hover {
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-text) 8%, transparent);
-  transform: rotate(-30deg);
+}
+
+/* "Rewind": one full counter-clockwise turn that eases out. */
+.historyBtn:hover svg {
+  animation: history-rewind 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .historyBtn:active {
-  transform: scale(0.9) rotate(-30deg);
+  transform: scale(0.9);
+}
+
+@keyframes history-rewind {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .historyBtn:hover svg {
+    animation: none;
+  }
 }
 
 .historyBtn:focus-visible {
