@@ -11,6 +11,7 @@
     "dev": "vite",
     "dev:server": "bun --cwd ../backend run dev",
     "build": "node ./node_modules/@typescript/native/bin/tsc -b && vite build",
+    "test": "bun scripts/run-tests.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
