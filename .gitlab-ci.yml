@@ -35,9 +35,8 @@ default:
 
 # ---------- frontend ----------
 .frontend:
-  image: node:22-alpine
+  image: oven/bun:1.4.4
   before_script:
-    - npm i -g bun@1.4.4
     - cd frontend
     - bun install --frozen-lockfile
   cache:
@@ -47,12 +46,17 @@ default:
   rules:
     - changes: [frontend/**/*, .gitlab-ci.yml]
 
-frontend:lint:
+# Lint, tests and audit share one job so the image pull and bun install
+# happen once instead of three times (saves shared runner minutes).
+frontend:check:
   extends: .frontend
   stage: lint
   script:
     - bun run format:check
     - bun run lint
+    - bun run test
+    # GitLab's dependency scanner may not read bun.lock, so audit with bun itself.
+    - bun audit --prod --audit-level=high
 
 frontend:build:
   extends: .frontend
@@ -63,21 +67,6 @@ frontend:build:
   artifacts:
     paths: [frontend/dist/]
     expire_in: 1 week
-
-frontend:test:
-  extends: .frontend
-  stage: test
-  needs: []
-  script:
-    - bun run test
-
-# GitLab's dependency scanner may not read bun.lock, so audit with bun itself.
-frontend:audit:
-  extends: .frontend
-  stage: test
-  needs: []
-  script:
-    - bun audit --prod --audit-level=high
 
 # ---------- backend (C++, CMake) ----------
 # Dormant until backend/CMakeLists.txt exists.
@@ -127,7 +116,7 @@ frontend:docker:
   variables:
     APP: frontend
     BUILD_ARGS: --target prebuilt
-  needs: [frontend:lint, frontend:test, frontend:build]
+  needs: [frontend:check, frontend:build]
   before_script:
     - '[ -n "$VITE_APP_URL" ] || { echo "VITE_APP_URL is not set (Settings > CI/CD > Variables)"; exit 1; }'
     - !reference [.docker, before_script]
