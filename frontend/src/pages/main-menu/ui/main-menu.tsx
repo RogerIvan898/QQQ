@@ -6,6 +6,7 @@ import { Coins, Swords } from 'lucide-react';
 
 import { RoomCard } from 'entities/room';
 import { JoinRoomButton } from 'features/join-room';
+import { getTelegramUser } from 'shared/lib/telegram';
 import { cn } from 'shared/utils/cn';
 
 import {
@@ -88,6 +89,7 @@ export const MenuPage = () => {
   const [isDepositOpen, setIsDepositOpen] = React.useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false);
   const mockUser = { firstName: 'User', balance: 42.5 };
+  const [telegramUser] = React.useState(getTelegramUser);
   const visibleRooms = filterRooms(ROOMS, roomFilter);
   const router = useRouter();
 
@@ -117,7 +119,8 @@ export const MenuPage = () => {
       <div className={styles.appLayout}>
         <div className={styles.mainContainer}>
           <Header
-            userName={mockUser.firstName}
+            userName={telegramUser?.name ?? mockUser.firstName}
+            avatarUrl={telegramUser?.photoUrl}
             balance={mockUser.balance}
             onDepositClick={() => setIsDepositOpen(true)}
             onWithdrawClick={() => setIsWithdrawOpen(true)}

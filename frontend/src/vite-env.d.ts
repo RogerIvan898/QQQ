@@ -16,12 +16,26 @@ declare global {
         initData: string;
         initDataUnsafe?: {
           user?: {
+            first_name?: string;
+            last_name?: string;
+            username?: string;
             language_code?: string;
+            photo_url?: string;
           };
         };
         setHeaderColor: (color: string) => void;
         setBackgroundColor: (color: string) => void;
         requestFullscreen: () => void;
+        version: string;
+        isVersionAtLeast: (version: string) => boolean;
+        enableClosingConfirmation: () => void;
+        disableClosingConfirmation: () => void;
+        BackButton: {
+          show: () => void;
+          hide: () => void;
+          onClick: (callback: () => void) => void;
+          offClick: (callback: () => void) => void;
+        };
         safeAreaInset?: TelegramSafeAreaInset;
         contentSafeAreaInset?: TelegramSafeAreaInset;
         onEvent: (event: string, callback: () => void) => void;
