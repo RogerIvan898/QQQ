@@ -319,3 +319,20 @@
     border-radius: var(--radius-lg);
   }
 }
+
+.destinationPanes {
+  display: grid;
+}
+
+.pane {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+.paneHidden {
+  visibility: hidden;
+}
+
+.fieldErrorIdle {
+  visibility: hidden;
+}

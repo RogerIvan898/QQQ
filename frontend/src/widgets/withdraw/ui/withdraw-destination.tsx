@@ -60,58 +60,83 @@ export const WithdrawDestinationBlock = ({
         </button>
       </div>
 
-      {destination === 'wallet' ? (
-        connectedAddress ? (
-          <div className={styles.walletCard}>
-            <span className={styles.walletLabel}>{t`Withdraw to`}</span>
-            <span className={styles.walletAddress} title={connectedAddress}>
-              {truncateMiddle(connectedAddress, 6)}
-            </span>
-          </div>
-        ) : (
-          <div className={styles.connectBlock}>
-            <p className={styles.connectText}>
-              {t`Connect a wallet to withdraw in one tap`}
-            </p>
-            <button
-              type="button"
-              className={styles.secondaryBtn}
-              onClick={onConnectWallet}
-            >
-              {t`Connect wallet`}
-            </button>
-          </div>
-        )
-      ) : (
-        <div className={styles.addressSection}>
-          <div className={styles.warningWrap}>
-            <Alert variant="warning" title={t`Double-check the TON address`}>
-              {t`Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds.`}
-            </Alert>
-          </div>
-
-          <div
-            className={cn(
-              styles.addressBox,
-              addressTouched && !isAddressValid && styles.fieldInvalid
-            )}
-          >
-            <input
-              className={styles.addressInput}
-              value={customAddress}
-              onChange={e => onCustomAddressChange(e.target.value)}
-              placeholder="UQ..."
-              spellCheck={false}
-              autoComplete="off"
-              aria-label={t`TON address`}
-            />
-          </div>
-
-          {addressTouched && !isAddressValid && (
-            <p className={styles.fieldError}>{t`Enter a valid TON address`}</p>
+      {/* Both panes share one grid cell: the card is always as tall as the
+          larger one, so switching tabs doesn't make it jump. */}
+      <div className={styles.destinationPanes}>
+        <div
+          className={cn(
+            styles.pane,
+            destination !== 'wallet' && styles.paneHidden
+          )}
+          inert={destination !== 'wallet'}
+        >
+          {connectedAddress ? (
+            <div className={styles.walletCard}>
+              <span className={styles.walletLabel}>{t`Withdraw to`}</span>
+              <span className={styles.walletAddress} title={connectedAddress}>
+                {truncateMiddle(connectedAddress, 6)}
+              </span>
+            </div>
+          ) : (
+            <div className={styles.connectBlock}>
+              <p className={styles.connectText}>
+                {t`Connect a wallet to withdraw in one tap`}
+              </p>
+              <button
+                type="button"
+                className={styles.secondaryBtn}
+                onClick={onConnectWallet}
+              >
+                {t`Connect wallet`}
+              </button>
+            </div>
           )}
         </div>
-      )}
+
+        <div
+          className={cn(
+            styles.pane,
+            destination !== 'address' && styles.paneHidden
+          )}
+          inert={destination !== 'address'}
+        >
+          <div className={styles.addressSection}>
+            <div className={styles.warningWrap}>
+              <Alert variant="warning" title={t`Double-check the TON address`}>
+                {t`Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds.`}
+              </Alert>
+            </div>
+
+            <div
+              className={cn(
+                styles.addressBox,
+                addressTouched && !isAddressValid && styles.fieldInvalid
+              )}
+            >
+              <input
+                className={styles.addressInput}
+                value={customAddress}
+                onChange={e => onCustomAddressChange(e.target.value)}
+                placeholder="UQ..."
+                spellCheck={false}
+                autoComplete="off"
+                aria-label={t`TON address`}
+              />
+            </div>
+
+            {/* Always rendered so showing the error doesn't change the height. */}
+            <p
+              className={cn(
+                styles.fieldError,
+                !(addressTouched && !isAddressValid) && styles.fieldErrorIdle
+              )}
+              aria-hidden={!(addressTouched && !isAddressValid)}
+            >
+              {t`Enter a valid TON address`}
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
