@@ -139,11 +139,16 @@ gameModel.incomingEvent.watch(event => {
         recalculate();
       }
       break;
-    case SERVER_EVENTS.BOARD_DEALT:
-      if (active) {
+    case SERVER_EVENTS.BOARD_DEALT: {
+      // The flop is dealt card by card for the animation; 1–2 cards on the
+      // board is not a real spot, so wait for the whole flop.
+      const boardSize = gameModel.$gameState.getState().community.length;
+
+      if (active && boardSize !== 1 && boardSize !== 2) {
         recalculate();
       }
       break;
+    }
     case SERVER_EVENTS.HAND_COMPLETED:
       // The river already settled it to 100% / 0% (or a split); hold that
       // while the pot flies to the winner, then clear.
