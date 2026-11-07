@@ -1,5 +1,6 @@
 import { useLingui } from '@lingui/react/macro';
 
+import { useChipFormatter } from 'shared/lib/display-settings';
 import { Button } from 'shared/ui/button';
 
 import { call, check, fold } from '../../model';
@@ -11,6 +12,8 @@ interface Props {
   canCall: boolean;
   canRaise: boolean;
   isBet: boolean;
+  /** Chips still to put in to call; shown on the button. */
+  callAmount: number;
   onRaiseClick: () => void;
 }
 
@@ -19,12 +22,15 @@ export const BaseActions = ({
   canCall,
   canRaise,
   isBet,
+  callAmount,
   onRaiseClick,
 }: Props) => {
   const { t } = useLingui();
+  const formatChips = useChipFormatter();
 
   const foldLabel = t`Fold`;
-  const callLabel = t`Call`;
+  const callLabel =
+    callAmount > 0 ? t`Call ${formatChips(callAmount)}` : t`Call`;
   const checkLabel = t`Check`;
   const betLabel = t`Bet`;
   const raiseLabel = t`Raise`;

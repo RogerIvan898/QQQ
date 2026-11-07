@@ -166,9 +166,9 @@
 
 .card {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px 12px 14px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -186,23 +186,30 @@
   outline-offset: 2px;
 }
 
-.cardHead {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.cardTitleBlock {
+.cardMain {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
 }
 
+/* Two lines: title + profit, then time · hands · duration + buy-in → out. */
+.cardRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
 .cardTitle {
-  font-size: 16px;
+  min-width: 0;
+  font-size: 15px;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cardTime {
@@ -210,16 +217,26 @@
   color: var(--color-text-muted);
 }
 
-.profit {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+.cardMeta {
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardFlow {
   flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .profitValue {
-  font-size: 18px;
+  flex-shrink: 0;
+  font-size: 16px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -227,39 +244,7 @@
 
 .chevron {
   flex-shrink: 0;
-  margin-top: 10px;
   color: var(--color-text-muted);
-}
-
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px 8px;
-  margin: 0;
-  padding-top: 12px;
-  border-top: 1px solid var(--color-border);
-}
-
-.metrics div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.metrics dt {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-}
-
-.metrics dd {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .empty {
@@ -330,11 +315,4 @@
   margin: 0;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-}
-
-@media (max-width: 380px) {
-  .stats,
-  .metrics {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }

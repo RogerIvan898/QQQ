@@ -101,6 +101,7 @@ export const PlayerActions = () => {
           canRaise={canPutChips}
           onRaiseClick={() => setIsChangingAmount(true)}
           isBet={canBet}
+          callAmount={allowedActions?.callAmount ?? 0}
         />
       )}
     </div>

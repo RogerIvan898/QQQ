@@ -10,6 +10,7 @@ interface Props {
   canCall: boolean;
   canRaise: boolean;
   isBet: boolean;
+  callAmount: number;
   onRaiseClick: () => void;
 }
 
@@ -21,6 +22,7 @@ export const ActionPanel = ({
   canCall,
   canRaise,
   isBet,
+  callAmount,
   onRaiseClick,
 }: Props) => {
   if (isMyTurn) {
@@ -30,6 +32,7 @@ export const ActionPanel = ({
         canCall={canCall}
         canRaise={canRaise}
         isBet={isBet}
+        callAmount={callAmount}
         onRaiseClick={onRaiseClick}
       />
     );

@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { ChevronRight } from 'lucide-react';
 
-import { Alert } from 'shared/ui/alert';
 import { Logo } from 'shared/ui/logo';
 import { NumberField } from 'shared/ui/number-field';
 import { parseNumericInput } from 'shared/utils/format';
@@ -48,10 +47,6 @@ export const AmountStep = ({ amount, onChangeAmount, onNext }: Props) => {
 
   return (
     <div className={styles.content}>
-      <Alert variant="info" title={t`Deposit TON`}>
-        {t`Enter the amount you want to deposit`}
-      </Alert>
-
       <label className={styles.label} htmlFor="deposit-amount">
         {t`Amount`}
       </label>
@@ -70,6 +65,8 @@ export const AmountStep = ({ amount, onChangeAmount, onNext }: Props) => {
           <Logo /> TON
         </span>
       </div>
+
+      <p className={styles.hint}>{t`Enter the amount you want to deposit`}</p>
 
       <QuickAddOptions options={QUICK_ADD_OPTIONS} onAdd={handleQuickAdd} />
 

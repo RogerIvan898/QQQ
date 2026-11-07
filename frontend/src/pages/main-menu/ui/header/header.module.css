@@ -20,10 +20,11 @@
 }
 
 .avatarPlaceholder {
-  /* Same height as the name + balance block (18 + 4 + 36). */
-  width: 58px;
-  height: 58px;
-  border-radius: var(--radius-sm);
+  /* Round, like a Telegram avatar; a bit smaller than the name + balance
+     block so it doesn't dominate the header. */
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   background: linear-gradient(
     135deg,
     var(--color-primary) 0%,

@@ -11,6 +11,10 @@ msgstr ""
 msgid "— or scan with Tonkeeper —"
 msgstr "— или отсканируйте в Tonkeeper —"
 
+#. placeholder {0}: session.hands
+msgid "{0, plural, one {# hand} other {# hands}}"
+msgstr "{0, plural, one {# раздача} few {# раздачи} many {# раздач} other {# раздачи}}"
+
 msgid "30 Days"
 msgstr "30 дней"
 
@@ -70,6 +74,10 @@ msgstr "Бай-ин"
 
 msgid "Call"
 msgstr "Колл"
+
+#. placeholder {0}: formatChips(callAmount)
+msgid "Call {0}"
+msgstr "Колл {0}"
 
 msgid "Call {callAmount}"
 msgstr "Колл {callAmount}"
@@ -267,9 +275,6 @@ msgstr "Шаг раздачи"
 msgid "Hands"
 msgstr "Раздачи"
 
-msgid "Hands played"
-msgstr "Раздач сыграно"
-
 msgid "Hands Played"
 msgstr "Раздач сыграно"
 
@@ -406,9 +411,6 @@ msgstr "Префлоп"
 msgid "Previous step"
 msgstr "Предыдущий шаг"
 
-msgid "Profit"
-msgstr "Прибыль"
-
 msgid "Quick add amount"
 msgstr "Быстро добавить"
 
@@ -478,9 +480,6 @@ msgstr "Стрит-флеш"
 #. placeholder {0}: session.roomId
 msgid "Table #{0}"
 msgstr "Стол #{0}"
-
-msgid "Table format"
-msgstr "Формат стола"
 
 msgid "Table full"
 msgstr "Стол заполнен"

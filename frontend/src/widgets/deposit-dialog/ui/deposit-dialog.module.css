@@ -58,3 +58,22 @@
 .primaryBtn:not(:disabled):hover svg {
   transform: translateX(3px);
 }
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.label {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* One line of guidance under the amount field. */
+.hint {
+  margin: -4px 0 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}

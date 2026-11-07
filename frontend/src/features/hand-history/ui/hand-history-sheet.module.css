@@ -59,13 +59,31 @@
   overscroll-behavior: contain;
 }
 
-/* Phones: full width under the top bar, shorter so most of the table shows. */
+/* Phones: a sheet from the bottom edge, so the seats at the top stay in
+   view; it covers the action buttons while you pick a hand. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .panel {
-    left: calc(12px + var(--tg-safe-area-left));
-    right: calc(12px + var(--tg-safe-area-right));
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 950;
     width: auto;
-    max-height: 45vh;
+    max-height: 50vh;
+    padding-bottom: var(--tg-safe-area-bottom);
+    border-bottom: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    animation-name: sheetIn;
+  }
+}
+
+@keyframes sheetIn {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
   }
 }
 

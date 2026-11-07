@@ -95,10 +95,16 @@
 }
 
 @keyframes chipSlideOut {
-  /* Starts at the seat itself and slides out to its spot toward the pot. */
+  /* Starts at the seat's edge (a third of the way out, clear of the stack
+     numbers) and slides out to its spot toward the pot. */
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.5);
+    transform: translate(-50%, -50%)
+      translate(
+        calc(var(--to-center-x) * var(--bet-distance) * 0.35),
+        calc(var(--to-center-y) * var(--bet-distance) * 0.35)
+      )
+      scale(0.6);
   }
   25% {
     opacity: 1;

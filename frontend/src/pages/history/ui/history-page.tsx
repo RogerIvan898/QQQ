@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type { MessageDescriptor } from '@lingui/core';
-import { msg } from '@lingui/core/macro';
+import { msg, plural } from '@lingui/core/macro';
 import { useLingui } from '@lingui/react/macro';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
@@ -15,7 +15,7 @@ import {
 import { useTelegramBackButton } from 'shared/lib/telegram';
 import { cn } from 'shared/utils/cn';
 
-import { formatSessionTime, formatSignedTon, formatTon } from '../lib/format';
+import { formatSignedTon } from '../lib/format';
 
 import styles from './history-page.module.css';
 import { useSessionTitle } from './use-session-title';
@@ -41,8 +41,15 @@ interface CardProps {
 }
 
 const SessionCard = ({ session }: CardProps) => {
-  const { i18n, t } = useLingui();
+  const { i18n } = useLingui();
   const title = useSessionTitle();
+  // "Nov 7, 10:15 PM": the full range and buy-in/cash-out are on the details page.
+  const shortTime = new Intl.DateTimeFormat(i18n.locale, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   return (
     <li>
@@ -51,19 +58,9 @@ const SessionCard = ({ session }: CardProps) => {
         params={{ sessionId: session.id }}
         className={styles.card}
       >
-        <div className={styles.cardHead}>
-          <div className={styles.cardTitleBlock}>
+        <div className={styles.cardMain}>
+          <div className={styles.cardRow}>
             <span className={styles.cardTitle}>{title(session)}</span>
-            <span className={styles.cardTime}>
-              {formatSessionTime(
-                session.startedAt,
-                session.endedAt,
-                i18n.locale
-              )}
-            </span>
-          </div>
-          <div className={styles.profit}>
-            <span className={styles.metricLabel}>{t`Profit`}</span>
             <span
               className={cn(
                 styles.profitValue,
@@ -74,35 +71,18 @@ const SessionCard = ({ session }: CardProps) => {
               {formatSignedTon(session.net, i18n.locale)}
             </span>
           </div>
-          <ChevronRight size={18} className={styles.chevron} />
+          <div className={styles.cardRow}>
+            <span className={styles.cardMeta}>
+              {shortTime.format(new Date(session.startedAt))}
+            </span>
+            <span className={styles.cardFlow}>
+              {plural(session.hands, { one: '# hand', other: '# hands' })}
+              {' · '}
+              {formatDuration(sessionDurationMs(session))}
+            </span>
+          </div>
         </div>
-
-        <dl className={styles.metrics}>
-          <div>
-            <dt>{t`Buy-in`}</dt>
-            <dd>{formatTon(session.buyIn, i18n.locale)}</dd>
-          </div>
-          <div>
-            <dt>{t`Cash out`}</dt>
-            <dd>{formatTon(session.cashOut, i18n.locale)}</dd>
-          </div>
-          <div>
-            <dt>{t`Hands played`}</dt>
-            <dd>{session.hands}</dd>
-          </div>
-          <div>
-            <dt>{t`Duration`}</dt>
-            <dd>{formatDuration(sessionDurationMs(session))}</dd>
-          </div>
-          <div>
-            <dt>{t`Blinds`}</dt>
-            <dd>{session.blinds ? `${session.blinds} TON` : '—'}</dd>
-          </div>
-          <div>
-            <dt>{t`Table format`}</dt>
-            <dd>{session.format ?? '—'}</dd>
-          </div>
-        </dl>
+        <ChevronRight size={18} className={styles.chevron} />
       </Link>
     </li>
   );

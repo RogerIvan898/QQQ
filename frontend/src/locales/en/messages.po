@@ -10,6 +10,10 @@ msgstr ""
 msgid "— or scan with Tonkeeper —"
 msgstr "— or scan with Tonkeeper —"
 
+#. placeholder {0}: session.hands
+msgid "{0, plural, one {# hand} other {# hands}}"
+msgstr "{0, plural, one {# hand} other {# hands}}"
+
 msgid "30 Days"
 msgstr "30 Days"
 
@@ -69,6 +73,10 @@ msgstr "Buy-in"
 
 msgid "Call"
 msgstr "Call"
+
+#. placeholder {0}: formatChips(callAmount)
+msgid "Call {0}"
+msgstr "Call {0}"
 
 msgid "Call {callAmount}"
 msgstr "Call {callAmount}"
@@ -266,9 +274,6 @@ msgstr "Hand step"
 msgid "Hands"
 msgstr "Hands"
 
-msgid "Hands played"
-msgstr "Hands played"
-
 msgid "Hands Played"
 msgstr "Hands Played"
 
@@ -405,9 +410,6 @@ msgstr "Preflop"
 msgid "Previous step"
 msgstr "Previous step"
 
-msgid "Profit"
-msgstr "Profit"
-
 msgid "Quick add amount"
 msgstr "Quick add amount"
 
@@ -477,9 +479,6 @@ msgstr "Straight flush"
 #. placeholder {0}: session.roomId
 msgid "Table #{0}"
 msgstr "Table #{0}"
-
-msgid "Table format"
-msgstr "Table format"
 
 msgid "Table full"
 msgstr "Table full"

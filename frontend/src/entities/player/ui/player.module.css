@@ -50,7 +50,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  z-index: 5;
+  /* Above the hole cards (z-index 8): the hero's big cards otherwise hide it. */
+  z-index: 9;
   perspective: 300px;
   pointer-events: none;
   transform: translate(-50%, -50%)

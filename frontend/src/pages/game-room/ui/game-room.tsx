@@ -6,6 +6,7 @@ import { useGate, useUnit } from 'effector-react';
 import { ArrowLeft, History, Settings } from 'lucide-react';
 
 import { gameModel } from 'entities/game';
+import { findRoom } from 'entities/room';
 import {
   HAND_HISTORY_TOGGLE_ATTR,
   HandHistorySheet,
@@ -34,8 +35,9 @@ const RevealCardsButton = import.meta.env.DEV
   : null;
 
 export const GameRoomPage = () => {
-  const { t } = useLingui();
+  const { i18n, t } = useLingui();
   const { roomId } = useParams({ from: '/game/$roomId' });
+  const room = findRoom(roomId);
   useGate(GamePageGate, { roomId });
 
   const navigate = useNavigate();
@@ -71,6 +73,12 @@ export const GameRoomPage = () => {
         <ArrowLeft size={14} strokeWidth={2.25} />
         {t`Tables`}
       </button>
+
+      {room && (
+        <p className={styles.tableInfo}>
+          {i18n._(room.name)} · {room.blinds} TON
+        </p>
+      )}
 
       <button
         type="button"
