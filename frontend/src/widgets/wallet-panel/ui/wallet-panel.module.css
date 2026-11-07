@@ -100,17 +100,13 @@
   border-radius: var(--radius-lg);
 }
 
-.statusDot {
+.statusIcon {
   flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-text-muted);
+  color: var(--color-text-muted);
 }
 
 .statusConnected {
-  background: var(--color-success);
-  box-shadow: 0 0 6px color-mix(in srgb, var(--color-success) 60%, transparent);
+  color: var(--color-success);
 }
 
 .address {

@@ -2,7 +2,7 @@ import React from 'react';
 
 import { useLingui } from '@lingui/react/macro';
 import { useUnit } from 'effector-react';
-import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react';
 
 import { walletModel } from 'entities/wallet';
 import { useMediaQuery } from 'shared/hooks/use-media-query';
@@ -46,8 +46,9 @@ const WalletContent = ({
   return (
     <div className={styles.content}>
       <div className={styles.walletStatus}>
-        <span
-          className={cn(styles.statusDot, address && styles.statusConnected)}
+        <Wallet
+          size={16}
+          className={cn(styles.statusIcon, address && styles.statusConnected)}
         />
         {address ? (
           <span>
