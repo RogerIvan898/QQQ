@@ -18,6 +18,11 @@ import styles from './wallet-panel.module.css';
 // Matches the Dialog's bottom-sheet breakpoint.
 const MOBILE_QUERY = '(max-width: 600px)';
 
+/** Where the TON Connect UI renders its modal. */
+const TON_CONNECT_ROOT = '#tc-widget-root';
+/** Clicks here are not "outside" the popover. */
+const KEEP_OPEN_SELECTOR = `[role="dialog"], ${TON_CONNECT_ROOT}`;
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -145,8 +150,9 @@ export const WalletPanel = ({
       if (
         panelRef.current?.contains(target) ||
         anchorRef.current?.contains(target) ||
-        // Dialogs opened from the panel (transaction details) live in portals.
-        (target instanceof Element && target.closest('[role="dialog"]'))
+        // Dialogs opened from the panel (transaction details) live in portals,
+        // and the TON Connect modal renders into its own root.
+        (target instanceof Element && target.closest(KEEP_OPEN_SELECTOR))
       ) {
         return;
       }
@@ -154,6 +160,14 @@ export const WalletPanel = ({
       onClose();
     };
     const onKeyDown = (event: KeyboardEvent) => {
+      // Escape inside the TON Connect modal closes that modal, not the panel.
+      if (
+        event.target instanceof Element &&
+        event.target.closest(TON_CONNECT_ROOT)
+      ) {
+        return;
+      }
+
       if (event.key === 'Escape') {
         onClose();
       }
