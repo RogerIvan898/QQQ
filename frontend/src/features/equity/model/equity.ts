@@ -52,6 +52,39 @@ let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** Keep the final 100% / 0% up until the winner animation has played. */
 const HIDE_AFTER_WIN_MS = 1800;
+/** Board card deal animation (card.module.css `.play`): new numbers appear
+ *  only once the card has landed face-up. */
+const CARD_DEAL_MS = 750;
+
+/** Earliest time the next result may be shown. */
+let revealAt = 0;
+let revealTimer: ReturnType<typeof setTimeout> | null = null;
+
+const clearRevealTimer = () => {
+  if (revealTimer !== null) {
+    clearTimeout(revealTimer);
+    revealTimer = null;
+  }
+};
+
+/** Shows `equity` no earlier than `revealAt`. */
+const publish = (equity: EquityState, id: number) => {
+  clearRevealTimer();
+  const wait = revealAt - performance.now();
+
+  if (wait <= 0) {
+    equityChanged(equity);
+    return;
+  }
+
+  revealTimer = setTimeout(() => {
+    revealTimer = null;
+
+    if (id === requestId && active) {
+      equityChanged(equity);
+    }
+  }, wait);
+};
 
 const clearHideTimer = () => {
   if (hideTimer !== null) {
@@ -75,12 +108,18 @@ const getWorker = () => {
         return;
       }
 
-      equityChanged({
-        bySeat: Object.fromEntries(
-          pendingSeats.map((seat, index) => [seat, event.data.equities[index]])
-        ),
-        exact: event.data.exact,
-      });
+      publish(
+        {
+          bySeat: Object.fromEntries(
+            pendingSeats.map((seat, index) => [
+              seat,
+              event.data.equities[index],
+            ])
+          ),
+          exact: event.data.exact,
+        },
+        event.data.id
+      );
     };
   } catch {
     worker = null;
@@ -91,6 +130,7 @@ const getWorker = () => {
 
 const stop = () => {
   clearHideTimer();
+  clearRevealTimer();
   active = false;
   requestId += 1;
   equityChanged(null);
@@ -126,12 +166,15 @@ const recalculate = () => {
     // No worker support: compute inline (rare, older WebViews).
     const result = computeEquity(request.hands, request.board);
 
-    equityChanged({
-      bySeat: Object.fromEntries(
-        pendingSeats.map((seat, index) => [seat, result.equities[index]])
-      ),
-      exact: result.exact,
-    });
+    publish(
+      {
+        bySeat: Object.fromEntries(
+          pendingSeats.map((seat, index) => [seat, result.equities[index]])
+        ),
+        exact: result.exact,
+      },
+      requestId
+    );
   }
 };
 
@@ -143,6 +186,7 @@ gameModel.incomingEvent.watch(event => {
   switch (event.type) {
     case SERVER_EVENTS.SHOWDOWN:
       if (gameModel.$gameState.getState().community.length < 5) {
+        revealAt = 0;
         recalculate();
       }
       break;
@@ -152,6 +196,7 @@ gameModel.incomingEvent.watch(event => {
       const boardSize = gameModel.$gameState.getState().community.length;
 
       if (active && boardSize !== 1 && boardSize !== 2) {
+        revealAt = performance.now() + CARD_DEAL_MS;
         recalculate();
       }
       break;
