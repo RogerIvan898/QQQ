@@ -1,5 +1,7 @@
 import { useLingui } from '@lingui/react/macro';
+import { Wallet } from 'lucide-react';
 
+import { Alert } from 'shared/ui/alert';
 import { cn } from 'shared/utils/cn';
 import { truncateMiddle } from 'shared/utils/format';
 
@@ -60,8 +62,8 @@ export const WithdrawDestinationBlock = ({
         </button>
       </div>
 
-      {/* Both panes have the same shape (one 56px control + one hint line),
-          so switching tabs neither jumps nor leaves empty space. */}
+      {/* Both panes share one grid cell and have the same shape (a notice +
+          one control), so switching tabs doesn't jump or leave a gap. */}
       <div className={styles.destinationPanes}>
         <div
           className={cn(
@@ -71,26 +73,27 @@ export const WithdrawDestinationBlock = ({
           inert={destination !== 'wallet'}
         >
           {connectedAddress ? (
-            <div className={cn(styles.walletCard, styles.destControl)}>
+            <div className={styles.walletCard}>
               <span className={styles.walletLabel}>{t`Withdraw to`}</span>
               <span className={styles.walletAddress} title={connectedAddress}>
                 {truncateMiddle(connectedAddress, 6)}
               </span>
             </div>
           ) : (
-            <button
-              type="button"
-              className={cn(styles.secondaryBtn, styles.destControl)}
-              onClick={onConnectWallet}
-            >
-              {t`Connect wallet`}
-            </button>
+            <div className={styles.paneStack}>
+              <Alert variant="info" title={t`Wallet not connected`}>
+                {t`Connect a wallet to withdraw in one tap`}
+              </Alert>
+              <button
+                type="button"
+                className={styles.connectBtn}
+                onClick={onConnectWallet}
+              >
+                <Wallet size={16} />
+                {t`Connect wallet`}
+              </button>
+            </div>
           )}
-          <p className={styles.destHint}>
-            {connectedAddress
-              ? t`Funds go to your connected wallet`
-              : t`Connect a wallet to withdraw in one tap`}
-          </p>
         </div>
 
         <div
@@ -100,34 +103,35 @@ export const WithdrawDestinationBlock = ({
           )}
           inert={destination !== 'address'}
         >
-          <div
-            className={cn(
-              styles.addressBox,
-              styles.destControl,
-              addressInvalid && styles.fieldInvalid
-            )}
-          >
-            <input
-              className={styles.addressInput}
-              value={customAddress}
-              onChange={e => onCustomAddressChange(e.target.value)}
-              placeholder="UQ..."
-              spellCheck={false}
-              autoComplete="off"
-              aria-label={t`TON address`}
-            />
+          <div className={styles.paneStack}>
+            <Alert variant="warning" title={t`Double-check the TON address`}>
+              {t`Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds.`}
+            </Alert>
+
+            <div>
+              <div
+                className={cn(
+                  styles.addressBox,
+                  addressInvalid && styles.fieldInvalid
+                )}
+              >
+                <input
+                  className={styles.addressInput}
+                  value={customAddress}
+                  onChange={e => onCustomAddressChange(e.target.value)}
+                  placeholder="UQ..."
+                  spellCheck={false}
+                  autoComplete="off"
+                  aria-label={t`TON address`}
+                />
+              </div>
+              {addressInvalid ? (
+                <p className={styles.fieldError} role="alert">
+                  {t`Enter a valid TON address`}
+                </p>
+              ) : null}
+            </div>
           </div>
-          <p
-            className={cn(
-              styles.destHint,
-              addressInvalid ? styles.destHintError : styles.destHintWarning
-            )}
-            role={addressInvalid ? 'alert' : undefined}
-          >
-            {addressInvalid
-              ? t`Enter a valid TON address`
-              : t`Withdrawals are irreversible. Double-check it's a TON address.`}
-          </p>
         </div>
       </div>
     </div>

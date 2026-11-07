@@ -183,6 +183,9 @@ msgstr "Отключить кошелёк"
 msgid "Disconnecting…"
 msgstr "Отключение…"
 
+msgid "Double-check the TON address"
+msgstr "Проверьте TON-адрес"
+
 msgid "Duration"
 msgstr "Длительность"
 
@@ -227,9 +230,6 @@ msgstr "Полная ссылка для перевода с адресом и �
 
 msgid "Full transfer link with address, amount and memo."
 msgstr "Полная ссылка для перевода с адресом, суммой и Memo."
-
-msgid "Funds go to your connected wallet"
-msgstr "Средства придут на подключённый кошелёк"
 
 msgid "Game History"
 msgstr "История игр"
@@ -565,8 +565,8 @@ msgstr "Вывод"
 msgid "Withdrawals"
 msgstr "Выводы"
 
-msgid "Withdrawals are irreversible. Double-check it's a TON address."
-msgstr "Вывод необратим. Проверьте, что это адрес в сети TON."
+msgid "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
+msgstr "Выводы необратимы. Отправляйте только на TON-адрес — неправильная сеть или опечатка означают безвозвратную потерю средств."
 
 msgid "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
 msgstr "Вывод обрабатывается в течение нескольких минут. Сумма уже зарезервирована на балансе."
