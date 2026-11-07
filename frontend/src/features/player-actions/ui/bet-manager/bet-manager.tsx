@@ -110,7 +110,7 @@ export const BetManager = ({
     commit(draftValue ?? amount);
   };
 
-  const maxLabel = t`Max`;
+  const maxLabel = t`All in`;
   const potLabel = t`Pot`;
   const allInLabel = t`All in`;
   const betLabel = t`Bet`;
