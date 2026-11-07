@@ -44,42 +44,7 @@
 /* ---------- Period filter ---------- */
 
 .periods {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
   margin-bottom: 12px;
-}
-
-.periods::-webkit-scrollbar {
-  display: none;
-}
-
-.period {
-  flex-shrink: 0;
-  height: 34px;
-  padding: 0 14px;
-  border: none;
-  border-radius: var(--radius-xl);
-  background: var(--color-bg-muted);
-  color: var(--color-text-secondary);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.period:hover {
-  color: var(--color-text);
-}
-
-.periodActive,
-.periodActive:hover {
-  background: var(--color-primary);
-  color: var(--color-text-on-primary);
 }
 
 .customRange {

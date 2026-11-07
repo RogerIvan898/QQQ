@@ -13,6 +13,7 @@ import {
   type SessionPeriod,
 } from 'features/game-sessions';
 import { useTelegramBackButton } from 'shared/lib/telegram';
+import { ChipGroup } from 'shared/ui/chip-group';
 import { cn } from 'shared/utils/cn';
 
 import { formatSignedTon } from '../lib/format';
@@ -110,23 +111,13 @@ export const HistoryPage = () => {
       </header>
 
       <div className={styles.scroll}>
-        <div className={styles.periods} role="tablist">
-          {PERIODS.map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={period === id}
-              onClick={() => setPeriod(id)}
-              className={cn(
-                styles.period,
-                period === id && styles.periodActive
-              )}
-            >
-              {i18n._(label)}
-            </button>
-          ))}
-        </div>
+        <ChipGroup
+          className={styles.periods}
+          items={PERIODS.map(([id, label]) => ({ id, label: i18n._(label) }))}
+          value={period}
+          onChange={setPeriod}
+          label={t`Period`}
+        />
 
         {period === 'custom' ? (
           <div className={styles.customRange}>

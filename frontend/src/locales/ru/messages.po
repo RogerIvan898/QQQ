@@ -396,6 +396,9 @@ msgstr "Способ оплаты"
 msgid "Pending"
 msgstr "В обработке"
 
+msgid "Period"
+msgstr "Период"
+
 msgid "Play"
 msgstr "Играть"
 
@@ -431,6 +434,12 @@ msgstr "Ривер"
 
 msgid "SB"
 msgstr "МБ"
+
+msgid "Scroll left"
+msgstr "Прокрутить влево"
+
+msgid "Scroll right"
+msgstr "Прокрутить вправо"
 
 msgid "Sender address"
 msgstr "Адрес отправителя"

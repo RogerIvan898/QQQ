@@ -1,0 +1,133 @@
+.root {
+  --fade: 36px;
+
+  position: relative;
+}
+
+.track {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 40px;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hidden chips fade out under the arrows instead of being cut sharply. */
+.fadeLeft .track {
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade));
+}
+
+.fadeRight .track {
+  mask-image: linear-gradient(
+    90deg,
+    #000 calc(100% - var(--fade)),
+    transparent 100%
+  );
+}
+
+.fadeLeft.fadeRight .track {
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 var(--fade),
+    #000 calc(100% - var(--fade)),
+    transparent 100%
+  );
+}
+
+.chip {
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-muted);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.chip:hover {
+  color: var(--color-text);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.chipActive,
+.chipActive:hover {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-bg-elevated);
+  box-shadow: 0 2px 8px var(--color-shadow);
+  color: var(--color-text);
+  cursor: pointer;
+  transform: translateY(-50%);
+  animation: arrowIn 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.arrow:hover {
+  border-color: var(--color-border-hover);
+}
+
+.arrow:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+.arrow:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.arrowLeft {
+  left: 0;
+}
+
+.arrowRight {
+  right: 0;
+}
+
+@keyframes arrowIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    scroll-behavior: auto;
+  }
+
+  .arrow {
+    animation: none;
+  }
+}
