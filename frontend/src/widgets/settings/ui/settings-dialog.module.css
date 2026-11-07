@@ -33,7 +33,7 @@
 }
 
 .langBtn:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -77,7 +77,7 @@
 }
 
 .iconBtn:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -117,7 +117,7 @@
 }
 
 .soundRow:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -222,34 +222,7 @@
 }
 
 .connectBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  height: 44px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary);
-  color: var(--color-text-on-primary);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: filter 0.15s ease;
-}
-
-.connectBtn:hover:not(:disabled) {
-  filter: brightness(1.1);
-}
-
-.connectBtn:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.connectBtn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+  composes: solid from '../../../shared/ui/button/solid-button.module.css';
 }
 
 .disconnectBtn {
@@ -261,8 +234,8 @@
   height: 38px;
   border: none;
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--color-danger, #ef4444) 12%, transparent);
-  color: var(--color-danger, #ef4444);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  color: var(--color-danger);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -270,11 +243,11 @@
 }
 
 .disconnectBtn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-danger, #ef4444) 22%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 22%, transparent);
 }
 
 .disconnectBtn:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 

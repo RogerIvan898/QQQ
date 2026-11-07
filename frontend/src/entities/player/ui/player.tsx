@@ -48,6 +48,8 @@ interface Props {
    * so a % update re-renders only the badge, not the whole seat.
    */
   equitySlot?: React.ReactNode;
+  /** Made-hand label under the stack ("Two pair"); hidden when folded. */
+  combinationSlot?: React.ReactNode;
 }
 
 const PlayerView = ({
@@ -66,6 +68,7 @@ const PlayerView = ({
   winId,
   collecting = false,
   equitySlot = null,
+  combinationSlot = null,
 }: Props) => {
   const { status, stack, name } = player;
   const hand = handOverride === undefined ? player.hand : handOverride;
@@ -156,6 +159,10 @@ const PlayerView = ({
             winAmount={winAmount}
             winId={winId}
           />
+
+          {!isFolded && combinationSlot && (
+            <div className={styles.combinationWrap}>{combinationSlot}</div>
+          )}
         </div>
 
         {player.committed > 0 && (

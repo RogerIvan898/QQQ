@@ -1,0 +1,73 @@
+/* Shared icon-only button looks. Consumers compose one variant and add
+   only positioning: `composes: floating from 'shared/ui/icon-button/...'`. */
+.base {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.base:hover {
+  color: var(--color-text);
+}
+
+.base:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.base:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 36px square with a frosted plate: controls floating over the table. */
+.floating {
+  composes: base;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-header);
+  backdrop-filter: blur(10px);
+}
+
+.floating:hover {
+  border-color: var(--color-border-hover);
+}
+
+/* 44px round: navigation in page headers. */
+.round {
+  composes: base;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.round:hover {
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+
+/* 32px round close / header action inside dialogs and sheets. */
+.close {
+  composes: base;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-bg-muted);
+  color: var(--color-text-muted);
+}
+
+.close:hover {
+  background: color-mix(in srgb, var(--color-bg-muted) 85%, white);
+}

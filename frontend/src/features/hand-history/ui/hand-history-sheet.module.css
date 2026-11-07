@@ -49,24 +49,7 @@
 }
 
 .close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
-
-.close:hover,
-.close:focus-visible {
-  color: var(--color-text);
-  background: color-mix(in srgb, var(--color-text) 6%, transparent);
-  outline: none;
+  composes: close from '../../../shared/ui/icon-button/icon-button.module.css';
 }
 
 .body {
@@ -77,7 +60,7 @@
 }
 
 /* Phones: full width under the top bar, shorter so most of the table shows. */
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .panel {
     left: calc(12px + var(--tg-safe-area-left));
     right: calc(12px + var(--tg-safe-area-right));
@@ -110,7 +93,11 @@
 .row:hover,
 .row:focus-visible {
   background: color-mix(in srgb, var(--color-text) 5%, transparent);
-  outline: none;
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
 }
 
 li + li .row {

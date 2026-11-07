@@ -23,12 +23,6 @@
   opacity: 0.72;
 }
 
-.player.sitOut .avatar {
-  background: linear-gradient(180deg, #888888, #667676);
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
 /* Phones and portrait tablets share the compact, vertical table layout. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .avatar {

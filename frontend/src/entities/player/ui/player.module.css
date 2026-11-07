@@ -33,6 +33,15 @@
   justify-content: center;
 }
 
+.combinationWrap {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 .stackLogo {
   width: 16px;
   height: 16px;
@@ -57,12 +66,6 @@
 .sitOut {
   opacity: 0.6;
   filter: grayscale(0.7);
-}
-
-.player.sitOut .avatar {
-  background: linear-gradient(180deg, #888888, #667676);
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Phones and portrait tablets share the compact, vertical table layout. */

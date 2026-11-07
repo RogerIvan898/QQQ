@@ -93,7 +93,7 @@
     0 0 18px color-mix(in srgb, var(--color-primary-active) 45%, transparent);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .badge {
     min-width: 92px;
     height: 32px;

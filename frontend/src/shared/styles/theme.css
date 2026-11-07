@@ -42,6 +42,8 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+
+  --focus-ring: var(--color-primary-light);
   --font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
   /* Selected / unselected look shared by option-like controls

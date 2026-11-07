@@ -47,36 +47,8 @@
 }
 
 .primaryBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  composes: solid from '../../../shared/ui/button/solid-button.module.css';
   gap: 6px;
-  width: 100%;
-  height: 52px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
-  color: var(--color-text-on-primary);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 0.2s,
-    opacity 0.2s;
-}
-
-.primaryBtn:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-}
-
-.primaryBtn:active:not(:disabled) {
-  background: var(--color-primary-active);
-}
-
-.primaryBtn:disabled {
-  background: var(--color-bg-muted);
-  color: var(--color-text-secondary);
-  cursor: not-allowed;
 }
 
 .primaryBtn:not(:disabled) svg {

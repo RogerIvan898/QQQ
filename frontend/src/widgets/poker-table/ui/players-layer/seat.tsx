@@ -6,6 +6,7 @@ import { gameModel } from 'entities/game';
 import { Player, type SeatDirection } from 'entities/player';
 
 import styles from './players-layer.module.css';
+import { SeatCombination } from './seat-combination';
 import { SeatEquity } from './seat-equity';
 
 interface Props {
@@ -105,6 +106,7 @@ const SeatView = ({
         winId={winId}
         collecting={collecting}
         equitySlot={equitySlot}
+        combinationSlot={<SeatCombination hand={hand} />}
       />
     </div>
   );

@@ -90,22 +90,7 @@
 }
 
 .iconBtn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 50%;
-  background: var(--color-bg-muted);
-  color: var(--color-text-disabled);
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.iconBtn:hover {
-  background: color-mix(in srgb, var(--color-bg-muted) 85%, white);
-  color: var(--color-text);
+  composes: close from '../icon-button/icon-button.module.css';
 }
 
 .body {

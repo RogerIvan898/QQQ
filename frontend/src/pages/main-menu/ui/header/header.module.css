@@ -98,7 +98,7 @@
 }
 
 .walletBtn:focus-visible {
-  outline: 2px solid var(--color-primary-light);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -132,63 +132,14 @@
 }
 
 .historyBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  color: var(--color-text-secondary);
-  transition:
-    color 0.2s ease,
-    background-color 0.2s ease,
-    transform 0.15s ease;
-}
-
-.historyBtn:hover {
-  color: var(--color-text);
-  background: color-mix(in srgb, var(--color-text) 8%, transparent);
-  transform: scale(1.1);
-}
-
-.historyBtn:active {
-  transform: scale(0.92);
-}
-
-.historyBtn:focus-visible {
-  outline: 2px solid var(--color-primary-light);
-  outline-offset: 2px;
+  composes: round from '../../../../shared/ui/icon-button/icon-button.module.css';
 }
 
 .settingsBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  composes: round from '../../../../shared/ui/icon-button/icon-button.module.css';
   /* Centered on the header (the avatar's center). It sits far from the
      balance row on wide screens, so lining it up with that row looks off. */
   align-self: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: transparent;
-  border: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  outline: none;
-  transition:
-    color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.settingsBtn:hover {
-  color: var(--color-text);
-  background: color-mix(in srgb, var(--color-text) 8%, transparent);
-  transform: scale(1.1);
-}
-
-.settingsBtn:active {
-  transform: scale(0.92);
 }
 
 /* Extend the 36px buttons to a ~44px tap target. */

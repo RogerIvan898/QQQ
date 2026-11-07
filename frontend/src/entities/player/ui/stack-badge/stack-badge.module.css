@@ -12,7 +12,7 @@
   min-width: clamp(88px, 18vw, 124px);
   max-width: clamp(108px, 22vw, 140px);
   padding: 7px 12px 8px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--color-bg-elevated);
   border: 1.5px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
   box-shadow: 0 4px 14px var(--color-shadow);

@@ -1,31 +1,11 @@
 import { createEvent, createStore } from 'effector';
 
-import type { CardType as Card } from 'entities/card';
 import { gameModel, SERVER_EVENTS } from 'entities/game';
 import { PlayerStatus } from 'entities/player';
 
+import { cardToInt as toInt } from '../lib/card-int';
 import { computeEquity } from '../lib/equity';
 import type { EquityRequest, EquityResponse } from '../lib/equity.worker';
-
-const RANKS = [
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  '10',
-  'J',
-  'Q',
-  'K',
-  'A',
-];
-const SUITS: Card['suit'][] = ['clubs', 'diamonds', 'hearts', 'spades'];
-
-const toInt = (card: Card) =>
-  RANKS.indexOf(card.rank) * 4 + SUITS.indexOf(card.suit);
 
 export interface EquityState {
   /** Seat → share of the pot, 0..1. */
