@@ -2,6 +2,7 @@ import { sample } from 'effector';
 import { createGate } from 'effector-react';
 
 import { gameModel } from 'entities/game';
+import { gameSessionsModel } from 'features/game-sessions';
 import { handHistoryModel } from 'features/hand-history';
 import { setTonConnectPaused } from 'shared/lib/ton-connect';
 
@@ -14,8 +15,14 @@ sample({
 });
 
 sample({
+  clock: GamePageGate.open,
+  fn: ({ roomId }) => roomId,
+  target: gameSessionsModel.sessionStarted,
+});
+
+sample({
   clock: GamePageGate.close,
-  target: gameModel.disconnectGame,
+  target: [gameSessionsModel.sessionEnded, gameModel.disconnectGame],
 });
 
 // The wallet bridge connection is not needed during play.

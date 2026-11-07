@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index';
 import { Route as SplatRouteImport } from './routes/$';
 import { Route as HistoryRouteImport } from './routes/history';
 import { Route as GameRoomIdRouteImport } from './routes/game.$roomId';
+import { Route as HistorySessionIdRouteImport } from './routes/history_.$sessionId';
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const GameRoomIdRoute = GameRoomIdRouteImport.update({
   path: '/game/$roomId',
   getParentRoute: () => rootRouteImport,
 } as any);
+const HistorySessionIdRoute = HistorySessionIdRouteImport.update({
+  id: '/history_/$sessionId',
+  path: '/history/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any);
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
   '/history': typeof HistoryRoute;
   '/game/$roomId': typeof GameRoomIdRoute;
+  '/history/$sessionId': typeof HistorySessionIdRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
   '/history': typeof HistoryRoute;
   '/game/$roomId': typeof GameRoomIdRoute;
+  '/history/$sessionId': typeof HistorySessionIdRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
@@ -53,13 +61,20 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute;
   '/history': typeof HistoryRoute;
   '/game/$roomId': typeof GameRoomIdRoute;
+  '/history_/$sessionId': typeof HistorySessionIdRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/' | '/$' | '/history' | '/game/$roomId';
+  fullPaths: '/' | '/$' | '/history' | '/game/$roomId' | '/history/$sessionId';
   fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '/$' | '/history' | '/game/$roomId';
-  id: '__root__' | '/' | '/$' | '/history' | '/game/$roomId';
+  to: '/' | '/$' | '/history' | '/game/$roomId' | '/history/$sessionId';
+  id:
+    | '__root__'
+    | '/'
+    | '/$'
+    | '/history'
+    | '/game/$roomId'
+    | '/history_/$sessionId';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -67,6 +82,7 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute;
   HistoryRoute: typeof HistoryRoute;
   GameRoomIdRoute: typeof GameRoomIdRoute;
+  HistorySessionIdRoute: typeof HistorySessionIdRoute;
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GameRoomIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/history_/$sessionId': {
+      id: '/history_/$sessionId';
+      path: '/history/$sessionId';
+      fullPath: '/history/$sessionId';
+      preLoaderRoute: typeof HistorySessionIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
@@ -107,6 +130,7 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   HistoryRoute: HistoryRoute,
   GameRoomIdRoute: GameRoomIdRoute,
+  HistorySessionIdRoute: HistorySessionIdRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

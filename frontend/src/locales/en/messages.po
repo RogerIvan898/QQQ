@@ -10,6 +10,12 @@ msgstr ""
 msgid "— or scan with Tonkeeper —"
 msgstr "— or scan with Tonkeeper —"
 
+msgid "30 Days"
+msgstr "30 Days"
+
+msgid "7 Days"
+msgstr "7 Days"
+
 msgid "Aces are taking their seats..."
 msgstr "Aces are taking their seats..."
 
@@ -24,6 +30,9 @@ msgstr "All"
 
 msgid "All in"
 msgstr "All in"
+
+msgid "All Time"
+msgstr "All Time"
 
 msgid "Amount"
 msgstr "Amount"
@@ -66,6 +75,12 @@ msgstr "Cancel"
 
 msgid "Cash"
 msgstr "Cash"
+
+msgid "Cash Game"
+msgstr "Cash Game"
+
+msgid "Cash out"
+msgstr "Cash out"
 
 msgid "Change wallet"
 msgstr "Change wallet"
@@ -139,6 +154,9 @@ msgstr "Couldn't load the page"
 msgid "Couldn't load transactions"
 msgstr "Couldn't load transactions"
 
+msgid "Custom"
+msgstr "Custom"
+
 msgid "Deposit"
 msgstr "Deposit"
 
@@ -152,6 +170,9 @@ msgstr "Deposit address is missing"
 msgid "Deposit TON"
 msgstr "Deposit TON"
 
+msgid "Deposits"
+msgstr "Deposits"
+
 msgid "Destination"
 msgstr "Destination"
 
@@ -163,6 +184,9 @@ msgstr "Disconnecting…"
 
 msgid "Double-check the TON address"
 msgstr "Double-check the TON address"
+
+msgid "Duration"
+msgstr "Duration"
 
 msgid "Enter a valid TON address"
 msgstr "Enter a valid TON address"
@@ -194,11 +218,23 @@ msgstr "Flop"
 msgid "Fold"
 msgstr "Fold"
 
+msgid "Format"
+msgstr "Format"
+
+msgid "From"
+msgstr "From"
+
 msgid "Full transfer link with address and amount."
 msgstr "Full transfer link with address and amount."
 
 msgid "Full transfer link with address, amount and memo."
 msgstr "Full transfer link with address, amount and memo."
+
+msgid "Game History"
+msgstr "Game History"
+
+msgid "Game Type"
+msgstr "Game Type"
 
 msgid "Hand at {time}"
 msgstr "Hand at {time}"
@@ -214,6 +250,12 @@ msgstr "Hand step"
 
 msgid "Hands"
 msgstr "Hands"
+
+msgid "Hands played"
+msgstr "Hands played"
+
+msgid "Hands Played"
+msgstr "Hands Played"
 
 msgid "Heads-Up"
 msgstr "Heads-Up"
@@ -278,11 +320,20 @@ msgstr "My Wallet"
 msgid "Need {missing} more"
 msgstr "Need {missing} more"
 
+msgid "Net Profit"
+msgstr "Net Profit"
+
 msgid "Next step"
 msgstr "Next step"
 
+msgid "No game sessions yet. Sit at a table to start one."
+msgstr "No game sessions yet. Sit at a table to start one."
+
 msgid "No hands at this table yet"
 msgstr "No hands at this table yet"
+
+msgid "No sessions in this period"
+msgstr "No sessions in this period"
 
 msgid "No transactions yet"
 msgstr "No transactions yet"
@@ -330,6 +381,9 @@ msgstr "Preflop"
 msgid "Previous step"
 msgstr "Previous step"
 
+msgid "Profit"
+msgstr "Profit"
+
 msgid "Quick add amount"
 msgstr "Quick add amount"
 
@@ -354,6 +408,18 @@ msgstr "SB"
 msgid "Sender address"
 msgstr "Sender address"
 
+msgid "Session Details"
+msgstr "Session Details"
+
+msgid "Session not found"
+msgstr "Session not found"
+
+msgid "Session Overview"
+msgstr "Session Overview"
+
+msgid "Sessions"
+msgstr "Sessions"
+
 msgid "Setting up the table..."
 msgstr "Setting up the table..."
 
@@ -375,12 +441,21 @@ msgstr "Sound off"
 msgid "Sound on"
 msgstr "Sound on"
 
+msgid "Stakes"
+msgstr "Stakes"
+
 #. placeholder {0}: session.roomId
 msgid "Table #{0}"
 msgstr "Table #{0}"
 
+msgid "Table format"
+msgstr "Table format"
+
 msgid "Table full"
 msgstr "Table full"
+
+msgid "Table ID"
+msgstr "Table ID"
 
 msgid "Tables"
 msgstr "Tables"
@@ -406,11 +481,20 @@ msgstr "The transfer was rejected by the network."
 msgid "The transfer was sent without the required memo. Contact support to get it credited."
 msgstr "The transfer was sent without the required memo. Contact support to get it credited."
 
+msgid "Time Played"
+msgstr "Time Played"
+
+msgid "To"
+msgstr "To"
+
 msgid "To end"
 msgstr "To end"
 
 msgid "To start"
 msgstr "To start"
+
+msgid "Today"
+msgstr "Today"
 
 msgid "TON address"
 msgstr "TON address"
@@ -420,6 +504,9 @@ msgstr "Tonkeeper / Telegram Wallet"
 
 msgid "Top up"
 msgstr "Top up"
+
+msgid "Total Buy-in"
+msgstr "Total Buy-in"
 
 msgid "Transaction"
 msgstr "Transaction"
@@ -474,11 +561,17 @@ msgctxt "transaction"
 msgid "Withdrawal"
 msgstr "Withdrawal"
 
+msgid "Withdrawals"
+msgstr "Withdrawals"
+
 msgid "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
 msgstr "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
 
 msgid "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
 msgstr "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
+
+msgid "Yesterday"
+msgstr "Yesterday"
 
 msgid "You"
 msgstr "You"
