@@ -84,3 +84,20 @@
     margin-top: -10px;
   }
 }
+
+/* Portrait tablets: same compact layout as phones, but the table is much
+   bigger there, so seat elements step up ~1.3x. */
+@media (orientation: portrait) and (min-width: 769px) and (max-width: 1100px) {
+  .mainContainer {
+    width: 84px;
+  }
+
+  .dealerWrap {
+    --dealer-distance: 62px;
+  }
+
+  .avatarWrap {
+    width: 68px;
+    height: 68px;
+  }
+}

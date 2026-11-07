@@ -150,3 +150,26 @@
     --bet-slide: 24px;
   }
 }
+
+/* Portrait tablets: same compact layout as phones, but the table is much
+   bigger there, so seat elements step up ~1.3x. */
+@media (orientation: portrait) and (min-width: 769px) and (max-width: 1100px) {
+  .amountBadge {
+    height: 34px;
+    padding: 0 14px;
+    gap: 6px;
+  }
+
+  .amountValue {
+    font-size: 17px;
+  }
+
+  .amountLogo {
+    width: 18px;
+    height: 18px;
+  }
+
+  .betArea {
+    --bet-base-distance: clamp(72px, 18cqmin, 110px);
+  }
+}

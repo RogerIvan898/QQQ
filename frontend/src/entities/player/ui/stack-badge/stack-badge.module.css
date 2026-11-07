@@ -132,3 +132,21 @@
     font-size: 13px;
   }
 }
+
+/* Portrait tablets: same compact layout as phones, but the table is much
+   bigger there, so seat elements step up ~1.3x. */
+@media (orientation: portrait) and (min-width: 769px) and (max-width: 1100px) {
+  .frame {
+    min-width: 100px;
+    max-width: 124px;
+    padding: 6px 10px 7px;
+  }
+
+  .name {
+    font-size: 14px;
+  }
+
+  .stackAmount {
+    font-size: 17px;
+  }
+}
