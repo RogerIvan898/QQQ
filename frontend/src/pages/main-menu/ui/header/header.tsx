@@ -3,7 +3,12 @@ import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { Link } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
-import { History, Minus, Plus, Settings } from 'lucide-react';
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  History,
+  Settings,
+} from 'lucide-react';
 
 import { $currentLocale } from 'shared/lib/i18n';
 import { $tonWallet } from 'shared/lib/ton-connect';
@@ -62,28 +67,6 @@ export const Header = ({
               <Logo className={styles.tonIcon} />
               <span className={styles.balanceValue}>{formattedBalance}</span>
             </div>
-
-            <div className={styles.walletActions}>
-              <button
-                type="button"
-                className={cn(styles.actionBtn, styles.depositBtn)}
-                onClick={onDepositClick}
-                aria-label={t`Deposit`}
-                title={t`Deposit`}
-              >
-                <Plus size={20} strokeWidth={2.5} />
-              </button>
-
-              <button
-                type="button"
-                className={cn(styles.actionBtn, styles.withdrawBtn)}
-                onClick={onWithdrawClick}
-                aria-label={t`Withdraw`}
-                title={t`Withdraw`}
-              >
-                <Minus size={20} strokeWidth={2.5} />
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -106,6 +89,26 @@ export const Header = ({
           title={t`Settings`}
         >
           <Settings size={28} />
+        </button>
+      </div>
+
+      <div className={styles.walletActions}>
+        <button
+          type="button"
+          className={cn(styles.actionBtn, styles.depositBtn)}
+          onClick={onDepositClick}
+        >
+          <ArrowDownToLine size={16} strokeWidth={2.5} />
+          {t`Deposit`}
+        </button>
+
+        <button
+          type="button"
+          className={cn(styles.actionBtn, styles.withdrawBtn)}
+          onClick={onWithdrawClick}
+        >
+          <ArrowUpFromLine size={16} strokeWidth={2.5} />
+          {t`Withdraw`}
         </button>
       </div>
 

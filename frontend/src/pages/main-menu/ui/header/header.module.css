@@ -1,4 +1,6 @@
 .header {
+  flex-wrap: wrap;
+  row-gap: 12px;
   position: sticky;
   top: 0;
   z-index: 50;
@@ -103,47 +105,54 @@
 
 .walletActions {
   display: flex;
-  gap: 6px;
+  flex-basis: 100%;
+  gap: 8px;
 }
 
 .actionBtn {
-  position: relative;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  border: none;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   outline: none;
-  transition: transform 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
 }
 
-.actionBtn:hover {
-  transform: translateY(-1px);
+.actionBtn:focus-visible {
+  outline: 2px solid var(--color-primary-light);
+  outline-offset: 2px;
 }
 
 .actionBtn:active {
-  transform: scale(0.92);
+  transform: scale(0.97);
 }
 
 .depositBtn {
-  color: var(--color-success);
-  background: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-text-on-primary);
+  background: var(--color-primary);
 }
 
 .depositBtn:hover {
-  background: color-mix(in srgb, var(--color-success) 28%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 85%, #fff);
 }
 
 .withdrawBtn {
-  color: var(--color-danger);
-  background: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  color: var(--color-text);
+  background: var(--color-bg-muted);
 }
 
 .withdrawBtn:hover {
-  background: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  background: color-mix(in srgb, var(--color-text) 12%, var(--color-bg-muted));
 }
 
 .headerRight {
@@ -213,12 +222,6 @@
 }
 
 /* Extend the 36px buttons to a ~44px tap target. */
-.actionBtn::after {
-  content: '';
-  position: absolute;
-  inset: -4px -3px;
-}
-
 .settingsBtn svg {
   width: 32px;
   height: 32px;
