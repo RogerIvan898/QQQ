@@ -11,8 +11,6 @@ import {
  * does not and is sampled.
  */
 export const EXACT_EVAL_LIMIT = 4_000_000;
-/** Below this, exact is instant (flop/turn/river) and needs no quick preview. */
-export const INSTANT_EVAL_LIMIT = 200_000;
 export const SAMPLES = 40_000;
 
 export type EquityMode = 'auto' | 'sample';

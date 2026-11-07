@@ -1,9 +1,4 @@
-import {
-  choose,
-  computeEquity,
-  EXACT_EVAL_LIMIT,
-  INSTANT_EVAL_LIMIT,
-} from './equity';
+import { computeEquity } from './equity';
 
 export interface EquityRequest {
   id: number;
@@ -14,30 +9,28 @@ export interface EquityRequest {
 export interface EquityResponse {
   id: number;
   equities: number[];
-  /** Sampled estimates come first for slow spots, then the exact answer. */
   exact: boolean;
+  /** Absolute times (timeOrigin-based ms) for profiling: request picked up,
+   *  computation start and end. */
+  timing: { received: number; start: number; end: number };
 }
 
-// Runs off the main thread. Heads-up preflop is enumerated exactly (~3.4M
-// evaluations, up to a few seconds on a slow phone), so a quick sampled
-// estimate is sent first and replaced when the exact numbers are ready.
+const now = () => performance.timeOrigin + performance.now();
+
+// Runs off the main thread, one answer per request: exact when affordable,
+// otherwise a single sampled estimate. The slowest spot (heads-up preflop,
+// ~3.4M evaluations) takes ~140 ms on desktop, well inside the pause before
+// the flop, so a quick sampled preview is not worth its extra work and the
+// extra main-thread message it costs.
 self.onmessage = (event: MessageEvent<EquityRequest>) => {
+  const received = now();
   const { id, hands, board } = event.data;
-  const deckLeft = 52 - board.length - hands.length * 2;
-  const evaluations = choose(deckLeft, 5 - board.length) * hands.length;
-  const slowExact =
-    evaluations > INSTANT_EVAL_LIMIT && evaluations <= EXACT_EVAL_LIMIT;
+  const start = now();
+  const result = computeEquity(hands, board);
 
-  if (slowExact) {
-    self.postMessage({
-      id,
-      ...computeEquity(hands, board, 'sample'),
-    } satisfies EquityResponse);
-  }
-
-  // Exact when affordable, otherwise the (single) sampled estimate.
   self.postMessage({
     id,
-    ...computeEquity(hands, board),
+    ...result,
+    timing: { received, start, end: now() },
   } satisfies EquityResponse);
 };

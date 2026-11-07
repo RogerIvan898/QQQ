@@ -30,7 +30,7 @@ const toInt = (card: Card) =>
 export interface EquityState {
   /** Seat → share of the pot, 0..1. */
   bySeat: Record<number, number>;
-  /** Sampled estimates (multiway preflop, or a heads-up preview) are shown
+  /** Sampled estimates (3–5-way preflop) are shown
    *  as whole percent: their ±0.5% noise makes a decimal meaningless. */
   exact: boolean;
 }
@@ -213,6 +213,9 @@ gameModel.incomingEvent.watch(event => {
       if (active || $equity.getState()) {
         stop();
       }
+      // Start the worker ahead of the first all-in: loading its module takes
+      // ~0.4 s on desktop and over a second on a slow phone.
+      getWorker();
       break;
   }
 });

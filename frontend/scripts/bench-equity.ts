@@ -23,6 +23,11 @@ interface Bench {
     players: number;
     ms: number;
     exact: boolean;
+    cold: boolean;
+    wait: number;
+    compute: number;
+    delivery: number;
+    finishedAt: number;
   }[];
   longTasks: { start: number; duration: number }[];
   loaf: { start: number; duration: number; scripts: string[] }[];
@@ -57,7 +62,7 @@ const instrument = () => {
     const worker = new NativeWorker(url, options);
     const sent = new Map<
       number,
-      { t: number; board: number; players: number }
+      { t: number; abs: number; board: number; players: number }
     >();
     const post = worker.postMessage.bind(worker);
 
@@ -68,22 +73,35 @@ const instrument = () => {
     }) => {
       sent.set(message.id, {
         t: performance.now(),
+        abs: performance.timeOrigin + performance.now(),
         board: message.board.length,
         players: message.hands.length,
       });
       post(message);
     };
     worker.addEventListener('message', event => {
-      const data = event.data as { id: number; exact: boolean };
+      const data = event.data as {
+        id: number;
+        exact: boolean;
+        timing?: { received: number; start: number; end: number };
+      };
       const request = sent.get(data.id);
 
       if (request) {
+        const arrived = performance.timeOrigin + performance.now();
+        const timing = data.timing;
+
         bench.calc.push({
           id: data.id,
           board: request.board,
           players: request.players,
           ms: performance.now() - request.t,
           exact: data.exact,
+          cold: data.id === Math.min(...sent.keys()),
+          wait: timing ? timing.received - request.abs : NaN,
+          compute: timing ? timing.end - timing.start : NaN,
+          delivery: timing ? arrived - timing.end : NaN,
+          finishedAt: timing ? timing.end - request.abs : NaN,
         });
       }
     });
@@ -275,6 +293,23 @@ const runAt = async (rate: number) => {
     `runouts: ${byBoard(0).length} started, ${bench.riversShown} reached the river on screen`
   );
   console.log(`equity preflop: ${stats(byBoard(0))}`);
+  console.log('  preflop breakdown (ms from request):');
+  for (const id of new Set(
+    bench.calc.filter(c => c.board === 0).map(c => c.id)
+  )) {
+    const parts = bench.calc.filter(c => c.id === id);
+    const f = (n: number) => n.toFixed(0).padStart(4);
+    console.log(
+      `    #${id} ${parts[0].players}p${parts[0].cold ? ' cold' : '     '}` +
+        ` | worker pickup ${f(parts[0].wait)}` +
+        parts
+          .map(
+            c =>
+              ` | ${c.exact ? 'exact ' : 'sample'} compute ${f(c.compute)} done@${f(c.finishedAt)} msg ${f(c.delivery)} shown@${f(c.ms)}`
+          )
+          .join('')
+    );
+  }
   console.log(`equity flop:    ${stats(byBoard(3))}`);
   console.log(`equity turn:    ${stats(byBoard(4))}`);
   console.log(`equity river:   ${stats(byBoard(5))}`);
