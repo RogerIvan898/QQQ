@@ -20,6 +20,7 @@ import {
 import { ActionBadge } from './action-badge';
 import { BetBadge } from './bet-badge';
 import { DealerButton } from './dealer-button';
+import { EquityBadge } from './equity-badge';
 import { PlayerAvatar } from './player-avatar';
 import { PlayerCards } from './player-cards';
 import styles from './player.module.css';
@@ -43,6 +44,8 @@ interface Props {
   reveal?: boolean;
   winAmount?: number;
   winId?: number;
+  /** All-in runout equity (0..1); undefined/null when not shown. */
+  equity?: number | null;
 }
 
 const PlayerView = ({
@@ -60,6 +63,7 @@ const PlayerView = ({
   winAmount,
   winId,
   collecting = false,
+  equity = null,
 }: Props) => {
   const { status, stack, name } = player;
 
@@ -116,6 +120,8 @@ const PlayerView = ({
             folded={isFolded}
             currentPlayer={currentPlayer}
           />
+
+          {equity !== null && !isFolded && <EquityBadge equity={equity} />}
 
           {dealer && (
             <div className={styles.dealerWrap}>

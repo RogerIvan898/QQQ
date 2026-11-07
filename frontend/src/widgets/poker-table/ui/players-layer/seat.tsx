@@ -4,6 +4,7 @@ import { useStoreMap, useUnit } from 'effector-react';
 
 import { gameModel } from 'entities/game';
 import { Player, type SeatDirection } from 'entities/player';
+import { equityModel } from 'features/equity';
 
 import styles from './players-layer.module.css';
 
@@ -67,6 +68,11 @@ const SeatView = ({
     fn: (holes, [index]) => holes[index] ?? null,
   });
   const [round, myCards] = useUnit([gameModel.$round, gameModel.$myCards]);
+  const equity = useStoreMap({
+    store: equityModel.$equity,
+    keys: [seat],
+    fn: (equities, [index]) => equities?.[index] ?? null,
+  });
 
   if (!player) return null;
 
@@ -102,6 +108,7 @@ const SeatView = ({
         winAmount={winAmount}
         winId={winId}
         collecting={collecting}
+        equity={equity}
       />
     </div>
   );
