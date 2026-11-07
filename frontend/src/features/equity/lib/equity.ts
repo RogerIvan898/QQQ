@@ -1,8 +1,22 @@
 import { evaluate7 } from './evaluator';
 
-/** Above this many remaining boards we sample instead of enumerating. */
-export const EXACT_LIMIT = 50_000;
+/**
+ * Enumerate every runout while it costs at most this many hand evaluations
+ * (boards × players). Heads-up preflop (1.7M boards × 2) fits; 3-way preflop
+ * does not and is sampled.
+ */
+export const EXACT_EVAL_LIMIT = 4_000_000;
+/** Below this, exact is instant (flop/turn/river) and needs no quick preview. */
+export const INSTANT_EVAL_LIMIT = 200_000;
 export const SAMPLES = 40_000;
+
+export type EquityMode = 'auto' | 'sample';
+
+export interface EquityResult {
+  equities: number[];
+  /** `false` for a sampled (Monte Carlo) estimate, good to about ±0.5%. */
+  exact: boolean;
+}
 
 const cardsRemaining = (dead: Set<number>) => {
   const deck: number[] = [];
@@ -16,7 +30,7 @@ const cardsRemaining = (dead: Set<number>) => {
   return deck;
 };
 
-const choose = (n: number, k: number) => {
+export const choose = (n: number, k: number) => {
   let result = 1;
 
   for (let index = 1; index <= k; index += 1) {
@@ -41,7 +55,11 @@ const prng = (seed: number) => () => {
  * (ties split). `hands` are two-card arrays, `board` 0–5 cards; returns
  * fractions summing to 1.
  */
-export const computeEquity = (hands: number[][], board: number[]) => {
+export const computeEquity = (
+  hands: number[][],
+  board: number[],
+  mode: EquityMode = 'auto'
+): EquityResult => {
   const missing = 5 - board.length;
   const dead = new Set([...board, ...hands.flat()]);
   const deck = cardsRemaining(dead);
@@ -90,11 +108,15 @@ export const computeEquity = (hands: number[][], board: number[]) => {
   };
 
   let total = 0;
+  let sampled = false;
 
   if (missing === 0) {
     settle([]);
     total = 1;
-  } else if (choose(deck.length, missing) <= EXACT_LIMIT) {
+  } else if (
+    mode === 'auto' &&
+    choose(deck.length, missing) * hands.length <= EXACT_EVAL_LIMIT
+  ) {
     const runout = new Uint8Array(missing);
     const walk = (start: number, depth: number) => {
       if (depth === missing) {
@@ -132,7 +154,11 @@ export const computeEquity = (hands: number[][], board: number[]) => {
     }
 
     total = SAMPLES;
+    sampled = true;
   }
 
-  return Array.from(wins, value => value / total);
+  return {
+    equities: Array.from(wins, value => value / total),
+    exact: !sampled,
+  };
 };

@@ -71,8 +71,12 @@ const SeatView = ({
   const equity = useStoreMap({
     store: equityModel.$equity,
     keys: [seat],
-    fn: (equities, [index]) => equities?.[index] ?? null,
+    fn: (equity, [index]) => equity?.bySeat[index] ?? null,
   });
+  const equityExact = useStoreMap(
+    equityModel.$equity,
+    equity => equity?.exact ?? true
+  );
 
   if (!player) return null;
 
@@ -109,6 +113,7 @@ const SeatView = ({
         winId={winId}
         collecting={collecting}
         equity={equity}
+        equityExact={equityExact}
       />
     </div>
   );

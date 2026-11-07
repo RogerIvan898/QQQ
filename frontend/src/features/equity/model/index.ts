@@ -1,1 +1,1 @@
-export { $equity } from './equity';
+export { $equity, type EquityState } from './equity';

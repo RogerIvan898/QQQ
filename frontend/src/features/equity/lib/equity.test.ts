@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 
 import { computeEquity } from './equity';
+
+const eq = (...args: Parameters<typeof computeEquity>) =>
+  computeEquity(...args).equities;
 import { evaluate7 } from './evaluator';
 
 const RANKS = '23456789TJQKA';
@@ -41,14 +44,14 @@ assert.equal(
 
 // ---- equity ----
 // River: board decides, no randomness.
-const river = computeEquity(
+const river = eq(
   [hand('Ah', 'Ad'), hand('Kh', 'Kd')],
   hand('2c', '7s', '9d', 'Jc', '3h')
 );
 assert.deepEqual(river, [1, 0]);
 
 // Turn, exact: AA vs KK on a dry board — KK has 2 outs of 44.
-const turn = computeEquity(
+const turn = eq(
   [hand('Ah', 'Ad'), hand('Kh', 'Kd')],
   hand('2c', '7s', '9d', 'Jc')
 );
@@ -56,18 +59,28 @@ near(turn[1], 2 / 44, 1e-9);
 near(turn[0] + turn[1], 1, 1e-9);
 
 // Chopped board: both play the royal on the table.
-const chop = computeEquity(
+const chop = eq(
   [hand('2h', '3d'), hand('4h', '5d')],
   hand('As', 'Ks', 'Qs', 'Js', 'Ts')
 );
 assert.deepEqual(chop, [0.5, 0.5]);
 
-// Preflop, sampled: AA vs KK is ~81.9% / ~18.1%.
+// Heads-up preflop is enumerated exactly: AA vs KK ~82%, mirror hands 50/50.
 const preflop = computeEquity([hand('Ah', 'Ad'), hand('Kh', 'Kd')], []);
-near(preflop[0], 0.819, 0.01);
+assert.equal(preflop.exact, true);
+near(preflop.equities[0], 0.82, 0.01);
+assert.deepEqual(eq([hand('Ah', 'Kh'), hand('Ad', 'Kd')], []), [0.5, 0.5]);
+
+// Multiway preflop is sampled and says so.
+assert.equal(
+  computeEquity([hand('Ah', 'Kh'), hand('Qs', 'Qd'), hand('7c', '8c')], [])
+    .exact,
+  false
+);
+near(eq([hand('Ah', 'Ad'), hand('Kh', 'Kd')], [], 'sample')[0], 0.82, 0.01);
 
 // Three-way sums to 1.
-const threeWay = computeEquity(
+const threeWay = eq(
   [hand('Ah', 'Kh'), hand('Qs', 'Qd'), hand('7c', '8c')],
   hand('2h', '9c', 'Td')
 );
@@ -98,7 +111,7 @@ for (const board of [
   hand('4c', 'Th', 'Jh'),
   hand('4c', 'Th', 'Jh', '2c'),
 ]) {
-  const result = computeEquity(nine, board);
+  const result = eq(nine, board);
 
   assert.equal(result.length, 9);
   near(sum(result), 1, 1e-9);
@@ -107,18 +120,15 @@ for (const board of [
 
 // River: JT makes two pair and takes it all.
 assert.deepEqual(
-  computeEquity(nine, hand('4c', 'Th', 'Jh', '2c', '9c')),
+  eq(nine, hand('4c', 'Th', 'Jh', '2c', '9c')),
   [0, 0, 0, 1, 0, 0, 0, 0, 0]
 );
 
 // Four-way chop when the board plays.
 assert.deepEqual(
-  computeEquity(
+  eq(
     [hand('2h', '3d'), hand('4h', '5d'), hand('6h', '7d'), hand('8h', '9d')],
     hand('As', 'Ks', 'Qs', 'Js', 'Ts')
   ),
   [0.25, 0.25, 0.25, 0.25]
 );
-
-// Mirror hands are a coin flip (within sampling noise).
-near(computeEquity([hand('Ah', 'Kh'), hand('Ad', 'Kd')], [])[0], 0.5, 0.01);

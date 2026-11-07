@@ -33,31 +33,39 @@ const straightHigh = (mask: number) => {
   return -1;
 };
 
-/** Packs up to five ranks (highest first) into 4 bits each. */
-const kickers = (ranks: number[]) => {
-  let value = 0;
+/**
+ * Score = category in bits 20+, then five 4-bit rank slots, highest first.
+ * Built without arrays: this runs millions of times per equity request.
+ */
+const withCategory = (category: Category, slots: number) =>
+  (category << CATEGORY_SHIFT) | slots;
 
-  for (let index = 0; index < 5; index += 1) {
-    value = (value << 4) | (ranks[index] ?? 0);
-  }
+/** Appends one rank to the packed slots. */
+const push = (slots: number, rank: number) => (slots << 4) | rank;
 
-  return value;
-};
+/**
+ * Appends the top `limit` ranks of `mask` (skipping up to two ranks), then
+ * pads so exactly five slots are used in total (`used` already taken).
+ */
+const pushTop = (
+  slots: number,
+  used: number,
+  mask: number,
+  limit: number,
+  skip = -1,
+  skip2 = -1
+) => {
+  let value = slots;
+  let taken = 0;
 
-const score = (category: Category, ranks: number[]) =>
-  (category << CATEGORY_SHIFT) | kickers(ranks);
-
-/** Ranks present in a bitmask, highest first, at most `limit`. */
-const topRanks = (mask: number, limit: number, skip = -1, skip2 = -1) => {
-  const result: number[] = [];
-
-  for (let rank = 12; rank >= 0 && result.length < limit; rank -= 1) {
+  for (let rank = 12; rank >= 0 && taken < limit; rank -= 1) {
     if (mask & (1 << rank) && rank !== skip && rank !== skip2) {
-      result.push(rank);
+      value = push(value, rank);
+      taken += 1;
     }
   }
 
-  return result;
+  return value << (4 * (5 - used - taken));
 };
 
 const rankCounts = new Uint8Array(13);
@@ -94,7 +102,7 @@ export const evaluate7 = (cards: ArrayLike<number>) => {
     const high = straightHigh(flushMask);
 
     if (high >= 0) {
-      return score(Category.StraightFlush, [high]);
+      return withCategory(Category.StraightFlush, push(0, high) << 16);
     }
   }
 
@@ -125,38 +133,49 @@ export const evaluate7 = (cards: ArrayLike<number>) => {
   }
 
   if (quads >= 0) {
-    return score(Category.Quads, [quads, ...topRanks(rankMask, 1, quads)]);
+    return withCategory(
+      Category.Quads,
+      pushTop(push(0, quads), 1, rankMask, 1, quads)
+    );
   }
 
   if (trips >= 0 && (pair >= 0 || trips2 >= 0)) {
-    return score(Category.FullHouse, [trips, Math.max(pair, trips2)]);
+    return withCategory(
+      Category.FullHouse,
+      push(push(0, trips), Math.max(pair, trips2)) << 12
+    );
   }
 
   if (flushMask) {
-    return score(Category.Flush, topRanks(flushMask, 5));
+    return withCategory(Category.Flush, pushTop(0, 0, flushMask, 5));
   }
 
   const high = straightHigh(rankMask);
 
   if (high >= 0) {
-    return score(Category.Straight, [high]);
+    return withCategory(Category.Straight, push(0, high) << 16);
   }
 
   if (trips >= 0) {
-    return score(Category.Trips, [trips, ...topRanks(rankMask, 2, trips)]);
+    return withCategory(
+      Category.Trips,
+      pushTop(push(0, trips), 1, rankMask, 2, trips)
+    );
   }
 
   if (pair >= 0 && pair2 >= 0) {
-    return score(Category.TwoPair, [
-      pair,
-      pair2,
-      ...topRanks(rankMask, 1, pair, pair2),
-    ]);
+    return withCategory(
+      Category.TwoPair,
+      pushTop(push(push(0, pair), pair2), 2, rankMask, 1, pair, pair2)
+    );
   }
 
   if (pair >= 0) {
-    return score(Category.Pair, [pair, ...topRanks(rankMask, 3, pair)]);
+    return withCategory(
+      Category.Pair,
+      pushTop(push(0, pair), 1, rankMask, 3, pair)
+    );
   }
 
-  return score(Category.HighCard, topRanks(rankMask, 5));
+  return withCategory(Category.HighCard, pushTop(0, 0, rankMask, 5));
 };

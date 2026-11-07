@@ -27,13 +27,18 @@ const SUITS: Card['suit'][] = ['clubs', 'diamonds', 'hearts', 'spades'];
 const toInt = (card: Card) =>
   RANKS.indexOf(card.rank) * 4 + SUITS.indexOf(card.suit);
 
-const equityChanged = createEvent<Record<number, number> | null>();
+export interface EquityState {
+  /** Seat → share of the pot, 0..1. */
+  bySeat: Record<number, number>;
+  /** Sampled estimates (multiway preflop, or a heads-up preview) are shown
+   *  as whole percent: their ±0.5% noise makes a decimal meaningless. */
+  exact: boolean;
+}
 
-/**
- * Seat → share of the pot (0..1) while an all-in runout is being dealt;
- * `null` the rest of the time.
- */
-export const $equity = createStore<Record<number, number> | null>(null).on(
+const equityChanged = createEvent<EquityState | null>();
+
+/** Equity while an all-in runout is being dealt; `null` the rest of the time. */
+export const $equity = createStore<EquityState | null>(null).on(
   equityChanged,
   (_, equity) => equity
 );
@@ -70,11 +75,12 @@ const getWorker = () => {
         return;
       }
 
-      equityChanged(
-        Object.fromEntries(
+      equityChanged({
+        bySeat: Object.fromEntries(
           pendingSeats.map((seat, index) => [seat, event.data.equities[index]])
-        )
-      );
+        ),
+        exact: event.data.exact,
+      });
     };
   } catch {
     worker = null;
@@ -118,13 +124,14 @@ const recalculate = () => {
     target.postMessage(request);
   } else {
     // No worker support: compute inline (rare, older WebViews).
-    const equities = computeEquity(request.hands, request.board);
+    const result = computeEquity(request.hands, request.board);
 
-    equityChanged(
-      Object.fromEntries(
-        pendingSeats.map((seat, index) => [seat, equities[index]])
-      )
-    );
+    equityChanged({
+      bySeat: Object.fromEntries(
+        pendingSeats.map((seat, index) => [seat, result.equities[index]])
+      ),
+      exact: result.exact,
+    });
   }
 };
 

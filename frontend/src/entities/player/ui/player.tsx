@@ -46,6 +46,8 @@ interface Props {
   winId?: number;
   /** All-in runout equity (0..1); undefined/null when not shown. */
   equity?: number | null;
+  /** Exact values get one decimal; sampled estimates are whole percent. */
+  equityExact?: boolean;
 }
 
 const PlayerView = ({
@@ -64,6 +66,7 @@ const PlayerView = ({
   winId,
   collecting = false,
   equity = null,
+  equityExact = true,
 }: Props) => {
   const { status, stack, name } = player;
 
@@ -121,7 +124,9 @@ const PlayerView = ({
             currentPlayer={currentPlayer}
           />
 
-          {equity !== null && !isFolded && <EquityBadge equity={equity} />}
+          {equity !== null && !isFolded && (
+            <EquityBadge equity={equity} decimals={equityExact ? 1 : 0} />
+          )}
 
           {dealer && (
             <div className={styles.dealerWrap}>
