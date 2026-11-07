@@ -6,14 +6,26 @@
   justify-content: center;
   padding: var(--tg-safe-area-top) var(--tg-safe-area-right)
     var(--tg-safe-area-bottom) var(--tg-safe-area-left);
-  background: var(--color-overlay);
+  /* A soft vignette rather than a flat veil: the centre stays a touch
+     lighter, so the panel reads as lifted off the page. */
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--color-overlay) 70%, transparent) 0%,
+    var(--color-overlay) 75%
+  );
   backdrop-filter: blur(8px);
   /* Layering: action panel (900) < our dialogs < TonConnect modal (1000),
      so dialogs can't be clicked through and the wallet modal opens on top. */
   z-index: 950;
+  animation: overlayIn 0.2s ease-out;
+}
+
+.overlayClosing {
+  animation: overlayOut 0.2s ease-in forwards;
 }
 
 .panel {
+  position: relative;
   width: 440px;
   max-width: calc(100vw - 32px);
   max-height: calc(
@@ -21,38 +33,92 @@
   );
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-surface);
+  padding: 22px 24px 24px;
+  /* Lit from above: a faint primary tint at the top fading into the surface. */
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-primary) 7%, transparent) 0%,
+      transparent 120px
+    ),
+    var(--color-bg-surface);
   border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-lg);
-  padding: 24px;
+  border-radius: var(--radius-xl);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-text) 8%, transparent),
+    0 24px 64px rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.3);
   color: var(--color-text);
-  animation: modalIn 0.2s ease-out;
+  outline: none;
   overflow: hidden;
+  animation: modalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.panelClosing {
+  animation: modalOut 0.2s ease-in forwards;
 }
 
 /* variant: bottom — только на мобильном */
 @media (max-width: 600px) {
-  .bottom {
-    align-self: flex-end;
-  }
-
   .overlay:has(.bottom) {
     align-items: flex-end;
     padding: var(--tg-safe-area-top) 0 0;
   }
 
   .bottom {
+    align-self: flex-end;
     width: 100%;
     max-width: 100vw;
     max-height: calc(100dvh - var(--tg-safe-area-top));
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    margin: 0;
+    padding: 8px 20px max(32px, calc(20px + var(--tg-safe-area-bottom)));
     border-bottom: none;
     border-left: none;
     border-right: none;
-    margin: 0;
-    padding: 24px 20px max(40px, calc(24px + var(--tg-safe-area-bottom)));
-    animation: sheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--color-text) 8%, transparent),
+      0 -12px 40px rgba(0, 0, 0, 0.45);
+    animation: sheetSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
+  .bottom.panelClosing {
+    animation: sheetSlideDown 0.2s ease-in forwards;
+  }
+
+  /* Follow the finger 1:1 while dragging; ease back only on release. */
+  .bottom.dragging {
+    transition: none;
+  }
+}
+
+/* Grab handle: shows the sheet can be swiped down; only drawn on phones. */
+.grabber {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .grabber {
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+    margin: 0 -20px 6px;
+    padding: 4px 0 8px;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .header {
+    touch-action: none;
+  }
+}
+
+.grabberBar {
+  width: 40px;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text) 22%, transparent);
 }
 
 .header {
@@ -60,8 +126,10 @@
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  margin-bottom: 20px;
   gap: 8px;
+  margin: 0 -24px 18px;
+  padding: 0 24px 16px;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .headerSide {
@@ -85,8 +153,12 @@
 .title {
   margin: 0;
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.3;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .iconBtn {
@@ -102,19 +174,52 @@
 }
 
 @media (max-width: 600px) {
+  .header {
+    margin: 0 -20px 16px;
+    padding: 0 20px 14px;
+  }
+
   .title {
-    font-size: 20px;
+    font-size: 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .overlayClosing,
+  .panel,
+  .panelClosing {
+    animation-duration: 0.01ms;
+  }
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes overlayOut {
+  to {
+    opacity: 0;
   }
 }
 
 @keyframes modalIn {
   from {
     opacity: 0;
-    transform: translateY(15px) scale(0.96);
+    transform: translateY(12px) scale(0.97);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalOut {
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
   }
 }
 
@@ -124,5 +229,11 @@
   }
   to {
     transform: translateY(0);
+  }
+}
+
+@keyframes sheetSlideDown {
+  to {
+    transform: translateY(100%);
   }
 }
