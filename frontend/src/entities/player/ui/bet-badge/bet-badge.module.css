@@ -30,17 +30,10 @@
   height: 40px;
   padding: 0 18px;
   border-radius: 100px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-bg-elevated) 95%, white) 0%,
-    var(--color-bg-elevated) 100%
-  );
-  border: 1.5px solid
-    color-mix(in srgb, var(--color-primary) 45%, var(--color-border-strong));
-  box-shadow:
-    0 6px 18px var(--color-shadow),
-    0 0 20px color-mix(in srgb, var(--color-primary) 28%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 12%, transparent);
+  /* Quiet translucent pill (what the pot used to look like). */
+  background: color-mix(in srgb, var(--color-bg) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-text) 18%, transparent);
+  box-shadow: 0 6px 16px var(--color-shadow);
 }
 
 .amountBadge::before {
@@ -88,14 +81,6 @@
 .amountLogoGlow {
   display: flex;
   flex-shrink: 0;
-  padding: 2px;
-  margin: -2px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--color-primary) 45%, transparent) 0%,
-    transparent 72%
-  );
 }
 
 .collect {

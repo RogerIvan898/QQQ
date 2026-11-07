@@ -112,9 +112,18 @@
   height: 34px;
   padding: 0 14px;
   border-radius: 100px;
-  background: color-mix(in srgb, var(--color-bg) 72%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-text) 18%, transparent);
-  box-shadow: 0 6px 16px var(--color-shadow);
+  /* Highlighted chip pill (what bet badges used to look like). */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-elevated) 95%, white) 0%,
+    var(--color-bg-elevated) 100%
+  );
+  border: 1.5px solid
+    color-mix(in srgb, var(--color-primary) 45%, var(--color-border-strong));
+  box-shadow:
+    0 6px 18px var(--color-shadow),
+    0 0 20px color-mix(in srgb, var(--color-primary) 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 12%, transparent);
 }
 
 .potLogo {
