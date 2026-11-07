@@ -3,12 +3,7 @@ import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { Link } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
-import {
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  History,
-  Settings,
-} from 'lucide-react';
+import { ChevronDown, History, Settings } from 'lucide-react';
 
 import { $currentLocale } from 'shared/lib/i18n';
 import { $tonWallet } from 'shared/lib/ton-connect';
@@ -21,26 +16,32 @@ import styles from './header.module.css';
 
 interface Props {
   userName: string;
-  balance?: number;
+  /** `null` while loading. */
+  balance: number | null;
   avatarUrl?: string;
-  onDepositClick?: () => void;
-  onWithdrawClick?: () => void;
-  onSettingsClick?: () => void;
+  isWalletOpen: boolean;
+  onWalletClick: () => void;
+  walletButtonRef: React.RefObject<HTMLButtonElement | null>;
+  /** Wallet Panel, anchored under the wallet button. */
+  walletPanel?: React.ReactNode;
 }
 
 export const Header = ({
   userName,
-  balance = 0,
+  balance,
   avatarUrl,
-  onDepositClick,
-  onWithdrawClick,
+  isWalletOpen,
+  onWalletClick,
+  walletButtonRef,
+  walletPanel,
 }: Props) => {
   const { t, i18n } = useLingui();
   const [isSettingsOpened, setIsSettingsOpened] = React.useState(false);
   const locale = useUnit($currentLocale);
   const wallet = useUnit($tonWallet);
   const walletAddress = wallet?.address;
-  const formattedBalance = formatBalance(balance, i18n.locale);
+  const formattedBalance =
+    balance === null ? '—' : formatBalance(balance, i18n.locale);
 
   return (
     <header className={styles.header} lang={locale ?? undefined}>
@@ -62,11 +63,24 @@ export const Header = ({
         <div className={styles.userInfo}>
           <span className={styles.userName}>{userName}</span>
 
-          <div className={styles.balanceRow}>
-            <div className={styles.balanceBadge}>
+          <div className={styles.walletAnchor}>
+            <button
+              ref={walletButtonRef}
+              type="button"
+              className={cn(
+                styles.walletBtn,
+                isWalletOpen && styles.walletOpen
+              )}
+              onClick={onWalletClick}
+              aria-haspopup="dialog"
+              aria-expanded={isWalletOpen}
+              aria-label={t`My Wallet`}
+            >
               <Logo className={styles.tonIcon} />
               <span className={styles.balanceValue}>{formattedBalance}</span>
-            </div>
+              <ChevronDown size={16} className={styles.walletChevron} />
+            </button>
+            {walletPanel}
           </div>
         </div>
       </div>
@@ -89,26 +103,6 @@ export const Header = ({
           title={t`Settings`}
         >
           <Settings size={28} />
-        </button>
-      </div>
-
-      <div className={styles.walletActions}>
-        <button
-          type="button"
-          className={cn(styles.actionBtn, styles.depositBtn)}
-          onClick={onDepositClick}
-        >
-          <ArrowDownToLine size={16} strokeWidth={2.5} />
-          {t`Deposit`}
-        </button>
-
-        <button
-          type="button"
-          className={cn(styles.actionBtn, styles.withdrawBtn)}
-          onClick={onWithdrawClick}
-        >
-          <ArrowUpFromLine size={16} strokeWidth={2.5} />
-          {t`Withdraw`}
         </button>
       </div>
 

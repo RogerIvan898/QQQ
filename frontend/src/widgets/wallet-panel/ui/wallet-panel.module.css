@@ -1,0 +1,427 @@
+/* ---------- Desktop / tablet popover ---------- */
+
+.popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  width: min(380px, calc(100vw - 32px));
+  /* Never past the bottom of the screen; the list scrolls inside. */
+  max-height: min(640px, calc(100dvh - 120px - var(--tg-safe-area-top)));
+  padding: 18px 18px 0;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px var(--color-shadow);
+  animation: popIn 0.16s ease-out;
+  overflow: hidden;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.popover .content {
+  min-height: 0;
+  flex: 1;
+}
+
+.popover .transactions {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0 -18px;
+  padding: 0 18px 12px;
+}
+
+/* ---------- Shared content ---------- */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Phones: the sheet is tall enough to browse history comfortably. */
+@media (max-width: 600px) {
+  .content {
+    min-height: min(70dvh, 620px);
+  }
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.statusDot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+
+.statusConnected {
+  background: var(--color-success);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--color-success) 60%, transparent);
+}
+
+.address {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.linkBtn {
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.balanceBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.balanceLabel {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.balance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 30px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.balanceLogo {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.currency {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.actionBtn:active {
+  transform: scale(0.97);
+}
+
+.actionBtn:focus-visible {
+  outline: 2px solid var(--color-primary-light);
+  outline-offset: 2px;
+}
+
+.depositBtn {
+  color: var(--color-text-on-primary);
+  background: var(--color-primary);
+}
+
+.depositBtn:hover {
+  background: color-mix(in srgb, var(--color-primary) 85%, #fff);
+}
+
+.withdrawBtn {
+  color: var(--color-text);
+  background: var(--color-bg-muted);
+}
+
+.withdrawBtn:hover {
+  background: color-mix(in srgb, var(--color-text) 12%, var(--color-bg-muted));
+}
+
+.sectionTitle {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 6px 0 8px;
+  background: var(--color-bg-surface);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Transactions ---------- */
+
+.filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.filter {
+  height: 30px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-muted);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.filter:hover {
+  color: var(--color-text);
+}
+
+.filterActive,
+.filterActive:hover {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.dayGroup + .dayGroup {
+  margin-top: 4px;
+}
+
+.dayTitle {
+  margin: 10px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 8px 10px 12px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.row:hover,
+.row:focus-visible {
+  background: color-mix(in srgb, var(--color-text) 5%, transparent);
+  outline: none;
+}
+
+li + li .row {
+  border-top: 1px solid var(--color-border);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+
+.iconDeposit {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+}
+
+.iconFailed {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+}
+
+.iconPending {
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+}
+
+.iconWithdrawal {
+  color: var(--color-text-secondary);
+  background: var(--color-bg-elevated);
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rowSub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rowSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.amount {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.amountPositive {
+  color: var(--color-success);
+}
+
+.amountFailed {
+  color: var(--color-text-muted);
+}
+
+.status {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.completed {
+  color: var(--color-text-muted);
+}
+
+.pending {
+  color: var(--color-warning);
+}
+
+.failed {
+  color: var(--color-danger);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  min-height: 36px;
+  padding: 10px 0 4px;
+  color: var(--color-text-muted);
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.retryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.retryBtn:hover {
+  border-color: var(--color-border-hover);
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popover,
+  .spin {
+    animation: none;
+  }
+}

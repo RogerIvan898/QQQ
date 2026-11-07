@@ -2,12 +2,15 @@ import React from 'react';
 
 import { useLingui } from '@lingui/react/macro';
 import { useRouter } from '@tanstack/react-router';
+import { useUnit } from 'effector-react';
 import { Coins, Swords } from 'lucide-react';
 
 import { RoomCard } from 'entities/room';
+import { walletModel } from 'entities/wallet';
 import { JoinRoomButton } from 'features/join-room';
 import { getTelegramUser } from 'shared/lib/telegram';
 import { cn } from 'shared/utils/cn';
+import { WalletPanel } from 'widgets/wallet-panel';
 
 import {
   filterRooms,
@@ -88,10 +91,21 @@ export const MenuPage = () => {
   const [roomFilter, setRoomFilter] = React.useState<RoomFilter>('all');
   const [isDepositOpen, setIsDepositOpen] = React.useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false);
-  const mockUser = { firstName: 'User', balance: 42.5 };
+  const [isWalletOpen, setIsWalletOpen] = React.useState(false);
+  const walletButtonRef = React.useRef<HTMLButtonElement | null>(null);
+  const [balance, requestBalance, refreshWallet] = useUnit([
+    walletModel.$balance,
+    walletModel.balanceRequested,
+    walletModel.walletRefreshRequested,
+  ]);
+  const closeWallet = React.useCallback(() => setIsWalletOpen(false), []);
   const [telegramUser] = React.useState(getTelegramUser);
   const visibleRooms = filterRooms(ROOMS, roomFilter);
   const router = useRouter();
+
+  React.useEffect(() => {
+    requestBalance();
+  }, [requestBalance]);
 
   React.useEffect(() => {
     const prefetch = () => {
@@ -119,11 +133,22 @@ export const MenuPage = () => {
       <div className={styles.appLayout}>
         <div className={styles.mainContainer}>
           <Header
-            userName={telegramUser?.name ?? mockUser.firstName}
+            userName={telegramUser?.name ?? 'User'}
             avatarUrl={telegramUser?.photoUrl}
-            balance={mockUser.balance}
-            onDepositClick={() => setIsDepositOpen(true)}
-            onWithdrawClick={() => setIsWithdrawOpen(true)}
+            balance={balance}
+            isWalletOpen={isWalletOpen}
+            onWalletClick={() => setIsWalletOpen(open => !open)}
+            walletButtonRef={walletButtonRef}
+            walletPanel={
+              <WalletPanel
+                open={isWalletOpen}
+                onClose={closeWallet}
+                anchorRef={walletButtonRef}
+                suspended={isDepositOpen || isWithdrawOpen}
+                onDeposit={() => setIsDepositOpen(true)}
+                onWithdraw={() => setIsWithdrawOpen(true)}
+              />
+            }
           />
 
           <main className={styles.contentArea}>
@@ -142,7 +167,8 @@ export const MenuPage = () => {
               </div>
               <div className={styles.roomGrid}>
                 {visibleRooms.map(room => {
-                  const shortfall = Math.max(0, room.minBuy - mockUser.balance);
+                  const shortfall =
+                    balance === null ? 0 : Math.max(0, room.minBuy - balance);
 
                   return (
                     <RoomCard
@@ -183,6 +209,10 @@ export const MenuPage = () => {
             <DepositDialog
               open
               onClose={() => setIsDepositOpen(false)}
+              onSuccess={() => {
+                setIsDepositOpen(false);
+                refreshWallet();
+              }}
               depositAddress="UQA-hgA0arLRETGFy5ccxv11acPYBUpU49X8RyqfIju3tGci"
               memo="1049285"
             />
@@ -192,9 +222,10 @@ export const MenuPage = () => {
             <WithdrawModal
               open
               onClose={() => setIsWithdrawOpen(false)}
-              balance={mockUser.balance}
+              balance={balance ?? 0}
               onSubmit={payload => {
                 console.log('Withdraw request', payload);
+                refreshWallet();
               }}
             />
           )}

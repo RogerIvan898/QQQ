@@ -1,14 +1,24 @@
 import type { MessageDescriptor } from '@lingui/core';
 import { msg } from '@lingui/core/macro';
 import { useLingui } from '@lingui/react/macro';
-import { ArrowDownLeft, ArrowUpRight, Check, Globe } from 'lucide-react';
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Check,
+  Ellipsis,
+  Globe,
+  X,
+} from 'lucide-react';
 
+import {
+  STATUS_LABELS,
+  type FailureReason,
+  type Transaction,
+} from 'entities/wallet';
 import { useCopyToClipboard } from 'shared/lib/clipboard';
 import { Dialog } from 'shared/ui/dialog';
 import { cn } from 'shared/utils/cn';
 import { formatBalance } from 'shared/utils/format';
-
-import { STATUS_LABELS, type FailureReason, type Transaction } from '../model';
 
 import styles from './transaction-details.module.css';
 
@@ -34,7 +44,15 @@ export const TransactionDetails = ({ transaction, onClose }: Props) => {
   }
 
   const isDeposit = transaction.type === 'deposit';
-  const Icon = isDeposit ? ArrowDownLeft : ArrowUpRight;
+  const isPending = transaction.status === 'pending';
+  const isFailed = transaction.status === 'failed';
+  const Icon = isFailed
+    ? X
+    : isPending
+      ? Ellipsis
+      : isDeposit
+        ? ArrowDownLeft
+        : ArrowUpRight;
   const ton = (value: number) => `${formatBalance(value, i18n.locale)} TON`;
   const when = new Intl.DateTimeFormat(i18n.locale, {
     day: 'numeric',
@@ -52,7 +70,13 @@ export const TransactionDetails = ({ transaction, onClose }: Props) => {
         <span
           className={cn(
             styles.heroIcon,
-            isDeposit ? styles.heroIconDeposit : styles.heroIconWithdrawal
+            isFailed
+              ? styles.heroIconFailed
+              : isPending
+                ? styles.heroIconPending
+                : isDeposit
+                  ? styles.heroIconDeposit
+                  : styles.heroIconWithdrawal
           )}
         >
           <Icon size={34} strokeWidth={2.5} />

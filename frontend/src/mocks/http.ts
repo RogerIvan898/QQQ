@@ -3,8 +3,11 @@ import { http, HttpResponse } from 'msw';
 import { VIEWER_ID } from 'entities/session/model';
 
 import { buildMockWsUrl } from './rooms';
+import { walletHandlers } from './wallet';
 
 export const httpHandlers = [
+  ...walletHandlers,
+
   http.post('*/auth/login', () => HttpResponse.json(null)),
 
   http.get('*/auth/me', () =>

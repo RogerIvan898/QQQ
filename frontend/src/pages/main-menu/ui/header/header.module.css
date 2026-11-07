@@ -1,6 +1,4 @@
 .header {
-  flex-wrap: wrap;
-  row-gap: 12px;
   position: sticky;
   top: 0;
   z-index: 50;
@@ -72,22 +70,46 @@
   max-width: 180px;
 }
 
-.balanceRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.walletAnchor {
+  position: relative;
 }
 
-.balanceBadge {
+.walletBtn {
   display: flex;
   align-items: center;
   gap: 8px;
   height: 36px;
-  box-sizing: border-box;
-  background: var(--color-border);
-  padding: 0 12px;
-  border-radius: var(--radius-sm);
+  padding: 0 10px 0 12px;
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.walletBtn:hover,
+.walletOpen {
+  border-color: var(--color-border-hover);
+  background: color-mix(in srgb, var(--color-text) 10%, var(--color-border));
+}
+
+.walletBtn:focus-visible {
+  outline: 2px solid var(--color-primary-light);
+  outline-offset: 2px;
+}
+
+.walletChevron {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.walletOpen .walletChevron {
+  transform: rotate(180deg);
 }
 
 .tonIcon {
@@ -101,58 +123,6 @@
   font-weight: 700;
   color: var(--color-info);
   letter-spacing: -0.2px;
-}
-
-.walletActions {
-  display: flex;
-  flex-basis: 100%;
-  gap: 8px;
-}
-
-.actionBtn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 40px;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  outline: none;
-  transition:
-    background-color 0.15s ease,
-    transform 0.15s ease;
-}
-
-.actionBtn:focus-visible {
-  outline: 2px solid var(--color-primary-light);
-  outline-offset: 2px;
-}
-
-.actionBtn:active {
-  transform: scale(0.97);
-}
-
-.depositBtn {
-  color: var(--color-text-on-primary);
-  background: var(--color-primary);
-}
-
-.depositBtn:hover {
-  background: color-mix(in srgb, var(--color-primary) 85%, #fff);
-}
-
-.withdrawBtn {
-  color: var(--color-text);
-  background: var(--color-bg-muted);
-}
-
-.withdrawBtn:hover {
-  background: color-mix(in srgb, var(--color-text) 12%, var(--color-bg-muted));
 }
 
 .headerRight {
@@ -236,9 +206,5 @@
 
   .headerLeft {
     gap: 10px;
-  }
-
-  .balanceRow {
-    gap: 6px;
   }
 }

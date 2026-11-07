@@ -22,6 +22,16 @@
   background: color-mix(in srgb, var(--color-success) 16%, transparent);
 }
 
+.heroIconFailed {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 16%, transparent);
+}
+
+.heroIconPending {
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 16%, transparent);
+}
+
 .heroIconWithdrawal {
   color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 16%, transparent);
@@ -37,7 +47,6 @@
 
 .heroAmountFailed {
   color: var(--color-text-muted);
-  text-decoration: line-through;
 }
 
 .heroSub {

@@ -25,3 +25,6 @@ dist-ssr
 # C++
 build/
 cmake-build-*/
+
+# TanStack router generator temp files
+.tanstack/
