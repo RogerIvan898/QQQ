@@ -2,6 +2,7 @@ import { createEffect, createEvent, createStore, sample } from 'effector';
 
 import type { CardType as Card } from 'entities/card';
 import type { PlayerType as Player } from 'entities/player';
+import { displayBigBlindChanged } from 'shared/lib/display-settings';
 
 import { watchPlayerActionSounds } from './action-sounds';
 import {
@@ -91,6 +92,9 @@ export const $currentBet = $gameState.map(state => state.currentBet);
 export const $pot = $gameState.map(state => state.pot);
 export const $community = $gameState.map(state => state.community);
 export const $round = $gameState.map(state => state.round);
+
+// Lets table widgets show amounts in big blinds (Settings → Display amounts in BB).
+sample({ clock: $bigBlind, target: displayBigBlindChanged });
 
 sample({
   clock: connectGame,

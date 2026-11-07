@@ -182,6 +182,12 @@ msgstr "Disconnect wallet"
 msgid "Disconnecting…"
 msgstr "Disconnecting…"
 
+msgid "Display"
+msgstr "Display"
+
+msgid "Display amounts in BB"
+msgstr "Display amounts in BB"
+
 msgid "Double-check the TON address"
 msgstr "Double-check the TON address"
 

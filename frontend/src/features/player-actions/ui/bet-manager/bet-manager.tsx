@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 
 import { useLingui } from '@lingui/react/macro';
+import { useUnit } from 'effector-react';
 
+import { $amountsInBb } from 'shared/lib/display-settings';
 import { Button } from 'shared/ui/button';
 import { Logo } from 'shared/ui/logo';
 import { cn } from 'shared/utils/cn';
@@ -47,7 +49,14 @@ export const BetManager = ({
   const [draft, setDraft] = useState<string | null>(null);
 
   const step = bigBlind > 0 ? bigBlind : 1;
-  const draftValue = draft === null ? null : parseNumericInput(draft);
+  // Settings → Display amounts in BB: the field shows and accepts big blinds,
+  // everything else (state, limits, the raise itself) stays in chips.
+  const inBb = useUnit($amountsInBb) && bigBlind > 0;
+  const toField = (chips: number) =>
+    inBb ? Math.round((chips / bigBlind) * 10) / 10 : chips;
+  const fromField = (value: number) => (inBb ? value * bigBlind : value);
+  const parsedDraft = draft === null ? null : parseNumericInput(draft);
+  const draftValue = parsedDraft === null ? null : fromField(parsedDraft);
   const legal = (value: number) =>
     clamp(roundChips(value), minAmount, maxAmount);
 
@@ -71,11 +80,13 @@ export const BetManager = ({
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const next = event.target.value;
     setDraft(next);
-    const value = parseNumericInput(next);
+    const parsed = parseNumericInput(next);
 
-    if (value === null) {
+    if (parsed === null) {
       return;
     }
+
+    const value = fromField(parsed);
 
     if (value > maxAmount) {
       commit(maxAmount);
@@ -186,16 +197,20 @@ export const BetManager = ({
           <input
             type="number"
             inputMode="numeric"
-            value={draft ?? amount}
+            value={draft ?? toField(amount)}
             onChange={handleInputChange}
             onBlur={handleBlur}
-            min={minAmount}
-            max={maxAmount}
-            step={step}
+            min={toField(minAmount)}
+            max={toField(maxAmount)}
+            step={inBb ? 0.1 : step}
             className={cn(styles.input, belowMin && styles.inputInvalid)}
           />
           <div className={styles.logo}>
-            <Logo size={14} className={styles.logoIcon} />
+            {inBb ? (
+              <span className={styles.unit}>BB</span>
+            ) : (
+              <Logo size={14} className={styles.logoIcon} />
+            )}
           </div>
         </div>
         <button

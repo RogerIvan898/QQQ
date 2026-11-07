@@ -85,6 +85,7 @@
 }
 
 .stackAmount {
+  white-space: nowrap;
   color: var(--color-primary-light);
   font-weight: 800;
   font-size: clamp(14px, 2.8vw, 18px);

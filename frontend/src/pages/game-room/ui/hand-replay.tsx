@@ -24,6 +24,11 @@ import {
   toGameState,
   type HandRecord,
 } from 'features/hand-history';
+import {
+  $amountsInBb,
+  $displayBigBlind,
+  formatBigBlinds,
+} from 'shared/lib/display-settings';
 import { cn } from 'shared/utils/cn';
 import { formatCompactNumber } from 'shared/utils/format';
 import { PokerBoard } from 'widgets/poker-table';
@@ -63,7 +68,15 @@ interface Props {
  */
 export const HandReplay = ({ hand, onClose }: Props) => {
   const { i18n, t } = useLingui();
-  const viewerId = useUnit(sessionModel.$currentUserId);
+  const [viewerId, amountsInBb] = useUnit([
+    sessionModel.$currentUserId,
+    $amountsInBb,
+  ]);
+  // The caption sits outside the replay scope: format with this hand's blind.
+  const formatChips = (amount: number) =>
+    amountsInBb && hand.bigBlind > 0
+      ? formatBigBlinds(amount, hand.bigBlind)
+      : formatCompactNumber(amount);
   const timeline = React.useMemo(() => buildTimeline(hand), [hand]);
   const lastStep = timeline.length - 1;
   const [step, setStep] = React.useState(0);
@@ -86,9 +99,12 @@ export const HandReplay = ({ hand, onClose }: Props) => {
         [gameModel.$debugHoles, {}],
         [gameModel.$collectingBets, false],
         [sessionModel.$currentUserId, viewerId],
+        // The scope starts from defaults; carry the setting and table blind in.
+        [$amountsInBb, amountsInBb],
+        [$displayBigBlind, hand.bigBlind],
       ],
     });
-  }, [hand, timeline, step, viewerId]);
+  }, [hand, timeline, step, viewerId, amountsInBb]);
 
   // Autoplay stops by itself on the last step.
   const isPlaying = playing && step < lastStep;
@@ -131,9 +147,7 @@ export const HandReplay = ({ hand, onClose }: Props) => {
       <>
         <b>{current.action.isMe ? t`You` : current.action.name}</b> ·{' '}
         {i18n._(ACTION_LABELS[current.action.action])}
-        {current.action.amount
-          ? ` ${formatCompactNumber(current.action.amount)}`
-          : ''}
+        {current.action.amount ? ` ${formatChips(current.action.amount)}` : ''}
       </>
     );
   } else if (current.kind === 'deal') {
@@ -142,7 +156,7 @@ export const HandReplay = ({ hand, onClose }: Props) => {
     caption = hand.winners.map(winner => (
       <span key={winner.seat} className={styles.captionLine}>
         <b>{winner.isMe ? t`You` : winner.name}</b> +
-        {formatCompactNumber(winner.amount)}
+        {formatChips(winner.amount)}
         {winner.combination ? ` · ${winner.combination}` : ''}
       </span>
     ));

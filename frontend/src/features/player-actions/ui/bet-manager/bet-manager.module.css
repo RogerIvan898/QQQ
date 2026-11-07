@@ -265,3 +265,9 @@
     --action-button-height: 46px;
   }
 }
+
+.unit {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-primary-light);
+}

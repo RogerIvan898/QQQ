@@ -183,6 +183,12 @@ msgstr "Отключить кошелёк"
 msgid "Disconnecting…"
 msgstr "Отключение…"
 
+msgid "Display"
+msgstr "Отображение"
+
+msgid "Display amounts in BB"
+msgstr "Суммы в больших блайндах (BB)"
+
 msgid "Double-check the TON address"
 msgstr "Проверьте TON-адрес"
 

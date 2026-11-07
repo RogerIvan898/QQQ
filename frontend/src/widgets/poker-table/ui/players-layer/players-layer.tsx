@@ -7,9 +7,9 @@ import { gameModel } from 'entities/game';
 import { sessionModel } from 'entities/session';
 import { $raisePanelTop } from 'features/player-actions';
 import { useElementSize } from 'shared/hooks/use-element-size';
+import { useChipFormatter } from 'shared/lib/display-settings';
 import { Logo } from 'shared/ui/logo';
 import { cn } from 'shared/utils/cn';
-import { formatCompactNumber } from 'shared/utils/format';
 
 import styles from './players-layer.module.css';
 import { Seat } from './seat';
@@ -44,26 +44,30 @@ const ChipFlight = ({
   toY,
   arrived,
   className,
-}: FlightProps) => (
-  <div
-    className={cn(styles.flightX, className, arrived && styles.arrived)}
-    style={
-      {
-        left: fromX,
-        top: fromY,
-        '--dx': `${toX - fromX}px`,
-        '--dy': `${toY - fromY}px`,
-      } as React.CSSProperties
-    }
-  >
-    <div className={styles.flightY}>
-      <div className={styles.potFlight}>
-        <Logo size={16} className={styles.potFlightLogo} />
-        <span>{formatCompactNumber(amount)}</span>
+}: FlightProps) => {
+  const formatChips = useChipFormatter();
+
+  return (
+    <div
+      className={cn(styles.flightX, className, arrived && styles.arrived)}
+      style={
+        {
+          left: fromX,
+          top: fromY,
+          '--dx': `${toX - fromX}px`,
+          '--dy': `${toY - fromY}px`,
+        } as React.CSSProperties
+      }
+    >
+      <div className={styles.flightY}>
+        <div className={styles.potFlight}>
+          <Logo size={16} className={styles.potFlightLogo} />
+          <span>{formatChips(amount)}</span>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
   const [viewerId, collecting, raisePanelTop] = useUnit([

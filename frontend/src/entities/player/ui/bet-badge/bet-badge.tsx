@@ -1,6 +1,6 @@
+import { useChipFormatter } from 'shared/lib/display-settings';
 import { Logo } from 'shared/ui/logo';
 import { cn } from 'shared/utils/cn';
-import { formatCompactNumber } from 'shared/utils/format';
 
 import styles from './bet-badge.module.css';
 
@@ -11,6 +11,7 @@ interface Props {
 }
 
 export const BetBadge = ({ amount, seat, collecting }: Props) => {
+  const formatChips = useChipFormatter();
   if (amount <= 0) return null;
 
   return (
@@ -24,7 +25,7 @@ export const BetBadge = ({ amount, seat, collecting }: Props) => {
           <Logo size={18} className={styles.amountLogo} />
         </span>
         <span key={amount} className={styles.amountValue}>
-          {formatCompactNumber(amount)}
+          {formatChips(amount)}
         </span>
       </div>
     </div>

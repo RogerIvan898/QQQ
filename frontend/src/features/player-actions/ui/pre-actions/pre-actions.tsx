@@ -4,8 +4,8 @@ import { useUnit } from 'effector-react';
 import { gameModel } from 'entities/game';
 import { findPlayerById } from 'entities/player';
 import { sessionModel } from 'entities/session';
+import { useChipFormatter } from 'shared/lib/display-settings';
 import { Button } from 'shared/ui/button';
-import { formatCompactNumber } from 'shared/utils/format';
 
 import {
   $preAction,
@@ -26,13 +26,14 @@ export const PreActions = () => {
     gameModel.$currentBet,
   ]);
 
+  const formatChips = useChipFormatter();
   const viewer = findPlayerById(players, userId);
   const toCall =
     viewer && canPreAct(viewer.status)
       ? chipsToCall(currentBet, viewer.committed, viewer.stack)
       : 0;
   // Same units as stacks and bets on the table, not big blinds.
-  const callAmount = formatCompactNumber(toCall);
+  const callAmount = formatChips(toCall);
 
   const toggle = (action: PreAction) => {
     setActive(activeAction === action ? null : action);

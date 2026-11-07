@@ -4,8 +4,8 @@ import { Card } from 'entities/card';
 import type { CardType } from 'entities/card';
 import { Sound } from 'shared/assets/sounds';
 import { useSound } from 'shared/lib/audio';
+import { useChipFormatter } from 'shared/lib/display-settings';
 import { Logo } from 'shared/ui/logo';
-import { formatCompactNumber } from 'shared/utils/format';
 
 import styles from './poker-table.module.css';
 
@@ -22,6 +22,7 @@ export const PokerTable = ({
   showPot = pot > 0,
   ref,
 }: Props) => {
+  const formatChips = useChipFormatter();
   const { play: playDeal } = useSound(Sound.CARD_DEAL);
 
   return (
@@ -34,9 +35,7 @@ export const PokerTable = ({
               {showPot && (
                 <div className={styles.potBadge}>
                   <Logo size={16} className={styles.potLogo} />
-                  <span className={styles.potValue}>
-                    {formatCompactNumber(pot)}
-                  </span>
+                  <span className={styles.potValue}>{formatChips(pot)}</span>
                 </div>
               )}
             </div>

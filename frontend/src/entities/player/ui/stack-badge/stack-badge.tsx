@@ -1,8 +1,8 @@
 import React from 'react';
 
+import { useChipFormatter } from 'shared/lib/display-settings';
 import { Logo } from 'shared/ui/logo';
 import { cn } from 'shared/utils/cn';
-import { formatCompactNumber } from 'shared/utils/format';
 
 import styles from './stack-badge.module.css';
 
@@ -31,6 +31,7 @@ export const StackBadge = ({
   winAmount,
   winId,
 }: Props) => {
+  const formatChips = useChipFormatter();
   const [settledWinId, setSettledWinId] = React.useState<number | null>(null);
   const isHoldingWin = Boolean(winId && winAmount && winId !== settledWinId);
   const displayAmount =
@@ -68,7 +69,7 @@ export const StackBadge = ({
           <span className={styles.name}>{name}</span>
           <div className={styles.stackRow}>
             <span className={styles.stackAmount}>
-              {formatCompactNumber(displayAmount)}
+              {formatChips(displayAmount)}
             </span>
             <Logo size={16} className={styles.stackLogo} />
           </div>

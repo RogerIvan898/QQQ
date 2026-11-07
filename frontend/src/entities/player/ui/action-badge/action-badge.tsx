@@ -1,8 +1,8 @@
 import { useLingui } from '@lingui/react/macro';
 
+import { useChipFormatter } from 'shared/lib/display-settings';
 import { Badge, type BadgeVariant } from 'shared/ui/badge';
 import { cn } from 'shared/utils/cn';
-import { formatCompactNumber } from 'shared/utils/format';
 
 import { PlayerAction, SeatBadgeKind, type SeatActionBadge } from '../../model';
 
@@ -25,6 +25,7 @@ interface Props {
 }
 
 export const ActionBadge = ({ action, amount }: Props) => {
+  const formatChips = useChipFormatter();
   const { t } = useLingui();
 
   const labels: Record<SeatActionBadge, string> = {
@@ -51,7 +52,7 @@ export const ActionBadge = ({ action, amount }: Props) => {
         )}
       >
         {labels[action]}
-        {showAmount ? ` ${formatCompactNumber(amount)}` : null}
+        {showAmount ? ` ${formatChips(amount)}` : null}
       </Badge>
     </div>
   );

@@ -52,6 +52,7 @@
 }
 
 .amountValue {
+  white-space: nowrap;
   color: var(--color-text);
   font-weight: 800;
   font-size: clamp(16px, 3vw, 19px);

@@ -7,6 +7,7 @@ import {
   Copy,
   Loader2,
   RefreshCw,
+  Coins,
   Volume2,
   VolumeX,
   Wallet,
@@ -14,6 +15,7 @@ import {
 
 import { $soundEnabled, setSoundEnabled } from 'shared/lib/audio';
 import { useCopyToClipboard } from 'shared/lib/clipboard';
+import { $amountsInBb, setAmountsInBb } from 'shared/lib/display-settings';
 import {
   changeLocale,
   LOCALES,
@@ -42,6 +44,10 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
   const walletAddress = useUnit($tonWallet)?.friendlyAddress ?? '';
   const [currentLocale, setLocale] = useUnit([$currentLocale, changeLocale]);
   const [soundEnabled, toggleSound] = useUnit([$soundEnabled, setSoundEnabled]);
+  const [amountsInBb, toggleAmountsInBb] = useUnit([
+    $amountsInBb,
+    setAmountsInBb,
+  ]);
 
   const [walletAction, setWalletAction] = useState<WalletAction | null>(null);
   const [copyPending, setCopyPending] = useState(false);
@@ -126,6 +132,32 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
               className={cn(
                 styles.switchTrack,
                 soundEnabled && styles.switchTrackOn
+              )}
+              aria-hidden="true"
+            >
+              <span className={styles.switchThumb} />
+            </span>
+          </button>
+        </Setting>
+
+        <Setting label={t`Display`}>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={amountsInBb}
+            className={styles.soundRow}
+            onClick={() => toggleAmountsInBb(!amountsInBb)}
+          >
+            <span className={styles.soundIcon} aria-hidden="true">
+              <Coins size={18} />
+            </span>
+
+            <span className={styles.soundText}>{t`Display amounts in BB`}</span>
+
+            <span
+              className={cn(
+                styles.switchTrack,
+                amountsInBb && styles.switchTrackOn
               )}
               aria-hidden="true"
             >
