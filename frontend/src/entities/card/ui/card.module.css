@@ -35,39 +35,10 @@
   box-shadow: inset 0 1px color-mix(in srgb, var(--color-text) 8%, transparent);
 }
 
-.cardCornerTop,
-.cardCornerBottom {
-  font-size: clamp(9px, 18cqw, 14px);
-  line-height: 1;
-}
-
-.cardSuitSmall {
-  margin-left: 2px;
-  font-size: clamp(9px, 18cqw, 14px);
-}
-
-.cardCenter {
-  font-size: clamp(16px, 40cqw, 32px);
-  text-align: center;
-  line-height: 1;
-}
-
-.suit_hearts .cardCenter,
-.suit_hearts .cardCornerTop,
-.suit_hearts .cardCornerBottom,
-.suit_diamonds .cardCenter,
-.suit_diamonds .cardCornerTop,
-.suit_diamonds .cardCornerBottom {
-  color: #d32f2f;
-}
-
-.suit_clubs .cardCenter,
-.suit_clubs .cardCornerTop,
-.suit_clubs .cardCornerBottom,
-.suit_spades .cardCenter,
-.suit_spades .cardCornerTop,
-.suit_spades .cardCornerBottom {
-  color: #111111;
+/* Face-up: the SVG face draws its own margins, so no padding. */
+.face {
+  padding: 0;
+  overflow: hidden;
 }
 
 .playFlat {

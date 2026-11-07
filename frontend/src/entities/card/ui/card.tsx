@@ -2,9 +2,9 @@ import React from 'react';
 
 import { cn } from 'shared/utils/cn';
 
-import { getSuitSymbol } from '../lib';
 import type { Card as CardType } from '../model';
 
+import { CardFace } from './card-face';
 import styles from './card.module.css';
 
 interface Props {
@@ -46,29 +46,9 @@ export const Card = ({ card, flat = false, onReveal }: Props) => {
     };
   }, [flat]);
 
-  const symbol = getSuitSymbol(card?.suit);
-
   return (
-    <div
-      ref={ref}
-      className={cn(styles.card, styles['suit_' + card?.suit])}
-      role="img"
-    >
-      {card ? (
-        <>
-          <div className={styles.cardCornerTop}>
-            {card.rank ?? ''}
-            <span className={styles.cardSuitSmall}>{symbol}</span>
-          </div>
-          <div className={styles.cardCenter}>{symbol}</div>
-          <div className={styles.cardCornerBottom}>
-            {card.rank ?? ''}
-            <span className={styles.cardSuitSmall}>{symbol}</span>
-          </div>
-        </>
-      ) : (
-        <div className={styles.cardBack} />
-      )}
+    <div ref={ref} className={cn(styles.card, card && styles.face)} role="img">
+      {card ? <CardFace card={card} /> : <div className={styles.cardBack} />}
     </div>
   );
 };
