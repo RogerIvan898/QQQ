@@ -59,19 +59,45 @@
   gap: 14px;
 }
 
-/* Phones: the sheet is tall enough to browse history comfortably. */
+/* Phones: a near full-height sheet where only the transaction list scrolls;
+   status, balance and actions stay in place. */
 @media (max-width: 600px) {
   .content {
-    min-height: min(70dvh, 620px);
+    height: calc(
+      100dvh - var(--tg-safe-area-top) - var(--tg-safe-area-bottom) - 150px
+    );
+    min-height: 360px;
+  }
+
+  .transactions {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }
 
-.status {
+.walletStatus {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+  padding: 12px 14px;
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-lg);
   font-size: 13px;
   color: var(--color-text-secondary);
+}
+
+/* Balance and the two actions as one block, apart from status and history. */
+.walletCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex-shrink: 0;
+  padding: 14px;
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-lg);
 }
 
 .statusDot {
@@ -179,11 +205,16 @@
 
 .withdrawBtn {
   color: var(--color-text);
-  background: var(--color-bg-muted);
+  background: var(--color-bg-elevated);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
 }
 
 .withdrawBtn:hover {
-  background: color-mix(in srgb, var(--color-text) 12%, var(--color-bg-muted));
+  background: color-mix(
+    in srgb,
+    var(--color-text) 8%,
+    var(--color-bg-elevated)
+  );
 }
 
 .sectionTitle {
@@ -248,7 +279,7 @@
   padding: 0;
   list-style: none;
   background: var(--color-bg-muted);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 

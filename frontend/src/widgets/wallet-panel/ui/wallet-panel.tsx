@@ -45,7 +45,7 @@ const WalletContent = ({
 
   return (
     <div className={styles.content}>
-      <div className={styles.status}>
+      <div className={styles.walletStatus}>
         <span
           className={cn(styles.statusDot, address && styles.statusConnected)}
         />
@@ -64,32 +64,34 @@ const WalletContent = ({
         )}
       </div>
 
-      <div className={styles.balanceBlock}>
-        <span className={styles.balanceLabel}>{t`Available balance`}</span>
-        <span className={styles.balance}>
-          <Logo size={26} className={styles.balanceLogo} />
-          {balance === null ? '—' : formatBalance(balance, i18n.locale)}
-          <span className={styles.currency}>TON</span>
-        </span>
-      </div>
+      <div className={styles.walletCard}>
+        <div className={styles.balanceBlock}>
+          <span className={styles.balanceLabel}>{t`Available balance`}</span>
+          <span className={styles.balance}>
+            <Logo size={26} className={styles.balanceLogo} />
+            {balance === null ? '—' : formatBalance(balance, i18n.locale)}
+            <span className={styles.currency}>TON</span>
+          </span>
+        </div>
 
-      <div className={styles.actions}>
-        <button
-          type="button"
-          className={cn(styles.actionBtn, styles.depositBtn)}
-          onClick={onDeposit}
-        >
-          <ArrowDownLeft size={18} strokeWidth={2.5} />
-          {t`Deposit`}
-        </button>
-        <button
-          type="button"
-          className={cn(styles.actionBtn, styles.withdrawBtn)}
-          onClick={onWithdraw}
-        >
-          <ArrowUpRight size={18} strokeWidth={2.5} />
-          {t`Withdraw`}
-        </button>
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={cn(styles.actionBtn, styles.depositBtn)}
+            onClick={onDeposit}
+          >
+            <ArrowDownLeft size={18} strokeWidth={2.5} />
+            {t`Deposit`}
+          </button>
+          <button
+            type="button"
+            className={cn(styles.actionBtn, styles.withdrawBtn)}
+            onClick={onWithdraw}
+          >
+            <ArrowUpRight size={18} strokeWidth={2.5} />
+            {t`Withdraw`}
+          </button>
+        </div>
       </div>
 
       <section className={styles.transactions}>
