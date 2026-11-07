@@ -59,8 +59,8 @@ msgstr "Бай-ин"
 msgid "Call"
 msgstr "Колл"
 
-msgid "Call {callBb} BB"
-msgstr "Колл {callBb} ББ"
+msgid "Call {callAmount}"
+msgstr "Колл {callAmount}"
 
 msgid "Cancel"
 msgstr "Отмена"
@@ -98,6 +98,9 @@ msgstr "Выполнено"
 msgid "Confirm in wallet…"
 msgstr "Подтвердить в кошельке…"
 
+msgid "Connect"
+msgstr "Подключить"
+
 msgid "Connect a wallet to withdraw in one tap"
 msgstr "Подключите кошелёк для вывода в один клик"
 
@@ -128,8 +131,14 @@ msgstr "Скопировано"
 msgid "Copy address"
 msgstr "Скопировать адрес"
 
+msgid "Couldn't load more. Try again"
+msgstr "Не удалось загрузить. Повторить"
+
 msgid "Couldn't load the page"
 msgstr "Не удалось загрузить страницу"
+
+msgid "Couldn't load transactions"
+msgstr "Не удалось загрузить транзакции"
 
 msgid "Deposit"
 msgstr "Пополнить"
@@ -143,9 +152,6 @@ msgstr "Адрес для пополнения не указан"
 
 msgid "Deposit TON"
 msgstr "Пополнение TON"
-
-msgid "Deposits"
-msgstr "Пополнения"
 
 msgid "Destination"
 msgstr "Куда отправить"
@@ -234,6 +240,12 @@ msgstr "Подключение к столу…"
 msgid "Language"
 msgstr "Язык"
 
+msgid "Loading"
+msgstr "Загрузка"
+
+msgid "Loading transactions…"
+msgstr "Загружаем транзакции…"
+
 msgid "Loading…"
 msgstr "Загрузка…"
 
@@ -245,9 +257,6 @@ msgstr "Low+"
 
 msgid "Making room for new players..."
 msgstr "Готовим места для новых игроков..."
-
-msgid "Max"
-msgstr "Макс"
 
 msgid "Medium"
 msgstr "Medium"
@@ -262,6 +271,9 @@ msgid "Micro+"
 msgstr "Micro+"
 
 msgid "My wallet"
+msgstr "Мой кошелёк"
+
+msgid "My Wallet"
 msgstr "Мой кошелёк"
 
 msgid "Need {missing} more"
@@ -364,6 +376,10 @@ msgstr "Звук выключен"
 msgid "Sound on"
 msgstr "Звук включён"
 
+#. placeholder {0}: session.roomId
+msgid "Table #{0}"
+msgstr "Стол #{0}"
+
 msgid "Table full"
 msgstr "Стол заполнен"
 
@@ -397,9 +413,6 @@ msgstr "В конец"
 msgid "To start"
 msgstr "В начало"
 
-msgid "Today"
-msgstr "Сегодня"
-
 msgid "TON address"
 msgstr "TON-адрес"
 
@@ -411,6 +424,12 @@ msgstr "Пополнить"
 
 msgid "Transaction"
 msgstr "Транзакция"
+
+msgid "Transactions"
+msgstr "Транзакции"
+
+msgid "Try again"
+msgstr "Повторить"
 
 msgid "Turn"
 msgstr "Тёрн"
@@ -429,6 +448,9 @@ msgstr "Адрес кошелька"
 
 msgid "Wallet connected"
 msgstr "Кошелёк подключён"
+
+msgid "Wallet not connected"
+msgstr "Кошелёк не подключён"
 
 msgid "Web3 wallet"
 msgstr "Web3-кошелёк"
@@ -453,17 +475,11 @@ msgctxt "transaction"
 msgid "Withdrawal"
 msgstr "Вывод"
 
-msgid "Withdrawals"
-msgstr "Выводы"
-
 msgid "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
 msgstr "Выводы необратимы. Отправляйте только на TON-адрес — неправильная сеть или опечатка означают безвозвратную потерю средств."
 
 msgid "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
 msgstr "Вывод обрабатывается в течение нескольких минут. Сумма уже зарезервирована на балансе."
-
-msgid "Yesterday"
-msgstr "Вчера"
 
 msgid "You"
 msgstr "Вы"

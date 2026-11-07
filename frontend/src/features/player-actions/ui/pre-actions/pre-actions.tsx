@@ -5,12 +5,12 @@ import { gameModel } from 'entities/game';
 import { findPlayerById } from 'entities/player';
 import { sessionModel } from 'entities/session';
 import { Button } from 'shared/ui/button';
+import { formatCompactNumber } from 'shared/utils/format';
 
 import {
   $preAction,
   canPreAct,
   chipsToCall,
-  formatCallBb,
   setPreAction,
   type PreAction,
 } from '../../model';
@@ -18,22 +18,21 @@ import styles from '../base-actions/base-actions.module.css';
 
 export const PreActions = () => {
   const { t } = useLingui();
-  const [activeAction, setActive, userId, players, currentBet, bigBlind] =
-    useUnit([
-      $preAction,
-      setPreAction,
-      sessionModel.$currentUserId,
-      gameModel.$players,
-      gameModel.$currentBet,
-      gameModel.$bigBlind,
-    ]);
+  const [activeAction, setActive, userId, players, currentBet] = useUnit([
+    $preAction,
+    setPreAction,
+    sessionModel.$currentUserId,
+    gameModel.$players,
+    gameModel.$currentBet,
+  ]);
 
   const viewer = findPlayerById(players, userId);
   const toCall =
     viewer && canPreAct(viewer.status)
       ? chipsToCall(currentBet, viewer.committed, viewer.stack)
       : 0;
-  const callBb = formatCallBb(toCall, bigBlind);
+  // Same units as stacks and bets on the table, not big blinds.
+  const callAmount = formatCompactNumber(toCall);
 
   const toggle = (action: PreAction) => {
     setActive(activeAction === action ? null : action);
@@ -41,7 +40,7 @@ export const PreActions = () => {
 
   const checkLabel = t`Check`;
   const checkFoldLabel = t`Check / Fold`;
-  const callAmountLabel = t`Call ${callBb} BB`;
+  const callAmountLabel = t`Call ${callAmount}`;
   const callLabel = t`Call`;
 
   return (

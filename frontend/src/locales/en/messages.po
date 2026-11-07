@@ -58,8 +58,8 @@ msgstr "Buy-in"
 msgid "Call"
 msgstr "Call"
 
-msgid "Call {callBb} BB"
-msgstr "Call {callBb} BB"
+msgid "Call {callAmount}"
+msgstr "Call {callAmount}"
 
 msgid "Cancel"
 msgstr "Cancel"
@@ -97,6 +97,9 @@ msgstr "Completed"
 msgid "Confirm in wallet…"
 msgstr "Confirm in wallet…"
 
+msgid "Connect"
+msgstr "Connect"
+
 msgid "Connect a wallet to withdraw in one tap"
 msgstr "Connect a wallet to withdraw in one tap"
 
@@ -127,8 +130,14 @@ msgstr "Copied"
 msgid "Copy address"
 msgstr "Copy address"
 
+msgid "Couldn't load more. Try again"
+msgstr "Couldn't load more. Try again"
+
 msgid "Couldn't load the page"
 msgstr "Couldn't load the page"
+
+msgid "Couldn't load transactions"
+msgstr "Couldn't load transactions"
 
 msgid "Deposit"
 msgstr "Deposit"
@@ -142,9 +151,6 @@ msgstr "Deposit address is missing"
 
 msgid "Deposit TON"
 msgstr "Deposit TON"
-
-msgid "Deposits"
-msgstr "Deposits"
 
 msgid "Destination"
 msgstr "Destination"
@@ -233,6 +239,12 @@ msgstr "Joining…"
 msgid "Language"
 msgstr "Language"
 
+msgid "Loading"
+msgstr "Loading"
+
+msgid "Loading transactions…"
+msgstr "Loading transactions…"
+
 msgid "Loading…"
 msgstr "Loading…"
 
@@ -244,9 +256,6 @@ msgstr "Low+"
 
 msgid "Making room for new players..."
 msgstr "Making room for new players..."
-
-msgid "Max"
-msgstr "Max"
 
 msgid "Medium"
 msgstr "Medium"
@@ -262,6 +271,9 @@ msgstr "Micro+"
 
 msgid "My wallet"
 msgstr "My wallet"
+
+msgid "My Wallet"
+msgstr "My Wallet"
 
 msgid "Need {missing} more"
 msgstr "Need {missing} more"
@@ -363,6 +375,10 @@ msgstr "Sound off"
 msgid "Sound on"
 msgstr "Sound on"
 
+#. placeholder {0}: session.roomId
+msgid "Table #{0}"
+msgstr "Table #{0}"
+
 msgid "Table full"
 msgstr "Table full"
 
@@ -396,9 +412,6 @@ msgstr "To end"
 msgid "To start"
 msgstr "To start"
 
-msgid "Today"
-msgstr "Today"
-
 msgid "TON address"
 msgstr "TON address"
 
@@ -410,6 +423,12 @@ msgstr "Top up"
 
 msgid "Transaction"
 msgstr "Transaction"
+
+msgid "Transactions"
+msgstr "Transactions"
+
+msgid "Try again"
+msgstr "Try again"
 
 msgid "Turn"
 msgstr "Turn"
@@ -428,6 +447,9 @@ msgstr "Wallet address"
 
 msgid "Wallet connected"
 msgstr "Wallet connected"
+
+msgid "Wallet not connected"
+msgstr "Wallet not connected"
 
 msgid "Web3 wallet"
 msgstr "Web3 wallet"
@@ -452,17 +474,11 @@ msgctxt "transaction"
 msgid "Withdrawal"
 msgstr "Withdrawal"
 
-msgid "Withdrawals"
-msgstr "Withdrawals"
-
 msgid "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
 msgstr "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
 
 msgid "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
 msgstr "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
-
-msgid "Yesterday"
-msgstr "Yesterday"
 
 msgid "You"
 msgstr "You"
