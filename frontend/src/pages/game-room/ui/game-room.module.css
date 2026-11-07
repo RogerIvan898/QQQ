@@ -117,7 +117,8 @@
   transform: scaleX(-1);
 }
 
-@media (max-width: 768px) {
+/* Phones and portrait tablets share the compact, vertical table layout. */
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .container {
     justify-content: center;
     align-items: center;

@@ -21,7 +21,8 @@
   min-width: 0;
 }
 
-@media (max-width: 768px) {
+/* Phones and portrait tablets share the compact, vertical table layout. */
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .actionContainer {
     left: calc(8px + var(--tg-safe-area-left));
     right: calc(8px + var(--tg-safe-area-right));

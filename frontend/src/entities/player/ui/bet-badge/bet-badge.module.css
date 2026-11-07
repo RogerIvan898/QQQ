@@ -126,7 +126,8 @@
   }
 }
 
-@media (max-width: 768px) {
+/* Phones and portrait tablets share the compact, vertical table layout. */
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .amountBadge {
     min-width: 0;
     height: 26px;

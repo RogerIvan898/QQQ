@@ -233,7 +233,8 @@
 
 /* Phones: the action container already draws the card, so drop the inner
    frame and tighten rows to keep the hero's cards visible above the panel. */
-@media (max-width: 768px) {
+/* Phones and portrait tablets share the compact, vertical table layout. */
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .wrapper {
     gap: 10px;
     padding: 2px;
