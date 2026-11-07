@@ -222,14 +222,23 @@ msgstr "Комиссия"
 msgid "Flop"
 msgstr "Флоп"
 
+msgid "Flush"
+msgstr "Флеш"
+
 msgid "Fold"
 msgstr "Фолд"
 
 msgid "Format"
 msgstr "Формат"
 
+msgid "Four of a kind"
+msgstr "Каре"
+
 msgid "From"
 msgstr "С"
+
+msgid "Full house"
+msgstr "Фулл-хаус"
 
 msgid "Full transfer link with address and amount."
 msgstr "Полная ссылка для перевода с адресом и суммой."
@@ -269,6 +278,9 @@ msgstr "Хедз-ап"
 
 msgid "High"
 msgstr "High"
+
+msgid "High card"
+msgstr "Старшая карта"
 
 msgid "History"
 msgstr "История"
@@ -347,6 +359,9 @@ msgstr "Операций пока нет"
 
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Недостаточно средств на сумму и комиссию сети."
+
+msgid "Pair"
+msgstr "Пара"
 
 msgid "Paste"
 msgstr "Вставить"
@@ -454,6 +469,12 @@ msgstr "Звук включён"
 msgid "Stakes"
 msgstr "Ставки"
 
+msgid "Straight"
+msgstr "Стрит"
+
+msgid "Straight flush"
+msgstr "Стрит-флеш"
+
 #. placeholder {0}: session.roomId
 msgid "Table #{0}"
 msgstr "Стол #{0}"
@@ -487,6 +508,9 @@ msgstr "Сеть отклонила перевод."
 
 msgid "The transfer was sent without the required memo. Contact support to get it credited."
 msgstr "Перевод отправлен без обязательного комментария (memo). Напишите в поддержку, чтобы его зачислили."
+
+msgid "Three of a kind"
+msgstr "Сет"
 
 msgid "Time Played"
 msgstr "Время игры"
@@ -529,6 +553,9 @@ msgstr "Повторить"
 
 msgid "Turn"
 msgstr "Тёрн"
+
+msgid "Two pair"
+msgstr "Две пары"
 
 msgid "VIP"
 msgstr "VIP"

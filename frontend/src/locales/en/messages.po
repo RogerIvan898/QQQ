@@ -221,14 +221,23 @@ msgstr "Fee"
 msgid "Flop"
 msgstr "Flop"
 
+msgid "Flush"
+msgstr "Flush"
+
 msgid "Fold"
 msgstr "Fold"
 
 msgid "Format"
 msgstr "Format"
 
+msgid "Four of a kind"
+msgstr "Four of a kind"
+
 msgid "From"
 msgstr "From"
+
+msgid "Full house"
+msgstr "Full house"
 
 msgid "Full transfer link with address and amount."
 msgstr "Full transfer link with address and amount."
@@ -268,6 +277,9 @@ msgstr "Heads-Up"
 
 msgid "High"
 msgstr "High"
+
+msgid "High card"
+msgstr "High card"
 
 msgid "History"
 msgstr "History"
@@ -346,6 +358,9 @@ msgstr "No transactions yet"
 
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Not enough balance to cover the amount and the network fee."
+
+msgid "Pair"
+msgstr "Pair"
 
 msgid "Paste"
 msgstr "Paste"
@@ -453,6 +468,12 @@ msgstr "Sound on"
 msgid "Stakes"
 msgstr "Stakes"
 
+msgid "Straight"
+msgstr "Straight"
+
+msgid "Straight flush"
+msgstr "Straight flush"
+
 #. placeholder {0}: session.roomId
 msgid "Table #{0}"
 msgstr "Table #{0}"
@@ -486,6 +507,9 @@ msgstr "The transfer was rejected by the network."
 
 msgid "The transfer was sent without the required memo. Contact support to get it credited."
 msgstr "The transfer was sent without the required memo. Contact support to get it credited."
+
+msgid "Three of a kind"
+msgstr "Three of a kind"
 
 msgid "Time Played"
 msgstr "Time Played"
@@ -528,6 +552,9 @@ msgstr "Try again"
 
 msgid "Turn"
 msgstr "Turn"
+
+msgid "Two pair"
+msgstr "Two pair"
 
 msgid "VIP"
 msgstr "VIP"
