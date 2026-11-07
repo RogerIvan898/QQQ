@@ -176,18 +176,6 @@ export const HistoryPage = () => {
         ) : null}
 
         <div className={styles.stats}>
-          <div className={cn(styles.stat, styles.statWide)}>
-            <span className={styles.metricLabel}>{t`Net Profit`}</span>
-            <span
-              className={cn(
-                styles.statValue,
-                stats.net > 0 && styles.positive,
-                stats.net < 0 && styles.negative
-              )}
-            >
-              {formatSignedTon(stats.net, i18n.locale)}
-            </span>
-          </div>
           <div className={styles.stat}>
             <span className={styles.metricLabel}>{t`Hands Played`}</span>
             <span className={styles.statValue}>
