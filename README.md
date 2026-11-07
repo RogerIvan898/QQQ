@@ -38,17 +38,17 @@ Pre-commit хук (husky + lint-staged) форматирует и линтит �
 
 ## CI/CD
 
-Пайплайн `.gitlab-ci.yml`, каждая часть монорепы собирается только при изменениях в своей папке:
+Пайплайн `.gitlab-ci.yml`, каждая часть монорепы собирается только при изменениях в своей папке. Чтобы экономить минуты shared-раннеров, пайплайны запускаются не на каждый пуш:
 
-| Этап | Джобы |
+| Когда | Что бежит |
 |---|---|
-| lint | `frontend:lint` |
-| build | `frontend:build`, `backend:build` |
-| test | `frontend:test`, `backend:test` |
-| secret-detection | поиск закоммиченных ключей и токенов |
-| docker | сборка образов и пуш в GitLab Container Registry (только `main` и теги) |
+| пуш в `main` | `frontend:build` (prettier, eslint, `bun audit`, тесты, сборка — одна джоба), secret detection, docker-образ |
+| пуш в `dev`, другие ветки, merge request | ничего; при необходимости вручную — **Build → Pipelines → Run pipeline** |
+| расписание, git-тег | SAST, dependency scanning, container scanning (+ сборка и образ на теге) |
 
-Образы: `registry.gitlab.com/company-group7340831/poker/<frontend|backend>` с тегами `:<sha>`, `:latest` и `:<git-tag>` для релизов.
+Расписание для сканеров: **Build → Pipeline schedules → New schedule**, ветка `main`, например раз в неделю.
+
+Образы: `registry.gitlab.com/company-group7340831/poker/<frontend|backend>` с тегом `:latest` и `:<git-tag>` для релизов. Артефакт `frontend/dist` живёт 1 день.
 
 Фронтенд-образ — nginx со статикой из `dist/`; `/api` и `/ws` будут проксироваться на бекенд.
 
