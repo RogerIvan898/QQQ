@@ -4,7 +4,7 @@ import { computeEquity } from './equity';
 
 const eq = (...args: Parameters<typeof computeEquity>) =>
   computeEquity(...args).equities;
-import { evaluate7 } from './evaluator';
+import { evaluateHand } from './evaluator';
 
 const RANKS = '23456789TJQKA';
 const SUITS = 'cdhs';
@@ -17,16 +17,16 @@ const near = (actual: number, expected: number, tolerance: number) =>
   );
 
 // ---- evaluator: category order ----
-const royal = evaluate7(hand('As', 'Ks', 'Qs', 'Js', 'Ts', '2d', '3c'));
-const quads = evaluate7(hand('9s', '9h', '9d', '9c', 'Ks', '2d', '3c'));
-const boat = evaluate7(hand('9s', '9h', '9d', 'Kc', 'Ks', '2d', '3c'));
-const flush = evaluate7(hand('2s', '7s', '9s', 'Js', 'Ks', '2d', '3c'));
-const straight = evaluate7(hand('5d', '6s', '7h', '8c', '9s', '2d', 'Kc'));
-const wheel = evaluate7(hand('Ad', '2s', '3h', '4c', '5s', '9d', 'Kc'));
-const trips = evaluate7(hand('9s', '9h', '9d', '4c', 'Ks', '2d', '3c'));
-const twoPair = evaluate7(hand('9s', '9h', '4d', '4c', 'Ks', '2d', '3c'));
-const pair = evaluate7(hand('9s', '9h', '4d', '7c', 'Ks', '2d', '3c'));
-const high = evaluate7(hand('9s', 'Jh', '4d', '7c', 'Ks', '2d', '3c'));
+const royal = evaluateHand(hand('As', 'Ks', 'Qs', 'Js', 'Ts', '2d', '3c'));
+const quads = evaluateHand(hand('9s', '9h', '9d', '9c', 'Ks', '2d', '3c'));
+const boat = evaluateHand(hand('9s', '9h', '9d', 'Kc', 'Ks', '2d', '3c'));
+const flush = evaluateHand(hand('2s', '7s', '9s', 'Js', 'Ks', '2d', '3c'));
+const straight = evaluateHand(hand('5d', '6s', '7h', '8c', '9s', '2d', 'Kc'));
+const wheel = evaluateHand(hand('Ad', '2s', '3h', '4c', '5s', '9d', 'Kc'));
+const trips = evaluateHand(hand('9s', '9h', '9d', '4c', 'Ks', '2d', '3c'));
+const twoPair = evaluateHand(hand('9s', '9h', '4d', '4c', 'Ks', '2d', '3c'));
+const pair = evaluateHand(hand('9s', '9h', '4d', '7c', 'Ks', '2d', '3c'));
+const high = evaluateHand(hand('9s', 'Jh', '4d', '7c', 'Ks', '2d', '3c'));
 
 assert.ok(royal > quads && quads > boat && boat > flush);
 assert.ok(flush > straight && straight > wheel && wheel > trips);
@@ -34,12 +34,12 @@ assert.ok(trips > twoPair && twoPair > pair && pair > high);
 
 // Kickers and ties.
 assert.ok(
-  evaluate7(hand('Ah', 'Kd', 'Qs', '9c', '7h', '4d', '2s')) >
-    evaluate7(hand('Ah', 'Kd', 'Qs', '9c', '6h', '4d', '2s'))
+  evaluateHand(hand('Ah', 'Kd', 'Qs', '9c', '7h', '4d', '2s')) >
+    evaluateHand(hand('Ah', 'Kd', 'Qs', '9c', '6h', '4d', '2s'))
 );
 assert.equal(
-  evaluate7(hand('Ah', 'Kd', 'Qs', 'Jc', 'Th', '4d', '2s')),
-  evaluate7(hand('As', 'Kh', 'Qd', 'Jh', 'Tc', '4c', '3s'))
+  evaluateHand(hand('Ah', 'Kd', 'Qs', 'Jc', 'Th', '4d', '2s')),
+  evaluateHand(hand('As', 'Kh', 'Qd', 'Jh', 'Tc', '4c', '3s'))
 );
 
 // ---- equity ----

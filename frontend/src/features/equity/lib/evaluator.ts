@@ -4,238 +4,297 @@
  * 4-bit rank slots, highest first.
  *
  * Hot path, so it works on bitmasks only (no arrays, no allocation):
- * - `m0..m3`: ranks present per suit (13-bit masks),
- * - `n1..n4`: bit-sliced rank counts — bit r of n2 set = rank r seen ≥ 2 times.
- * A hand "state" is those eight ints; adding a card is a few bit operations,
+ * - `clubs`, `diamonds`, `hearts`, `spades`: ranks present per suit (13-bit masks),
+ * - `atLeastOne` … `atLeastFour`: bit-sliced rank counts — bit r of
+ *   `atLeastTwo` is set when rank r appears at least twice.
+ * A hand state is those eight ints; adding a card is a few bit operations,
  * so the shared board is built once and each player only adds two cards.
  */
 
 const CATEGORY_SHIFT = 20;
+const RANK_BITS = 4;
+const SLOT_COUNT = 5;
+const RANK_MASK_SIZE = 1 << 13;
 
-const HIGH_CARD = 0;
-const PAIR = 1;
-const TWO_PAIR = 2;
-const TRIPS = 3;
-const STRAIGHT = 4;
-const FLUSH = 5;
-const FULL_HOUSE = 6;
-const QUADS = 7;
-const STRAIGHT_FLUSH = 8;
+const HandCategory = {
+  HighCard: 0,
+  Pair: 1,
+  TwoPair: 2,
+  Trips: 3,
+  Straight: 4,
+  Flush: 5,
+  FullHouse: 6,
+  Quads: 7,
+  StraightFlush: 8,
+} as const;
 
-/** Popcount of every 13-bit mask. */
-const POP = new Uint8Array(8192);
-/** Highest rank of a straight inside a 13-bit mask, or -1 (wheel included). */
-const STRAIGHT_HIGH = new Int8Array(8192);
+/** State slot indices. */
+const StateIndex = {
+  AtLeastOne: 4,
+  AtLeastTwo: 5,
+  AtLeastThree: 6,
+  AtLeastFour: 7,
+} as const;
 
-for (let mask = 0; mask < 8192; mask += 1) {
-  POP[mask] = (mask & 1) + POP[mask >> 1];
+/** Number of set bits for every 13-bit rank mask. */
+const POPCOUNT = new Uint8Array(RANK_MASK_SIZE);
+/** Highest rank of a straight inside a 13-bit rank mask, or -1 (wheel included). */
+const STRAIGHT_HIGH_RANK = new Int8Array(RANK_MASK_SIZE);
 
-  const extended = (mask << 1) | ((mask >> 12) & 1);
-  let high = -1;
+for (let rankMask = 0; rankMask < RANK_MASK_SIZE; rankMask += 1) {
+  POPCOUNT[rankMask] = (rankMask & 1) + POPCOUNT[rankMask >> 1];
 
-  for (let top = 12; top >= 3; top -= 1) {
-    const run = 0b11111 << (top - 3);
+  // The ace also plays low: copy it below the deuce for the wheel.
+  const withLowAce = (rankMask << 1) | ((rankMask >> 12) & 1);
+  let highRank = -1;
 
-    if ((extended & run) === run) {
-      high = top;
+  for (let topRank = 12; topRank >= 3; topRank -= 1) {
+    const run = 0b11111 << (topRank - 3);
+
+    if ((withLowAce & run) === run) {
+      highRank = topRank;
       break;
     }
   }
 
-  STRAIGHT_HIGH[mask] = high;
+  STRAIGHT_HIGH_RANK[rankMask] = highRank;
 }
 
-/** Highest set bit of a non-zero mask. */
-const hi = (mask: number) => 31 - Math.clz32(mask);
+/** Index of the highest set bit of a non-zero mask. */
+const highestRank = (rankMask: number) => 31 - Math.clz32(rankMask);
+
+const withCategory = (category: number, slots: number) =>
+  (category << CATEGORY_SHIFT) | slots;
 
 /**
- * Packs the top `count` ranks of `mask` after `slots` (which already holds
- * `used` ranks), padding to five slots.
+ * Appends the `count` highest ranks of `rankMask` to `slots` (which already
+ * holds `filledSlots` ranks) and left-aligns the result to five slots.
  */
-const packTop = (slots: number, used: number, mask: number, count: number) => {
-  let value = slots;
-  let rest = mask;
-  let taken = 0;
+const appendKickers = (
+  slots: number,
+  filledSlots: number,
+  rankMask: number,
+  count: number
+) => {
+  let packed = slots;
+  let remaining = rankMask;
+  let appended = 0;
 
-  while (taken < count && rest !== 0) {
-    const rank = hi(rest);
+  while (appended < count && remaining !== 0) {
+    const rank = highestRank(remaining);
 
-    value = (value << 4) | rank;
-    rest ^= 1 << rank;
-    taken += 1;
+    packed = (packed << RANK_BITS) | rank;
+    remaining ^= 1 << rank;
+    appended += 1;
   }
 
-  return value << (4 * (5 - used - taken));
+  return packed << (RANK_BITS * (SLOT_COUNT - filledSlots - appended));
 };
 
 /** Scores a complete hand state (5–7 cards). */
-export const scoreState = (
-  m0: number,
-  m1: number,
-  m2: number,
-  m3: number,
-  n1: number,
-  n2: number,
-  n3: number,
-  n4: number
+export const scoreHandState = (
+  clubs: number,
+  diamonds: number,
+  hearts: number,
+  spades: number,
+  atLeastOne: number,
+  atLeastTwo: number,
+  atLeastThree: number,
+  atLeastFour: number
 ) => {
-  const flush =
-    POP[m0] >= 5
-      ? m0
-      : POP[m1] >= 5
-        ? m1
-        : POP[m2] >= 5
-          ? m2
-          : POP[m3] >= 5
-            ? m3
+  const flushRanks =
+    POPCOUNT[clubs] >= 5
+      ? clubs
+      : POPCOUNT[diamonds] >= 5
+        ? diamonds
+        : POPCOUNT[hearts] >= 5
+          ? hearts
+          : POPCOUNT[spades] >= 5
+            ? spades
             : 0;
 
-  if (flush !== 0) {
-    const high = STRAIGHT_HIGH[flush];
+  if (flushRanks !== 0) {
+    const straightFlushHigh = STRAIGHT_HIGH_RANK[flushRanks];
 
-    if (high >= 0) {
-      return (STRAIGHT_FLUSH << CATEGORY_SHIFT) | (high << 16);
+    if (straightFlushHigh >= 0) {
+      return withCategory(HandCategory.StraightFlush, straightFlushHigh << 16);
     }
   }
 
-  if (n4 !== 0) {
-    const quads = hi(n4);
+  if (atLeastFour !== 0) {
+    const quadsRank = highestRank(atLeastFour);
 
-    return (QUADS << CATEGORY_SHIFT) | packTop(quads, 1, n1 & ~(1 << quads), 1);
+    return withCategory(
+      HandCategory.Quads,
+      appendKickers(quadsRank, 1, atLeastOne & ~(1 << quadsRank), 1)
+    );
   }
 
-  const trips = n3 & ~n4;
-  const pairs = n2 & ~n3;
+  const tripsRanks = atLeastThree & ~atLeastFour;
+  const pairRanks = atLeastTwo & ~atLeastThree;
 
-  if (trips !== 0) {
-    const top = hi(trips);
-    const rest = (trips & ~(1 << top)) | pairs;
+  if (tripsRanks !== 0) {
+    const tripsRank = highestRank(tripsRanks);
+    const fillRanks = (tripsRanks & ~(1 << tripsRank)) | pairRanks;
 
-    if (rest !== 0) {
-      return (FULL_HOUSE << CATEGORY_SHIFT) | (((top << 4) | hi(rest)) << 12);
+    if (fillRanks !== 0) {
+      return withCategory(
+        HandCategory.FullHouse,
+        ((tripsRank << RANK_BITS) | highestRank(fillRanks)) << 12
+      );
     }
   }
 
-  if (flush !== 0) {
-    return (FLUSH << CATEGORY_SHIFT) | packTop(0, 0, flush, 5);
+  if (flushRanks !== 0) {
+    return withCategory(HandCategory.Flush, appendKickers(0, 0, flushRanks, 5));
   }
 
-  const high = STRAIGHT_HIGH[n1];
+  const straightHigh = STRAIGHT_HIGH_RANK[atLeastOne];
 
-  if (high >= 0) {
-    return (STRAIGHT << CATEGORY_SHIFT) | (high << 16);
+  if (straightHigh >= 0) {
+    return withCategory(HandCategory.Straight, straightHigh << 16);
   }
 
-  if (trips !== 0) {
-    const top = hi(trips);
+  if (tripsRanks !== 0) {
+    const tripsRank = highestRank(tripsRanks);
 
-    return (TRIPS << CATEGORY_SHIFT) | packTop(top, 1, n1 & ~(1 << top), 2);
+    return withCategory(
+      HandCategory.Trips,
+      appendKickers(tripsRank, 1, atLeastOne & ~(1 << tripsRank), 2)
+    );
   }
 
-  if (pairs !== 0) {
-    const first = hi(pairs);
-    const others = pairs & ~(1 << first);
+  if (pairRanks !== 0) {
+    const topPair = highestRank(pairRanks);
+    const lowerPairs = pairRanks & ~(1 << topPair);
 
-    if (others !== 0) {
-      const second = hi(others);
+    if (lowerPairs !== 0) {
+      const secondPair = highestRank(lowerPairs);
 
-      return (
-        (TWO_PAIR << CATEGORY_SHIFT) |
-        packTop(
-          (first << 4) | second,
+      return withCategory(
+        HandCategory.TwoPair,
+        appendKickers(
+          (topPair << RANK_BITS) | secondPair,
           2,
-          n1 & ~((1 << first) | (1 << second)),
+          atLeastOne & ~((1 << topPair) | (1 << secondPair)),
           1
         )
       );
     }
 
-    return (PAIR << CATEGORY_SHIFT) | packTop(first, 1, n1 & ~(1 << first), 3);
+    return withCategory(
+      HandCategory.Pair,
+      appendKickers(topPair, 1, atLeastOne & ~(1 << topPair), 3)
+    );
   }
 
-  return (HIGH_CARD << CATEGORY_SHIFT) | packTop(0, 0, n1, 5);
+  return withCategory(
+    HandCategory.HighCard,
+    appendKickers(0, 0, atLeastOne, 5)
+  );
 };
 
-/** Hand state: [m0, m1, m2, m3, n1, n2, n3, n4]. */
+/**
+ * Hand state: [clubs, diamonds, hearts, spades,
+ * atLeastOne, atLeastTwo, atLeastThree, atLeastFour].
+ */
 export type HandState = Int32Array;
 
-export const createState = (): HandState => new Int32Array(8);
+export const createHandState = (): HandState => new Int32Array(8);
 
-/** `into` = `from` plus one card (both may be the same array). */
-export const addCard = (from: HandState, into: HandState, card: number) => {
-  const bit = 1 << (card >> 2);
-  const n1 = from[4];
-  const n2 = from[5];
-  const n3 = from[6];
+/** Writes `source` plus one card into `target` (they may be the same array). */
+export const addCardToState = (
+  source: HandState,
+  target: HandState,
+  card: number
+) => {
+  const rankBit = 1 << (card >> 2);
+  const atLeastOne = source[StateIndex.AtLeastOne];
+  const atLeastTwo = source[StateIndex.AtLeastTwo];
+  const atLeastThree = source[StateIndex.AtLeastThree];
 
-  into[0] = from[0];
-  into[1] = from[1];
-  into[2] = from[2];
-  into[3] = from[3];
-  into[card & 3] |= bit;
-  into[7] = from[7] | (n3 & bit);
-  into[6] = n3 | (n2 & bit);
-  into[5] = n2 | (n1 & bit);
-  into[4] = n1 | bit;
+  target[0] = source[0];
+  target[1] = source[1];
+  target[2] = source[2];
+  target[3] = source[3];
+  target[card & 3] |= rankBit;
+  target[StateIndex.AtLeastFour] =
+    source[StateIndex.AtLeastFour] | (atLeastThree & rankBit);
+  target[StateIndex.AtLeastThree] = atLeastThree | (atLeastTwo & rankBit);
+  target[StateIndex.AtLeastTwo] = atLeastTwo | (atLeastOne & rankBit);
+  target[StateIndex.AtLeastOne] = atLeastOne | rankBit;
 };
 
-/** Scores `board` plus two hole cards without touching `board`. */
-export const scoreWithHole = (board: HandState, a: number, b: number) => {
-  let m0 = board[0];
-  let m1 = board[1];
-  let m2 = board[2];
-  let m3 = board[3];
-  let n1 = board[4];
-  let n2 = board[5];
-  let n3 = board[6];
-  let n4 = board[7];
+/** Scores `boardState` plus two hole cards without modifying `boardState`. */
+export const scoreBoardWithHoleCards = (
+  boardState: HandState,
+  firstCard: number,
+  secondCard: number
+) => {
+  let clubs = boardState[0];
+  let diamonds = boardState[1];
+  let hearts = boardState[2];
+  let spades = boardState[3];
+  let atLeastOne = boardState[StateIndex.AtLeastOne];
+  let atLeastTwo = boardState[StateIndex.AtLeastTwo];
+  let atLeastThree = boardState[StateIndex.AtLeastThree];
+  let atLeastFour = boardState[StateIndex.AtLeastFour];
 
-  // Inlined addCard ×2: this runs millions of times per request.
-  let bit = 1 << (a >> 2);
-  let suit = a & 3;
+  // addCardToState inlined twice: this runs millions of times per request.
+  let rankBit = 1 << (firstCard >> 2);
+  let suit = firstCard & 3;
 
-  if (suit === 0) m0 |= bit;
-  else if (suit === 1) m1 |= bit;
-  else if (suit === 2) m2 |= bit;
-  else m3 |= bit;
-  n4 |= n3 & bit;
-  n3 |= n2 & bit;
-  n2 |= n1 & bit;
-  n1 |= bit;
+  if (suit === 0) clubs |= rankBit;
+  else if (suit === 1) diamonds |= rankBit;
+  else if (suit === 2) hearts |= rankBit;
+  else spades |= rankBit;
+  atLeastFour |= atLeastThree & rankBit;
+  atLeastThree |= atLeastTwo & rankBit;
+  atLeastTwo |= atLeastOne & rankBit;
+  atLeastOne |= rankBit;
 
-  bit = 1 << (b >> 2);
-  suit = b & 3;
+  rankBit = 1 << (secondCard >> 2);
+  suit = secondCard & 3;
 
-  if (suit === 0) m0 |= bit;
-  else if (suit === 1) m1 |= bit;
-  else if (suit === 2) m2 |= bit;
-  else m3 |= bit;
-  n4 |= n3 & bit;
-  n3 |= n2 & bit;
-  n2 |= n1 & bit;
-  n1 |= bit;
+  if (suit === 0) clubs |= rankBit;
+  else if (suit === 1) diamonds |= rankBit;
+  else if (suit === 2) hearts |= rankBit;
+  else spades |= rankBit;
+  atLeastFour |= atLeastThree & rankBit;
+  atLeastThree |= atLeastTwo & rankBit;
+  atLeastTwo |= atLeastOne & rankBit;
+  atLeastOne |= rankBit;
 
-  return scoreState(m0, m1, m2, m3, n1, n2, n3, n4);
+  return scoreHandState(
+    clubs,
+    diamonds,
+    hearts,
+    spades,
+    atLeastOne,
+    atLeastTwo,
+    atLeastThree,
+    atLeastFour
+  );
 };
 
-const scratch = createState();
+const scratchState = createHandState();
 
 /** Scores 5–7 cards. */
-export const evaluate7 = (cards: ArrayLike<number>) => {
-  scratch.fill(0);
+export const evaluateHand = (cards: ArrayLike<number>) => {
+  scratchState.fill(0);
 
   for (let index = 0; index < cards.length; index += 1) {
-    addCard(scratch, scratch, cards[index]);
+    addCardToState(scratchState, scratchState, cards[index]);
   }
 
-  return scoreState(
-    scratch[0],
-    scratch[1],
-    scratch[2],
-    scratch[3],
-    scratch[4],
-    scratch[5],
-    scratch[6],
-    scratch[7]
+  return scoreHandState(
+    scratchState[0],
+    scratchState[1],
+    scratchState[2],
+    scratchState[3],
+    scratchState[4],
+    scratchState[5],
+    scratchState[6],
+    scratchState[7]
   );
 };
