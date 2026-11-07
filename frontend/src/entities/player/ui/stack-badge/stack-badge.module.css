@@ -20,6 +20,23 @@
   overflow: hidden;
 }
 
+/* The viewer's seat: solid primary frame, tinted fill and a soft glow. */
+.frameHero {
+  border: 2px solid var(--color-primary);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 26%, var(--color-bg-elevated)) 0%,
+    var(--color-bg-elevated) 100%
+  );
+  box-shadow:
+    0 4px 14px var(--color-shadow),
+    0 0 14px color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+
+.frameHero .name {
+  color: var(--color-primary-light);
+}
+
 .content {
   position: relative;
   z-index: 1;

@@ -158,6 +158,7 @@ const PlayerView = ({
             usingBank={usingBank}
             winAmount={winAmount}
             winId={winId}
+            hero={currentPlayer}
           />
 
           {!isFolded && combinationSlot && (

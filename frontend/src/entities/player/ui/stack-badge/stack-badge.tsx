@@ -18,6 +18,8 @@ interface Props {
   usingBank?: boolean;
   winAmount?: number;
   winId?: number;
+  /** The viewer's own seat: highlighted so it stands out at a full table. */
+  hero?: boolean;
 }
 
 export const StackBadge = ({
@@ -30,6 +32,7 @@ export const StackBadge = ({
   usingBank = false,
   winAmount,
   winId,
+  hero = false,
 }: Props) => {
   const formatChips = useChipFormatter();
   const [settledWinId, setSettledWinId] = React.useState<number | null>(null);
@@ -52,6 +55,7 @@ export const StackBadge = ({
       <div
         className={cn(
           styles.frame,
+          hero && styles.frameHero,
           folded && styles.frameFolded,
           sitOut && styles.frameSitOut
         )}

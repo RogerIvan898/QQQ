@@ -18,6 +18,13 @@
   z-index: 1;
 }
 
+.currentPlayer {
+  border-color: var(--color-primary);
+  box-shadow:
+    0 4px 8px var(--color-shadow),
+    0 0 12px color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+
 .foldedAvatar {
   filter: grayscale(0.9) brightness(0.72);
   opacity: 0.72;
