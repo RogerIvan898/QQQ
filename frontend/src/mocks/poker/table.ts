@@ -156,6 +156,13 @@ export class PokerTable {
     this.deck = createShuffledDeck();
     this.board = [];
 
+    // Equity test table: everyone rebuys to 100 BB so all-ins keep coming.
+    if (this.allInScenario) {
+      this.seats.forEach(seat => {
+        seat.stack = this.bigBlind * 100;
+      });
+    }
+
     this.seats.forEach(seat => {
       const playing = seat.stack > 0;
 
