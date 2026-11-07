@@ -171,11 +171,13 @@ export const BetManager = ({
               type="button"
               className={cn(
                 styles.shortcut,
-                preset.label === maxLabel &&
-                  amount === value &&
-                  styles.shortcutActive
+                preset.label === maxLabel && styles.shortcutAllIn
               )}
-              disabled={preset.value < minAmount}
+              // Already all-in (slider, field or this button): nothing to pick.
+              disabled={
+                preset.value < minAmount ||
+                (preset.label === maxLabel && amount >= maxAmount)
+              }
               onClick={() => commit(value)}
             >
               {preset.label}

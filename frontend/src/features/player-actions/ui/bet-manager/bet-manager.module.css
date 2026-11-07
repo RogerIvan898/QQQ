@@ -67,16 +67,20 @@
   cursor: default;
 }
 
-.shortcutActive {
-  border-color: var(--color-primary);
-  color: var(--color-primary-light);
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+.shortcutAllIn {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 /* −  [ amount ]  + : the field takes the whole middle, all three one height. */
 .inputRow {
   display: grid;
-  grid-template-columns: var(--field-height) 1fr var(--field-height);
+  /* The amount needs a few digits, not the whole row: keep it compact
+     and centred between the steppers. */
+  grid-template-columns: var(--field-height) minmax(0, 180px) var(
+      --field-height
+    );
+  justify-content: center;
   gap: 8px;
 }
 
