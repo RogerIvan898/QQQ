@@ -35,12 +35,11 @@
 
 .combinationWrap {
   position: absolute;
-  /* Tucked under the stack badge's bottom edge (frame is z-index 12), so the
-     label looks like a tab pulled out of the badge; it also stays clear of
-     the action panel under the hero's seat. */
-  top: calc(100% - 7px);
+  /* Sits on the stack badge's bottom edge, above the frame (z-index 12),
+     which also keeps it clear of the action panel under the hero's seat. */
+  top: calc(100% - 9px);
   left: 50%;
-  z-index: 11;
+  z-index: 13;
   transform: translateX(-50%);
   pointer-events: none;
 }
