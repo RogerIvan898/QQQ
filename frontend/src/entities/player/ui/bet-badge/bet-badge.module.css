@@ -5,7 +5,6 @@
     var(--bet-base-distance) + var(--to-center-abs-y) *
       var(--bet-vertical-extra)
   );
-  --bet-slide: 40px;
   /* Side seats sit level with the board, so their chips would land on the
      cards: drop them below the board. 1 for a purely horizontal seat, 0 once
      the seat is more than ~30° above or below the centre line. */
@@ -25,7 +24,7 @@
       calc(var(--to-center-y) * var(--bet-distance))
     )
     translateY(var(--bet-drop));
-  animation: chipSlideOut 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: chipSlideOut 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .amountBadge {
@@ -96,16 +95,12 @@
 }
 
 @keyframes chipSlideOut {
+  /* Starts at the seat itself and slides out to its spot toward the pot. */
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%)
-      translate(
-        calc(var(--to-center-x) * (var(--bet-distance) - var(--bet-slide))),
-        calc(var(--to-center-y) * (var(--bet-distance) - var(--bet-slide)))
-      )
-      translateY(var(--bet-drop)) scale(0.65);
+    transform: translate(-50%, -50%) scale(0.5);
   }
-  40% {
+  25% {
     opacity: 1;
   }
   100% {
@@ -147,7 +142,6 @@
   .betArea {
     --bet-base-distance: clamp(56px, 18cqmin, 84px);
     --bet-vertical-extra: 34px;
-    --bet-slide: 24px;
   }
 }
 

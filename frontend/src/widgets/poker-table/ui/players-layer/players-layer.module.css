@@ -122,9 +122,12 @@
 /* Made hand under the seat; positioned by Player's combination slot. */
 .combination {
   display: block;
-  padding: 2px 8px;
+  /* Extra top padding is the part tucked under the stack badge. */
+  padding: 9px 8px 2px;
   border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
-  border-radius: 999px;
+  border-top: none;
+  /* A tab pulled out from under the badge: rounded only at the bottom. */
+  border-radius: 0 0 10px 10px;
   background: color-mix(in srgb, var(--color-bg-elevated) 92%, transparent);
   color: var(--color-primary-light);
   font-size: 10px;

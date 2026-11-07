@@ -35,19 +35,14 @@
 
 .combinationWrap {
   position: absolute;
-  top: calc(100% + 3px);
+  /* Tucked under the stack badge's bottom edge (frame is z-index 12), so the
+     label looks like a tab pulled out of the badge; it also stays clear of
+     the action panel under the hero's seat. */
+  top: calc(100% - 7px);
   left: 50%;
-  z-index: 2;
+  z-index: 11;
   transform: translateX(-50%);
   pointer-events: none;
-}
-
-.combinationWrapHero {
-  /* Same place as everyone's, pulled up onto the badge's bottom edge so the
-     action panel right below the hero doesn't cover it. */
-  top: calc(100% - 9px);
-  /* Above the stack badge frame (z-index 12). */
-  z-index: 13;
 }
 
 .dealerWrap {

@@ -162,14 +162,7 @@ const PlayerView = ({
           />
 
           {!isFolded && combinationSlot && (
-            <div
-              className={cn(
-                styles.combinationWrap,
-                currentPlayer && styles.combinationWrapHero
-              )}
-            >
-              {combinationSlot}
-            </div>
+            <div className={styles.combinationWrap}>{combinationSlot}</div>
           )}
         </div>
 
