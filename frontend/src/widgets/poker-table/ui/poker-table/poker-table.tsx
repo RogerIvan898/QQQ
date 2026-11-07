@@ -22,10 +22,11 @@ interface Props {
 export const PokerTable = ({
   cards = [],
   pot,
-  showPot = pot > 0,
+  showPot: showPotOverride,
   crowded = false,
   ref,
 }: Props) => {
+  const showPot = showPotOverride ?? pot > 0;
   const formatChips = useChipFormatter();
   const { play: playDeal } = useSound(Sound.CARD_DEAL);
 

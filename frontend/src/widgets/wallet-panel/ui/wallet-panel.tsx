@@ -130,12 +130,17 @@ export const WalletPanel = ({
   ]);
 
   // First open loads the newest page; later opens keep what is loaded.
-  React.useEffect(() => {
-    if (open && items.length === 0 && !loading) {
+  // An effect event reads the latest list without re-running on its changes.
+  const loadFirstPage = React.useEffectEvent(() => {
+    if (items.length === 0 && !loading) {
       reset();
     }
-    // Only on opening.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  });
+
+  React.useEffect(() => {
+    if (open) {
+      loadFirstPage();
+    }
   }, [open]);
 
   // Desktop popover: close on outside click and Escape.

@@ -1,6 +1,7 @@
 import { lingui } from '@lingui/vite-plugin';
+import babel from '@rolldown/plugin-babel';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
-import react from '@vitejs/plugin-react';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
@@ -81,6 +82,8 @@ export default defineConfig({
     }),
     lingui({ macroTransform: true }),
     react(),
+    // React Compiler: memoizes components and hooks at build time.
+    babel({ presets: [reactCompilerPreset()] }),
     nodePolyfills({
       include: ['buffer'],
     }),

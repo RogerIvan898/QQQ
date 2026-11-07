@@ -221,3 +221,7 @@ gameModel.incomingEvent.watch(event => {
 });
 
 gameModel.disconnectGame.watch(stop);
+
+// Load the worker as soon as the table code is loaded, so even the first
+// all-in of the session doesn't wait for its module.
+getWorker();

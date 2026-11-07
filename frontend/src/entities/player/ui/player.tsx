@@ -52,7 +52,7 @@ interface Props {
 
 const PlayerView = ({
   player,
-  hand = player.hand,
+  hand: handOverride,
   currentPlayer = false,
   turnDurationSec = 15,
   timeBankSec = 10,
@@ -68,6 +68,7 @@ const PlayerView = ({
   equitySlot = null,
 }: Props) => {
   const { status, stack, name } = player;
+  const hand = handOverride === undefined ? player.hand : handOverride;
 
   const isSitOut = status === PlayerStatus.SITTING_OUT;
   const isFolded = status === PlayerStatus.FOLDED;

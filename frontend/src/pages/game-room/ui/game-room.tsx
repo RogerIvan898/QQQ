@@ -112,8 +112,12 @@ export const GameRoomPage = () => {
           <RevealCardsButton />
         </React.Suspense>
       ) : null}
-      <PokerBoard />
-      <PlayerActions />
+      {/* The replay covers the screen: hide the live table under it so it
+          stops animating and playing sounds, but keeps its state. */}
+      <React.Activity mode={replayHand ? 'hidden' : 'visible'}>
+        <PokerBoard />
+        <PlayerActions />
+      </React.Activity>
     </div>
   );
 };
