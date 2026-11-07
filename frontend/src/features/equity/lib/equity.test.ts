@@ -132,3 +132,12 @@ assert.deepEqual(
   ),
   [0.25, 0.25, 0.25, 0.25]
 );
+
+// Sampling is deterministic per spot (same numbers on every client), and
+// big tables no longer collapse to one shared seed.
+const big = [nine.slice(0, 7), nine.slice(1, 8)];
+assert.deepEqual(eq(big[0], []), eq(big[0], []));
+assert.notDeepEqual(
+  eq(big[0], []).slice(0, 2),
+  eq([nine[0], nine[1], ...nine.slice(3, 8)], []).slice(0, 2)
+);

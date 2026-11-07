@@ -40,6 +40,22 @@ export const choose = (n: number, k: number) => {
   return Math.round(result);
 };
 
+/**
+ * FNV-1a over the spot's cards (hands in seat order, then the board): stays in
+ * 32 bits for any table size, so every client derives the same seed and
+ * therefore the same sampled numbers, and different spots get different seeds.
+ */
+const seedFor = (hands: number[][], board: number[]) => {
+  let hash = 0x811c9dc5;
+
+  for (const card of [...hands.flat(), 0xff, ...board]) {
+    hash ^= card;
+    hash = Math.imul(hash, 0x01000193);
+  }
+
+  return hash >>> 0;
+};
+
 /** Mulberry32: tiny seeded PRNG, so a given spot always gives the same %. */
 const prng = (seed: number) => () => {
   seed |= 0;
@@ -133,9 +149,7 @@ export const computeEquity = (
 
     walk(0, 0);
   } else {
-    const random = prng(
-      hands.flat().reduce((seed, card) => seed * 53 + card, 7)
-    );
+    const random = prng(seedFor(hands, board));
     const pool = deck.slice();
     const runout = new Uint8Array(missing);
 
