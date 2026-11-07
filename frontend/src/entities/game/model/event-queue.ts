@@ -55,7 +55,32 @@ export const enqueueServerEvent = (event: ServerGameEvent) => {
   }
 
   queue.push(event);
+  lastEnqueuedAt = performance.now();
   void run(generation);
+};
+
+let lastEnqueuedAt = 0;
+
+/** Quiet time that marks the end of a burst from the server. */
+const BURST_GAP_MS = 120;
+/** Never hold the queue longer than this waiting for a burst to finish. */
+const BURST_MAX_WAIT_MS = 500;
+
+/**
+ * The server sends a whole all-in runout at once (street, showdown, board,
+ * result), but each message lands as its own task. On a slow device the
+ * first one is seen before the rest arrive, and the runout would be played
+ * as plain streets. Wait until the burst goes quiet before deciding.
+ */
+const waitForBurst = async () => {
+  const started = performance.now();
+
+  while (
+    performance.now() - lastEnqueuedAt < BURST_GAP_MS &&
+    performance.now() - started < BURST_MAX_WAIT_MS
+  ) {
+    await delay(40);
+  }
 };
 
 const SHOWDOWN_PAUSE_MS = 500;
@@ -64,11 +89,50 @@ const WIN_ANIMATION_MS = 1000;
 // Animations are paced with timers, which a hidden WebView throttles to one
 // per second (one per minute after a while). Without this the queue would keep
 // growing in the background and replay minutes of old hands on return.
-const BACKLOG_LIMIT = 12;
+//
+// Lagging by one hand is normal: the server starts the next hand while we
+// still animate the runout, and a 9-handed orbit alone is ~20 events. So only
+// skip ahead when a second hand is already waiting (or the backlog is huge),
+// otherwise the runout would be cut off and its board never shown.
+const BACKLOG_HARD_LIMIT = 80;
 
-const shouldFastForward = () =>
-  (typeof document !== 'undefined' && document.hidden) ||
-  queue.length > BACKLOG_LIMIT;
+const queuedHandStarts = () =>
+  queue.reduce(
+    (count, event) =>
+      event.type === SERVER_EVENTS.HAND_STARTED ? count + 1 : count,
+    0
+  );
+
+/** Dev-only counters for the equity benchmark (`scripts/bench-equity.ts`). */
+const debug = import.meta.env.DEV
+  ? ((
+      window as unknown as { __queueDebug?: Record<string, number> }
+    ).__queueDebug ??= {})
+  : null;
+const count = (key: string) => {
+  if (debug) {
+    debug[key] = (debug[key] ?? 0) + 1;
+  }
+};
+
+const shouldFastForward = () => {
+  if (typeof document !== 'undefined' && document.hidden) {
+    count('ffHidden');
+    return true;
+  }
+
+  if (queuedHandStarts() >= 2) {
+    count('ffTwoHandsBehind');
+    return true;
+  }
+
+  if (queue.length > BACKLOG_HARD_LIMIT) {
+    count('ffHardLimit');
+    return true;
+  }
+
+  return false;
+};
 
 /** Applies everything queued at once, without pauses, animations or sounds. */
 const flushQueue = () => {
@@ -101,7 +165,7 @@ const run = async (gen: number) => {
     }
 
     if (isStreetEvent(queue[0])) {
-      await delay(0);
+      await waitForBurst();
 
       if (gen !== generation) {
         break;
@@ -259,6 +323,7 @@ const playRunout = async (gen: number) => {
 
   collectingBets(false);
   applyStreet();
+  count(finished ? 'runoutPlayed' : 'runoutCut');
 
   if (finished) {
     return;
