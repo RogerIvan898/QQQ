@@ -331,7 +331,9 @@ export class PokerTable {
       bankroll,
       seat.committed + this.minRaiseExtra(seat)
     );
-    const canRaise = seat.stack > need && bankroll > minTotal;
+    // `>=`: with less than a min-raise behind, the minimum is clamped to the
+    // whole stack and an all-in for less must still be allowed.
+    const canRaise = seat.stack > need && bankroll >= minTotal;
 
     this.emit({
       type: SERVER_EVENTS.ALLOWED_ACTIONS,
