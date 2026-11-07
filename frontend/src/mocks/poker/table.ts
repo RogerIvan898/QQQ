@@ -13,7 +13,16 @@ import { readPlayerAction, readReveal, type ChosenAction } from './commands';
 import { createShuffledDeck } from './deck';
 import { rankHand } from './rank';
 
-const BOT_NAMES = ['Nova', 'Rex', 'Ivy', 'Lux'] as const;
+const BOT_NAMES = [
+  'Nova',
+  'Rex',
+  'Ivy',
+  'Lux',
+  'Max',
+  'Zoe',
+  'Kai',
+  'Mia',
+] as const;
 const HERO_TURN_MS = 20_000;
 const BOT_ACTION_MS = 1_600;
 const STREET_PAUSE_MS = 900;
@@ -65,10 +74,13 @@ export class PokerTable {
 
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
 
+  private readonly allInScenario: boolean;
+
   constructor(
     private readonly client: MockSocket,
     room: MockRoomConfig
   ) {
+    this.allInScenario = room.scenario === 'all-in';
     this.smallBlind = room.smallBlind;
     this.bigBlind = room.bigBlind;
 
@@ -362,10 +374,22 @@ export class PokerTable {
   }
 
   private async botAction(seat: Seat): Promise<ChosenAction | null> {
-    await this.sleep(BOT_ACTION_MS);
+    await this.sleep(this.allInScenario ? 350 : BOT_ACTION_MS);
 
     if (this.closed) {
       return null;
+    }
+
+    // Equity test table: everyone shoves (or calls off when short).
+    if (this.allInScenario) {
+      const need = Math.max(0, this.currentBet - seat.committed);
+
+      return seat.stack > need
+        ? {
+            action: need === 0 ? PlayerAction.BET : PlayerAction.RAISE,
+            amount: seat.committed + seat.stack,
+          }
+        : { action: PlayerAction.CALL };
     }
 
     return chooseBotAction({

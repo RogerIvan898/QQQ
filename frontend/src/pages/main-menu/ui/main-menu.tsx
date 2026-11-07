@@ -162,6 +162,12 @@ export const MenuPage = () => {
                   <DevServerSwitch />
                 </React.Suspense>
               ) : null}
+              {import.meta.env.DEV ? (
+                <div className={styles.devTable}>
+                  <span>All-in test · 9 players (mock)</span>
+                  <JoinRoomButton roomId="allin" isFull={false} />
+                </div>
+              ) : null}
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>{t`Available tables`}</h2>
               </div>
