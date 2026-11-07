@@ -43,6 +43,17 @@ let requestId = 0;
 /** Seats of the latest request, in the order the worker answers. */
 let pendingSeats: number[] = [];
 let active = false;
+let hideTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Keep the final 100% / 0% up until the winner animation has played. */
+const HIDE_AFTER_WIN_MS = 1800;
+
+const clearHideTimer = () => {
+  if (hideTimer !== null) {
+    clearTimeout(hideTimer);
+    hideTimer = null;
+  }
+};
 
 const getWorker = () => {
   if (worker || typeof Worker === 'undefined') {
@@ -73,6 +84,7 @@ const getWorker = () => {
 };
 
 const stop = () => {
+  clearHideTimer();
   active = false;
   requestId += 1;
   equityChanged(null);
@@ -80,13 +92,6 @@ const stop = () => {
 
 const recalculate = () => {
   const state = gameModel.$gameState.getState();
-
-  // River dealt: the result is known and shown next; equity would read as a
-  // verdict, so it goes away here.
-  if (state.community.length >= 5) {
-    stop();
-    return;
-  }
 
   const contenders = Object.values(state.players).filter(
     player => player.hand && player.status !== PlayerStatus.FOLDED
@@ -97,6 +102,7 @@ const recalculate = () => {
     return;
   }
 
+  clearHideTimer();
   active = true;
   requestId += 1;
   pendingSeats = contenders.map(player => player.seat);
@@ -123,7 +129,9 @@ const recalculate = () => {
 };
 
 // The runout is the only time hands are revealed before the river: betting is
-// over, at least one player is all-in and nobody can act any more.
+// over, at least one player is all-in and nobody can act any more. Equity is
+// recomputed per street; on the river it is exact (the result), and it stays
+// until the winner animation is over.
 gameModel.incomingEvent.watch(event => {
   switch (event.type) {
     case SERVER_EVENTS.SHOWDOWN:
@@ -137,6 +145,13 @@ gameModel.incomingEvent.watch(event => {
       }
       break;
     case SERVER_EVENTS.HAND_COMPLETED:
+      // The river already settled it to 100% / 0% (or a split); hold that
+      // while the pot flies to the winner, then clear.
+      if (active) {
+        clearHideTimer();
+        hideTimer = setTimeout(stop, HIDE_AFTER_WIN_MS);
+      }
+      break;
     case SERVER_EVENTS.HAND_STARTED:
       if (active || $equity.getState()) {
         stop();

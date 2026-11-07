@@ -76,3 +76,49 @@ near(
   1,
   1e-9
 );
+
+// ---- extreme: full 9-handed table ----
+const nine = [
+  hand('Ah', 'Ad'),
+  hand('Kh', 'Kd'),
+  hand('Qs', 'Qc'),
+  hand('Js', 'Tc'),
+  hand('9h', '8h'),
+  hand('7d', '6d'),
+  hand('5s', '5c'),
+  hand('As', 'Ks'),
+  hand('2h', '3h'),
+];
+const sum = (values: number[]) =>
+  values.reduce((total, value) => total + value, 0);
+
+// Preflop (sampled), flop and turn (exact) all stay a valid distribution.
+for (const board of [
+  [],
+  hand('4c', 'Th', 'Jh'),
+  hand('4c', 'Th', 'Jh', '2c'),
+]) {
+  const result = computeEquity(nine, board);
+
+  assert.equal(result.length, 9);
+  near(sum(result), 1, 1e-9);
+  assert.ok(result.every(value => value >= 0 && value <= 1));
+}
+
+// River: JT makes two pair and takes it all.
+assert.deepEqual(
+  computeEquity(nine, hand('4c', 'Th', 'Jh', '2c', '9c')),
+  [0, 0, 0, 1, 0, 0, 0, 0, 0]
+);
+
+// Four-way chop when the board plays.
+assert.deepEqual(
+  computeEquity(
+    [hand('2h', '3d'), hand('4h', '5d'), hand('6h', '7d'), hand('8h', '9d')],
+    hand('As', 'Ks', 'Qs', 'Js', 'Ts')
+  ),
+  [0.25, 0.25, 0.25, 0.25]
+);
+
+// Mirror hands are a coin flip (within sampling noise).
+near(computeEquity([hand('Ah', 'Kh'), hand('Ad', 'Kd')], [])[0], 0.5, 0.01);
