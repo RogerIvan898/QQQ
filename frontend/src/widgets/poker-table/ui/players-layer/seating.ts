@@ -14,9 +14,10 @@ interface TableSize {
 
 const COMPACT_TABLE_WIDTH = 380;
 
+/** Seat ring relative to the table: past the rail, so seats don't hug the felt. */
 const ELLIPSE_SCALE = {
-  compact: { x: 0.54, y: 0.52 },
-  regular: { x: 0.54, y: 0.48 },
+  compact: { x: 0.54, y: 0.57 },
+  regular: { x: 0.58, y: 0.54 },
 };
 
 const FULL_TURN_DEG = 360;
