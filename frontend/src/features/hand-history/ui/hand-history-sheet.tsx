@@ -5,6 +5,7 @@ import { useUnit } from 'effector-react';
 import { ChevronRight, Spade, X } from 'lucide-react';
 
 import { MiniCard } from 'entities/card';
+import { useDismiss } from 'shared/hooks/use-dismiss';
 import { cn } from 'shared/utils/cn';
 
 import { formatNet } from '../lib/format-net';
@@ -36,37 +37,12 @@ export const HandHistorySheet = ({ open, onClose, onSelect }: Props) => {
     minute: '2-digit',
   });
 
-  React.useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Element | null;
-
-      if (
-        panelRef.current?.contains(target) ||
-        target?.closest(`[${HAND_HISTORY_TOGGLE_ATTR}]`)
-      ) {
-        return;
-      }
-
-      onClose();
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open, onClose]);
+  useDismiss({
+    enabled: open,
+    insideRefs: [panelRef],
+    keepOpenSelector: `[${HAND_HISTORY_TOGGLE_ATTR}]`,
+    onDismiss: onClose,
+  });
 
   if (!open) {
     return null;

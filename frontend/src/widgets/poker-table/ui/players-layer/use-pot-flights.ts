@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { SERVER_EVENTS, gameModel, type ServerGameEvent } from 'entities/game';
+import { afterNextPaint } from 'shared/utils/after-next-paint';
 
 import { getPotCenter } from './get-pot-center';
 import type { SeatLayout } from './seating';
@@ -85,11 +86,11 @@ export const usePotFlights = (
       return;
     }
 
-    const frame = requestAnimationFrame(() => setAtWinner(true));
+    const cancelStart = afterNextPaint(() => setAtWinner(true));
     const done = window.setTimeout(() => setFlights(null), POT_MOVE_MS);
 
     return () => {
-      cancelAnimationFrame(frame);
+      cancelStart();
       window.clearTimeout(done);
     };
   }, [flightId, flights]);

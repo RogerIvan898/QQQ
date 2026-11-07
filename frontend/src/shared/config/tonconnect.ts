@@ -15,13 +15,3 @@ export const getAppOrigin = () => {
 
 export const getTonConnectManifestUrl = () =>
   `${getAppOrigin()}/tonconnect-manifest.json`;
-
-export const createTonConnectManifest = (origin: string) => {
-  const appOrigin = normalizeOrigin(origin);
-
-  return {
-    url: appOrigin,
-    name: 'GRAM Poker',
-    iconUrl: `${appOrigin}/ton-icon.png`,
-  };
-};

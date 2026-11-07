@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { afterNextPaint } from 'shared/utils/after-next-paint';
+
 import { getPotCenter } from './get-pot-center';
 import type { CollectFlight } from './types';
 
@@ -44,15 +46,7 @@ export const useCollectFlights = (
       })
     );
 
-    let secondFrame = 0;
-    const firstFrame = requestAnimationFrame(() => {
-      secondFrame = requestAnimationFrame(() => setCollectAtPot(true));
-    });
-
-    return () => {
-      cancelAnimationFrame(firstFrame);
-      cancelAnimationFrame(secondFrame);
-    };
+    return afterNextPaint(() => setCollectAtPot(true));
   }, [collecting, tableElement]);
 
   return { collectFlights, collectAtPot };

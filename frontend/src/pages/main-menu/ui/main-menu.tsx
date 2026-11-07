@@ -229,8 +229,7 @@ export const MenuPage = () => {
               open
               onClose={() => setIsWithdrawOpen(false)}
               balance={balance ?? 0}
-              onSubmit={payload => {
-                console.log('Withdraw request', payload);
+              onSubmit={() => {
                 refreshWallet();
               }}
             />

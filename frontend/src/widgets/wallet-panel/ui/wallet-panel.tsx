@@ -5,6 +5,7 @@ import { useUnit } from 'effector-react';
 import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react';
 
 import { walletModel } from 'entities/wallet';
+import { useDismiss } from 'shared/hooks/use-dismiss';
 import { useMediaQuery } from 'shared/hooks/use-media-query';
 import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 import { Dialog } from 'shared/ui/dialog';
@@ -143,49 +144,16 @@ export const WalletPanel = ({
     }
   }, [open]);
 
-  // Desktop popover: close on outside click and Escape.
-  React.useEffect(() => {
-    if (!open || isMobile || suspended) {
-      return;
-    }
-
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-
-      if (
-        panelRef.current?.contains(target) ||
-        anchorRef.current?.contains(target) ||
-        // Dialogs opened from the panel (transaction details) live in portals,
-        // and the TON Connect modal renders into its own root.
-        (target instanceof Element && target.closest(KEEP_OPEN_SELECTOR))
-      ) {
-        return;
-      }
-
-      onClose();
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      // Escape inside the TON Connect modal closes that modal, not the panel.
-      if (
-        event.target instanceof Element &&
-        event.target.closest(TON_CONNECT_ROOT)
-      ) {
-        return;
-      }
-
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open, isMobile, suspended, onClose, anchorRef]);
+  // Desktop popover: close on outside click and Escape. Dialogs opened
+  // from the panel live in portals and TON Connect renders into its own
+  // root, so clicks there keep it open; Escape there closes that modal.
+  useDismiss({
+    enabled: open && !isMobile && !suspended,
+    insideRefs: [panelRef, anchorRef],
+    keepOpenSelector: KEEP_OPEN_SELECTOR,
+    ignoreEscapeSelector: TON_CONNECT_ROOT,
+    onDismiss: onClose,
+  });
 
   if (!open) {
     return null;

@@ -2,10 +2,11 @@ import { useState } from 'react';
 
 import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
-import { beginCell, toNano } from '@ton/core';
+import { beginCell } from '@ton/core';
 import { useUnit } from 'effector-react';
 import { Loader2, Wallet } from 'lucide-react';
 
+import { toNanoSafe } from 'shared/lib/ton';
 import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 
 interface Props {
@@ -66,7 +67,7 @@ export const PayViaWalletButton = ({
         messages: [
           {
             address: depositAddress,
-            amount: toNano(amount.toString()).toString(),
+            amount: toNanoSafe(amount).toString(),
             payload,
           },
         ],

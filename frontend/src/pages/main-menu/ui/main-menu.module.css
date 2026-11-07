@@ -111,25 +111,6 @@
   color: var(--color-text);
 }
 
-.onlineCount {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 500;
-}
-
-.onlineCount::before {
-  content: '';
-  display: block;
-  width: 6px;
-  height: 6px;
-  background-color: var(--color-success);
-  border-radius: 50%;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--color-success) 40%, transparent);
-}
-
 .roomGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
