@@ -94,14 +94,7 @@ export const ChipGroup = <T extends string>({
   };
 
   return (
-    <div
-      className={cn(
-        styles.root,
-        canLeft && styles.fadeLeft,
-        canRight && styles.fadeRight,
-        className
-      )}
-    >
+    <div className={cn(styles.root, className)}>
       {canLeft && (
         <button
           type="button"
@@ -109,7 +102,7 @@ export const ChipGroup = <T extends string>({
           onClick={() => page(-1)}
           aria-label={t`Scroll left`}
         >
-          <ChevronLeft size={16} strokeWidth={2.5} />
+          <ChevronLeft size={20} strokeWidth={2.5} />
         </button>
       )}
 
@@ -140,7 +133,7 @@ export const ChipGroup = <T extends string>({
           onClick={() => page(1)}
           aria-label={t`Scroll right`}
         >
-          <ChevronRight size={16} strokeWidth={2.5} />
+          <ChevronRight size={20} strokeWidth={2.5} />
         </button>
       )}
     </div>

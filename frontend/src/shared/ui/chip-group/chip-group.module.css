@@ -1,5 +1,7 @@
 .root {
-  --fade: 36px;
+  /* Page colour the edge shade fades from; override where the row sits on
+     another background. */
+  --chip-group-bg: var(--color-bg-subtle);
 
   position: relative;
 }
@@ -16,29 +18,6 @@
 
 .track::-webkit-scrollbar {
   display: none;
-}
-
-/* Hidden chips fade out under the arrows instead of being cut sharply. */
-.fadeLeft .track {
-  mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade));
-}
-
-.fadeRight .track {
-  mask-image: linear-gradient(
-    90deg,
-    #000 calc(100% - var(--fade)),
-    transparent 100%
-  );
-}
-
-.fadeLeft.fadeRight .track {
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0,
-    #000 var(--fade),
-    #000 calc(100% - var(--fade)),
-    transparent 100%
-  );
 }
 
 .chip {
@@ -76,44 +55,57 @@
 
 .arrow {
   position: absolute;
-  top: 50%;
+  top: 0;
+  bottom: 0;
   z-index: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 44px;
   padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  background: var(--color-bg-elevated);
-  box-shadow: 0 2px 8px var(--color-shadow);
+  border: none;
   color: var(--color-text);
   cursor: pointer;
-  transform: translateY(-50%);
   animation: arrowIn 0.15s ease-out;
   -webkit-tap-highlight-color: transparent;
 }
 
-.arrow:hover {
-  border-color: var(--color-border-hover);
-}
-
-.arrow:active {
-  transform: translateY(-50%) scale(0.92);
-}
-
-.arrow:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
+/* Just a chevron on a shade: the hidden chips dim out under it. */
 .arrowLeft {
   left: 0;
+  justify-content: flex-start;
+  background: linear-gradient(
+    90deg,
+    var(--chip-group-bg) 35%,
+    transparent 100%
+  );
 }
 
 .arrowRight {
   right: 0;
+  justify-content: flex-end;
+  background: linear-gradient(
+    270deg,
+    var(--chip-group-bg) 35%,
+    transparent 100%
+  );
+}
+
+.arrow svg {
+  transition: transform 0.15s ease;
+}
+
+.arrowLeft:hover svg {
+  transform: translateX(-2px);
+}
+
+.arrowRight:hover svg {
+  transform: translateX(2px);
+}
+
+.arrow:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
 }
 
 @keyframes arrowIn {
