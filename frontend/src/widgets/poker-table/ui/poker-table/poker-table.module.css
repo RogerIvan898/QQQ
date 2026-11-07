@@ -103,6 +103,14 @@
   min-height: calc(var(--card-width) * 92 / 64);
 }
 
+/* Full tables on phones: side seats reach into the board's row, so the five
+   board cards take ~12% less width to stay clear of them. */
+@media (max-width: 768px) {
+  .crowded {
+    --card-width: min(84px, calc((76cqw - 4 * var(--board-gap)) / 5));
+  }
+}
+
 .potBadge {
   display: flex;
   align-items: center;

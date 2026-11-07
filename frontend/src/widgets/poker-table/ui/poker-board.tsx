@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { useUnit } from 'effector-react';
+import { useStoreMap, useUnit } from 'effector-react';
 
 import { gameModel } from 'entities/game';
 
@@ -10,6 +10,10 @@ import { PokerTable } from './poker-table';
 
 export const PokerBoard = () => {
   const [community, pot] = useUnit([gameModel.$community, gameModel.$pot]);
+  const seatCount = useStoreMap(
+    gameModel.$players,
+    players => Object.keys(players).length
+  );
 
   const [tableElement, setTableElement] = React.useState<HTMLDivElement | null>(
     null
@@ -23,6 +27,7 @@ export const PokerBoard = () => {
         cards={community}
         pot={pot}
         showPot={showPot}
+        crowded={seatCount >= 7}
         ref={setTableElement}
       />
 

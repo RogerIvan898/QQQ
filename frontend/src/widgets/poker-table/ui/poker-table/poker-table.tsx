@@ -6,6 +6,7 @@ import { Sound } from 'shared/assets/sounds';
 import { useSound } from 'shared/lib/audio';
 import { useChipFormatter } from 'shared/lib/display-settings';
 import { Logo } from 'shared/ui/logo';
+import { cn } from 'shared/utils/cn';
 
 import styles from './poker-table.module.css';
 
@@ -13,6 +14,8 @@ interface Props {
   cards: CardType[];
   pot: number;
   showPot?: boolean;
+  /** 7+ seats: side players sit closer to the board, so it shrinks on phones. */
+  crowded?: boolean;
   ref?: React.Ref<HTMLDivElement>;
 }
 
@@ -20,6 +23,7 @@ export const PokerTable = ({
   cards = [],
   pot,
   showPot = pot > 0,
+  crowded = false,
   ref,
 }: Props) => {
   const formatChips = useChipFormatter();
@@ -39,7 +43,9 @@ export const PokerTable = ({
                 </div>
               )}
             </div>
-            <div className={styles.communityCards}>
+            <div
+              className={cn(styles.communityCards, crowded && styles.crowded)}
+            >
               {cards.map(c => (
                 <Card
                   key={`${c.rank}-${c.suit}`}
