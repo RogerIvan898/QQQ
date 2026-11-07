@@ -1,4 +1,9 @@
-import { evaluate7 } from './evaluator';
+import {
+  addCard,
+  createState,
+  scoreWithHole,
+  type HandState,
+} from './evaluator';
 
 /**
  * Enumerate every runout while it costs at most this many hand evaluations
@@ -77,34 +82,32 @@ export const computeEquity = (
   mode: EquityMode = 'auto'
 ): EquityResult => {
   const missing = 5 - board.length;
+  const count = hands.length;
   const dead = new Set([...board, ...hands.flat()]);
-  const deck = cardsRemaining(dead);
-  const wins = new Float64Array(hands.length);
-  const seven = hands.map(hand => {
-    const cards = new Uint8Array(7);
+  const deck = Uint8Array.from(cardsRemaining(dead));
+  const wins = new Float64Array(count);
+  const scores = new Int32Array(count);
+  const holeA = Uint8Array.from(hands, hand => hand[0]);
+  const holeB = Uint8Array.from(hands, hand => hand[1]);
+  /** Ties split the pot: share for k winners, precomputed. */
+  const share = Float64Array.from({ length: count + 1 }, (_, k) =>
+    k ? 1 / k : 0
+  );
 
-    cards[0] = hand[0];
-    cards[1] = hand[1];
-    board.forEach((card, index) => {
-      cards[2 + index] = card;
-    });
+  // states[d] = board plus the first d runout cards. The board is shared by
+  // every player, so it is built once and each player only adds two cards.
+  const states = Array.from({ length: missing + 1 }, createState);
 
-    return cards;
-  });
-  const scores = new Int32Array(hands.length);
+  for (const card of board) {
+    addCard(states[0], states[0], card);
+  }
 
-  const settle = (runout: ArrayLike<number>) => {
+  const settle = (state: HandState) => {
     let best = -1;
     let winners = 0;
 
-    for (let player = 0; player < hands.length; player += 1) {
-      const cards = seven[player];
-
-      for (let index = 0; index < missing; index += 1) {
-        cards[2 + board.length + index] = runout[index];
-      }
-
-      const value = evaluate7(cards);
+    for (let player = 0; player < count; player += 1) {
+      const value = scoreWithHole(state, holeA[player], holeB[player]);
 
       scores[player] = value;
 
@@ -116,9 +119,11 @@ export const computeEquity = (
       }
     }
 
-    for (let player = 0; player < hands.length; player += 1) {
+    const part = share[winners];
+
+    for (let player = 0; player < count; player += 1) {
       if (scores[player] === best) {
-        wins[player] += 1 / winners;
+        wins[player] += part;
       }
     }
   };
@@ -127,44 +132,61 @@ export const computeEquity = (
   let sampled = false;
 
   if (missing === 0) {
-    settle([]);
+    settle(states[0]);
     total = 1;
   } else if (
     mode === 'auto' &&
-    choose(deck.length, missing) * hands.length <= EXACT_EVAL_LIMIT
+    choose(deck.length, missing) * count <= EXACT_EVAL_LIMIT
   ) {
-    const runout = new Uint8Array(missing);
-    const walk = (start: number, depth: number) => {
-      if (depth === missing) {
-        settle(runout);
-        total += 1;
-        return;
+    // Every runout in lexicographic order, iteratively. Only the cards that
+    // changed are re-added: moving the last index touches one state.
+    const size = deck.length;
+    const index = new Int32Array(missing);
+
+    for (let depth = 0; depth < missing; depth += 1) {
+      index[depth] = depth;
+      addCard(states[depth], states[depth + 1], deck[depth]);
+    }
+
+    for (;;) {
+      settle(states[missing]);
+      total += 1;
+
+      let depth = missing - 1;
+
+      while (depth >= 0 && index[depth] === size - missing + depth) {
+        depth -= 1;
       }
 
-      for (let index = start; index < deck.length; index += 1) {
-        runout[depth] = deck[index];
-        walk(index + 1, depth + 1);
+      if (depth < 0) {
+        break;
       }
-    };
 
-    walk(0, 0);
+      index[depth] += 1;
+      addCard(states[depth], states[depth + 1], deck[index[depth]]);
+
+      for (let next = depth + 1; next < missing; next += 1) {
+        index[next] = index[next - 1] + 1;
+        addCard(states[next], states[next + 1], deck[index[next]]);
+      }
+    }
   } else {
     const random = prng(seedFor(hands, board));
     const pool = deck.slice();
-    const runout = new Uint8Array(missing);
+    const last = states[missing];
 
     for (let sample = 0; sample < SAMPLES; sample += 1) {
       // Partial Fisher–Yates: the first `missing` slots become the runout.
-      for (let index = 0; index < missing; index += 1) {
-        const pick = index + Math.floor(random() * (pool.length - index));
+      for (let slot = 0; slot < missing; slot += 1) {
+        const pick = slot + Math.floor(random() * (pool.length - slot));
         const card = pool[pick];
 
-        pool[pick] = pool[index];
-        pool[index] = card;
-        runout[index] = card;
+        pool[pick] = pool[slot];
+        pool[slot] = card;
+        addCard(slot === 0 ? states[0] : last, last, card);
       }
 
-      settle(runout);
+      settle(last);
     }
 
     total = SAMPLES;
