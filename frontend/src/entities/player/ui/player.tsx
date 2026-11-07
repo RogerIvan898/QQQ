@@ -162,7 +162,16 @@ const PlayerView = ({
           />
 
           {!isFolded && combinationSlot && (
-            <div className={styles.combinationWrap}>{combinationSlot}</div>
+            <div
+              className={cn(
+                styles.combinationWrap,
+                // The hero sits right above the action panel, so the label
+                // goes beside the badge instead of under it.
+                currentPlayer && styles.combinationWrapSide
+              )}
+            >
+              {combinationSlot}
+            </div>
           )}
         </div>
 

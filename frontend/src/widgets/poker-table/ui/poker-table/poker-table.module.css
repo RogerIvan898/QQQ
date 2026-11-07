@@ -108,7 +108,14 @@
 /* Phones and portrait tablets share the compact, vertical table layout. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .crowded {
-    --card-width: min(84px, calc((76cqw - 4 * var(--board-gap)) / 5));
+    /* Side seats sit at 54% of the table width from the centre (seating.ts)
+       and a seat box is up to ~110px wide, so the row between them is about
+       108cqw - 110px - a little air; the board must fit inside it. */
+    --card-width: min(
+      84px,
+      calc((76cqw - 4 * var(--board-gap)) / 5),
+      calc((108cqw - 126px - 4 * var(--board-gap)) / 5)
+    );
   }
 }
 

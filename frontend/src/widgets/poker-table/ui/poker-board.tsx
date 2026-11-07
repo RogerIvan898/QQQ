@@ -27,7 +27,8 @@ export const PokerBoard = () => {
         cards={community}
         pot={pot}
         showPot={showPot}
-        crowded={seatCount >= 7}
+        // 7+ seats, or 4 / 8 where two seats sit level with the board's row.
+        crowded={seatCount >= 7 || seatCount % 4 === 0}
         ref={setTableElement}
       />
 
