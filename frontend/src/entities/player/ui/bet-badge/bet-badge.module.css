@@ -77,10 +77,18 @@
 }
 
 .amountLogo {
+  display: block;
   color: var(--color-primary-light);
+}
+
+/* Glow as a plain background on a wrapper: a drop-shadow filter would be
+   re-rasterized every frame of the scale animation, and rounding the SVG
+   itself clips the logo. */
+.amountLogoGlow {
+  display: flex;
   flex-shrink: 0;
-  /* Glow as a plain background: a drop-shadow filter here is re-rasterized
-     on every frame of the badge's scale animation. */
+  padding: 2px;
+  margin: -2px;
   border-radius: 50%;
   background: radial-gradient(
     circle,

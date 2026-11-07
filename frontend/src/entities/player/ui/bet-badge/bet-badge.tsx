@@ -20,7 +20,9 @@ export const BetBadge = ({ amount, seat, collecting }: Props) => {
       data-bet-seat={seat}
     >
       <div className={styles.amountBadge}>
-        <Logo size={18} className={styles.amountLogo} />
+        <span className={styles.amountLogoGlow}>
+          <Logo size={18} className={styles.amountLogo} />
+        </span>
         <span key={amount} className={styles.amountValue}>
           {formatCompactNumber(amount)}
         </span>
