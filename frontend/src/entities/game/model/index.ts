@@ -24,6 +24,7 @@ export {
 export { CLIENT_COMMANDS, SERVER_EVENTS } from './constants';
 export type {
   AllowedPlayerActionsEvent,
+  GameState,
   GameStreet,
   PlayerInfo,
   ServerGameEvent,

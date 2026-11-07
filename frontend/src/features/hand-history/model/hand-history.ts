@@ -117,6 +117,9 @@ const startHand = (
       startedAt: new Date().toISOString(),
       smallBlind: state.smallBlind,
       bigBlind: state.bigBlind,
+      dealerSeat: payload.dealerSeat,
+      smallBlindSeat: payload.smallBlindSeat,
+      bigBlindSeat: payload.bigBlindSeat,
       myCards: null,
       board: [],
       seats: Object.values(state.players)

@@ -195,9 +195,8 @@ msgstr "Полная ссылка для перевода с адресом и �
 msgid "Full transfer link with address, amount and memo."
 msgstr "Полная ссылка для перевода с адресом, суммой и Memo."
 
-#. placeholder {0}: time.format(new Date(selected.startedAt))
-msgid "Hand at {0}"
-msgstr "Раздача в {0}"
+msgid "Hand at {time}"
+msgstr "Раздача в {time}"
 
 msgid "Hand history"
 msgstr "История раздач"
@@ -207,6 +206,9 @@ msgstr "Раздача началась"
 
 msgid "Hand step"
 msgstr "Шаг раздачи"
+
+msgid "Hands"
+msgstr "Раздачи"
 
 msgid "Heads-Up"
 msgstr "Хедз-ап"

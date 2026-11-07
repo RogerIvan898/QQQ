@@ -6,7 +6,7 @@ import { useGate, useUnit } from 'effector-react';
 import { ArrowLeft, History, Settings } from 'lucide-react';
 
 import { gameModel } from 'entities/game';
-import { HandHistorySheet } from 'features/hand-history';
+import { HandHistorySheet, type HandRecord } from 'features/hand-history';
 import { PlayerActions } from 'features/player-actions';
 import {
   useTelegramBackButton,
@@ -19,6 +19,7 @@ import { GamePageGate } from '../model';
 
 import { GameLoader } from './game-loader';
 import styles from './game-room.module.css';
+import { HandReplay } from './hand-replay';
 
 const RevealCardsButton = import.meta.env.DEV
   ? React.lazy(() =>
@@ -40,6 +41,7 @@ export const GameRoomPage = () => {
   ]);
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
+  const [replayHand, setReplayHand] = React.useState<HandRecord | null>(null);
   useTelegramBackButton(() => void navigate({ to: '/' }));
   // A stray swipe-down would otherwise drop the player out of a hand.
   useTelegramClosingConfirmation();
@@ -87,9 +89,18 @@ export const GameRoomPage = () => {
       </button>
 
       <HandHistorySheet
-        open={isHistoryOpen}
+        open={isHistoryOpen && !replayHand}
         onClose={() => setIsHistoryOpen(false)}
+        onSelect={setReplayHand}
       />
+
+      {replayHand ? (
+        <HandReplay
+          key={replayHand.id}
+          hand={replayHand}
+          onClose={() => setReplayHand(null)}
+        />
+      ) : null}
 
       <SettingsDialog
         open={isSettingsOpen}

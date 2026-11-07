@@ -37,6 +37,10 @@ export interface HandRecord {
   finishedAt: string;
   smallBlind: number;
   bigBlind: number;
+  /** Button and blind seats; missing on hands recorded before they were kept. */
+  dealerSeat?: number | null;
+  smallBlindSeat?: number | null;
+  bigBlindSeat?: number | null;
   myCards: Card[] | null;
   board: Card[];
   seats: HandSeat[];

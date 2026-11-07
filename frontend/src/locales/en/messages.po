@@ -194,9 +194,8 @@ msgstr "Full transfer link with address and amount."
 msgid "Full transfer link with address, amount and memo."
 msgstr "Full transfer link with address, amount and memo."
 
-#. placeholder {0}: time.format(new Date(selected.startedAt))
-msgid "Hand at {0}"
-msgstr "Hand at {0}"
+msgid "Hand at {time}"
+msgstr "Hand at {time}"
 
 msgid "Hand history"
 msgstr "Hand history"
@@ -206,6 +205,9 @@ msgstr "Hand started"
 
 msgid "Hand step"
 msgstr "Hand step"
+
+msgid "Hands"
+msgstr "Hands"
 
 msgid "Heads-Up"
 msgstr "Heads-Up"

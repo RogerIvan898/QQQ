@@ -3,6 +3,7 @@ export {
   CLIENT_COMMANDS,
   SERVER_EVENTS,
   type AllowedPlayerActionsEvent,
+  type GameState,
   type GameStreet,
   type ServerGameEvent,
 } from './model';
