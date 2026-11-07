@@ -186,15 +186,41 @@ export const HandReplay = ({ hand, onClose }: Props) => {
           {caption}
         </p>
 
-        <input
-          type="range"
-          className={styles.scrubber}
-          min={0}
-          max={lastStep}
-          value={step}
-          onChange={event => go(Number(event.target.value))}
-          aria-label={t`Hand step`}
-        />
+        <div
+          className={styles.scrubberTrack}
+          style={
+            {
+              '--progress': lastStep > 0 ? step / lastStep : 0,
+            } as React.CSSProperties
+          }
+        >
+          <input
+            type="range"
+            className={styles.scrubber}
+            min={0}
+            max={lastStep}
+            value={step}
+            onChange={event => go(Number(event.target.value))}
+            aria-label={t`Hand step`}
+          />
+          {/* One tick per step; new streets and the showdown get a tall one. */}
+          <div className={styles.ticks} aria-hidden="true">
+            {timeline.map((item, index) => (
+              <span
+                key={index}
+                className={cn(
+                  styles.tick,
+                  (item.kind === 'deal' || item.kind === 'showdown') &&
+                    styles.tickStreet,
+                  index <= step && styles.tickPassed
+                )}
+                style={{
+                  left: `${lastStep > 0 ? (index / lastStep) * 100 : 0}%`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
 
         <div className={styles.controls}>
           <button
