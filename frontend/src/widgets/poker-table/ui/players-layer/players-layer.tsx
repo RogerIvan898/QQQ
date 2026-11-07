@@ -153,7 +153,12 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
   }
 
   return createPortal(
-    <div className={styles.playersLayer}>
+    <div
+      className={styles.playersLayer}
+      // Seat elements size themselves from the table, not the viewport: a
+      // wide window with a short table must not get oversized hole cards.
+      style={{ '--table-w': `${tableSize.width}px` } as React.CSSProperties}
+    >
       {collectFlights?.map(flight => (
         <ChipFlight
           key={`collect-${flight.seat}`}

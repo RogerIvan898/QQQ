@@ -52,6 +52,9 @@
 /* Phones and portrait tablets share the compact, vertical table layout. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .cards {
+    /* ~15% of the table width (set by the players layer), not 11vw. */
+    --card-width: clamp(34px, calc(var(--table-w, 300px) * 0.15), 84px);
+
     transform: translate(-50%, -62%) scale(0.6);
   }
 
@@ -65,18 +68,5 @@
 
   .large .cardSlot + .cardSlot {
     margin-left: -12px;
-  }
-}
-
-/* Portrait tablets: cards are sized from the viewport (11vw, capped at
-   84px), so on a tablet they are already at the cap; these scales keep them
-   ~1.3x the phone size, in line with the other seat elements. */
-@media (orientation: portrait) and (min-width: 769px) and (max-width: 1100px) {
-  .cards {
-    transform: translate(-50%, -62%) scale(0.42);
-  }
-
-  .large {
-    transform: translate(-50%, -72%) scale(0.58);
   }
 }
