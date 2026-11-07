@@ -46,10 +46,10 @@ const WalletContent = ({
   return (
     <div className={styles.content}>
       <div className={styles.walletStatus}>
-        <span
-          className={cn(styles.statusDot, address && styles.statusDotConnected)}
+        <Wallet
+          size={16}
+          className={cn(styles.statusIcon, address && styles.statusConnected)}
         />
-        <Wallet size={16} className={styles.statusIcon} />
         {address ? (
           <span>
             {t`Wallet connected`}{' '}
