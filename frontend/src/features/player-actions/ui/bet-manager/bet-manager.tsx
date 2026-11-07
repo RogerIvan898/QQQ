@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import { useLingui } from '@lingui/react/macro';
 import { useUnit } from 'effector-react';
+import { Minus, Plus } from 'lucide-react';
 
 import { $amountsInBb } from 'shared/lib/display-settings';
 import { Button } from 'shared/ui/button';
@@ -191,7 +192,7 @@ export const BetManager = ({
           disabled={amount <= minAmount}
           onClick={() => commit(amount - step)}
         >
-          −
+          <Minus size={18} strokeWidth={2.5} />
         </button>
         <div className={styles.inputContainer}>
           <input
@@ -220,7 +221,7 @@ export const BetManager = ({
           disabled={amount >= maxAmount}
           onClick={() => commit(amount + step)}
         >
-          +
+          <Plus size={18} strokeWidth={2.5} />
         </button>
       </div>
 
@@ -230,7 +231,7 @@ export const BetManager = ({
         onChange={event => commit(Number(event.target.value))}
         onTouchStart={setFromTouch}
         onTouchMove={setFromTouch}
-        style={{ '--fill': `${fillPercent}%` } as React.CSSProperties}
+        style={{ '--fill': fillPercent / 100 } as React.CSSProperties}
         min={minAmount}
         max={maxAmount}
         step={1 / CHIP_PRECISION}
