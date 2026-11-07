@@ -4,9 +4,9 @@ import { useStoreMap, useUnit } from 'effector-react';
 
 import { gameModel } from 'entities/game';
 import { Player, type SeatDirection } from 'entities/player';
-import { equityModel } from 'features/equity';
 
 import styles from './players-layer.module.css';
+import { SeatEquity } from './seat-equity';
 
 interface Props {
   seat: number;
@@ -68,15 +68,7 @@ const SeatView = ({
     fn: (holes, [index]) => holes[index] ?? null,
   });
   const [round, myCards] = useUnit([gameModel.$round, gameModel.$myCards]);
-  const equity = useStoreMap({
-    store: equityModel.$equity,
-    keys: [seat],
-    fn: (equity, [index]) => equity?.bySeat[index] ?? null,
-  });
-  const equityExact = useStoreMap(
-    equityModel.$equity,
-    equity => equity?.exact ?? true
-  );
+  const equitySlot = React.useMemo(() => <SeatEquity seat={seat} />, [seat]);
 
   if (!player) return null;
 
@@ -112,8 +104,7 @@ const SeatView = ({
         winAmount={winAmount}
         winId={winId}
         collecting={collecting}
-        equity={equity}
-        equityExact={equityExact}
+        equitySlot={equitySlot}
       />
     </div>
   );

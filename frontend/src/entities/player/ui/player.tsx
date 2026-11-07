@@ -20,7 +20,6 @@ import {
 import { ActionBadge } from './action-badge';
 import { BetBadge } from './bet-badge';
 import { DealerButton } from './dealer-button';
-import { EquityBadge } from './equity-badge';
 import { PlayerAvatar } from './player-avatar';
 import { PlayerCards } from './player-cards';
 import styles from './player.module.css';
@@ -44,10 +43,11 @@ interface Props {
   reveal?: boolean;
   winAmount?: number;
   winId?: number;
-  /** All-in runout equity (0..1); undefined/null when not shown. */
-  equity?: number | null;
-  /** Exact values get one decimal; sampled estimates are whole percent. */
-  equityExact?: boolean;
+  /**
+   * All-in equity badge. A slot, not a value: it subscribes to equity itself,
+   * so a % update re-renders only the badge, not the whole seat.
+   */
+  equitySlot?: React.ReactNode;
 }
 
 const PlayerView = ({
@@ -65,8 +65,7 @@ const PlayerView = ({
   winAmount,
   winId,
   collecting = false,
-  equity = null,
-  equityExact = true,
+  equitySlot = null,
 }: Props) => {
   const { status, stack, name } = player;
 
@@ -124,9 +123,7 @@ const PlayerView = ({
             currentPlayer={currentPlayer}
           />
 
-          {equity !== null && !isFolded && (
-            <EquityBadge equity={equity} decimals={equityExact ? 1 : 0} />
-          )}
+          {!isFolded && equitySlot}
 
           {dealer && (
             <div className={styles.dealerWrap}>
