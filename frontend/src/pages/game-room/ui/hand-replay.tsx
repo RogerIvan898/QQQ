@@ -21,6 +21,7 @@ import { sessionModel } from 'entities/session';
 import {
   buildTimeline,
   replayState,
+  type ReplayStep,
   toGameState,
   type HandRecord,
 } from 'features/hand-history';
@@ -48,6 +49,11 @@ const ACTION_LABELS = {
   BET: msg`Bet`,
   RAISE: msg`Raise`,
 } as const satisfies Record<ActionKind, MessageDescriptor>;
+
+/** Must match `--thumb` in hand-replay.module.css. */
+const SCRUBBER_THUMB_PX = 16;
+/** Half the tooltip's max width, so it never overflows the panel. */
+const TOOLTIP_EDGE_PX = 90;
 
 const STREET_LABELS: Partial<Record<GameStreet, MessageDescriptor>> = {
   PREFLOP: msg`Preflop`,
@@ -137,30 +143,67 @@ export const HandReplay = ({ hand, onClose }: Props) => {
     setPlaying(true);
   };
 
-  const current = replay.step;
-  let caption: React.ReactNode;
+  /** Text for one replay step: the caption, and the scrubber's hover tooltip. */
+  const describe = (item: ReplayStep): React.ReactNode => {
+    if (item.kind === 'start') {
+      return t`Hand started`;
+    }
 
-  if (current.kind === 'start') {
-    caption = t`Hand started`;
-  } else if (current.kind === 'action') {
-    caption = (
-      <>
-        <b>{current.action.isMe ? t`You` : current.action.name}</b> ·{' '}
-        {i18n._(ACTION_LABELS[current.action.action])}
-        {current.action.amount ? ` ${formatChips(current.action.amount)}` : ''}
-      </>
-    );
-  } else if (current.kind === 'deal') {
-    caption = i18n._(STREET_LABELS[current.street] ?? msg`Preflop`);
-  } else {
-    caption = hand.winners.map(winner => (
+    if (item.kind === 'action') {
+      return (
+        <>
+          <b>{item.action.isMe ? t`You` : item.action.name}</b> ·{' '}
+          {i18n._(ACTION_LABELS[item.action.action])}
+          {item.action.amount ? ` ${formatChips(item.action.amount)}` : ''}
+        </>
+      );
+    }
+
+    if (item.kind === 'deal') {
+      return i18n._(STREET_LABELS[item.street] ?? msg`Preflop`);
+    }
+
+    return hand.winners.map(winner => (
       <span key={winner.seat} className={styles.captionLine}>
         <b>{winner.isMe ? t`You` : winner.name}</b> +
         {formatChips(winner.amount)}
         {winner.combination ? ` · ${winner.combination}` : ''}
       </span>
     ));
-  }
+  };
+
+  const caption = describe(replay.step);
+
+  // Hover tooltip (mouse only; touch already shows the caption as you drag).
+  const [hover, setHover] = React.useState<{
+    index: number;
+    x: number;
+  } | null>(null);
+
+  const handleTrackHover = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse') {
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const usable = rect.width - SCRUBBER_THUMB_PX;
+    const ratio = Math.min(
+      1,
+      Math.max(0, (event.clientX - rect.left - SCRUBBER_THUMB_PX / 2) / usable)
+    );
+    const index = Math.round(ratio * lastStep);
+    const tickX =
+      SCRUBBER_THUMB_PX / 2 + (lastStep > 0 ? index / lastStep : 0) * usable;
+
+    setHover({
+      index,
+      // Keep the tooltip inside the panel near the ends.
+      x: Math.min(
+        rect.width - TOOLTIP_EDGE_PX,
+        Math.max(TOOLTIP_EDGE_PX, tickX)
+      ),
+    });
+  };
 
   const time = new Intl.DateTimeFormat(i18n.locale, {
     hour: '2-digit',
@@ -188,6 +231,8 @@ export const HandReplay = ({ hand, onClose }: Props) => {
 
         <div
           className={styles.scrubberTrack}
+          onPointerMove={handleTrackHover}
+          onPointerLeave={() => setHover(null)}
           style={
             {
               '--progress': lastStep > 0 ? step / lastStep : 0,
@@ -203,6 +248,18 @@ export const HandReplay = ({ hand, onClose }: Props) => {
             onChange={event => go(Number(event.target.value))}
             aria-label={t`Hand step`}
           />
+          {hover ? (
+            <div
+              className={styles.tooltip}
+              style={{ left: hover.x }}
+              aria-hidden="true"
+            >
+              <span className={styles.tooltipStep}>
+                {hover.index + 1}/{timeline.length}
+              </span>
+              {describe(timeline[hover.index])}
+            </div>
+          ) : null}
           {/* One tick per step; new streets and the showdown get a tall one. */}
           <div className={styles.ticks} aria-hidden="true">
             {timeline.map((item, index) => (
