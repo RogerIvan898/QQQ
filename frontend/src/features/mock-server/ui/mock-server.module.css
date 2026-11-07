@@ -15,7 +15,7 @@
   position: fixed;
   top: calc(16px + var(--tg-safe-area-top));
   /* Leaves room for the game room's 36px settings button + 8px gap. */
-  right: calc(60px + var(--tg-safe-area-right));
+  right: calc(104px + var(--tg-safe-area-right));
   z-index: 100;
   padding: 8px 14px;
   border: 1px solid var(--color-border);

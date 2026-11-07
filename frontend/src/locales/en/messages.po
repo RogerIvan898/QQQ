@@ -52,9 +52,6 @@ msgstr "Big blind"
 msgid "Blinds"
 msgstr "Blinds"
 
-msgid "Board"
-msgstr "Board"
-
 msgid "Buy-in"
 msgstr "Buy-in"
 
@@ -197,11 +194,18 @@ msgstr "Full transfer link with address and amount."
 msgid "Full transfer link with address, amount and memo."
 msgstr "Full transfer link with address, amount and memo."
 
-msgid "Games"
-msgstr "Games"
+#. placeholder {0}: time.format(new Date(selected.startedAt))
+msgid "Hand at {0}"
+msgstr "Hand at {0}"
 
-msgid "Hand log"
-msgstr "Hand log"
+msgid "Hand history"
+msgstr "Hand history"
+
+msgid "Hand started"
+msgstr "Hand started"
+
+msgid "Hand step"
+msgstr "Hand step"
 
 msgid "Heads-Up"
 msgstr "Heads-Up"
@@ -260,17 +264,20 @@ msgstr "My wallet"
 msgid "Need {missing} more"
 msgstr "Need {missing} more"
 
-msgid "No hands played yet"
-msgstr "No hands played yet"
+msgid "Next step"
+msgstr "Next step"
+
+msgid "No hands at this table yet"
+msgstr "No hands at this table yet"
 
 msgid "No transactions yet"
 msgstr "No transactions yet"
 
-msgid "Not dealt"
-msgstr "Not dealt"
-
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Not enough balance to cover the amount and the network fee."
+
+msgid "Pause"
+msgstr "Pause"
 
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
@@ -306,6 +313,9 @@ msgstr "Pot"
 msgid "Preflop"
 msgstr "Preflop"
 
+msgid "Previous step"
+msgstr "Previous step"
+
 msgid "Quick add amount"
 msgstr "Quick add amount"
 
@@ -336,6 +346,9 @@ msgstr "Setting up the table..."
 msgid "Settings"
 msgstr "Settings"
 
+msgid "Showdown"
+msgstr "Showdown"
+
 msgid "Small blind"
 msgstr "Small blind"
 
@@ -347,13 +360,6 @@ msgstr "Sound off"
 
 msgid "Sound on"
 msgstr "Sound on"
-
-msgid "Table"
-msgstr "Table"
-
-#. placeholder {0}: hand.roomId
-msgid "Table #{0}"
-msgstr "Table #{0}"
 
 msgid "Table full"
 msgstr "Table full"
@@ -382,6 +388,12 @@ msgstr "The transfer was rejected by the network."
 msgid "The transfer was sent without the required memo. Contact support to get it credited."
 msgstr "The transfer was sent without the required memo. Contact support to get it credited."
 
+msgid "To end"
+msgstr "To end"
+
+msgid "To start"
+msgstr "To start"
+
 msgid "Today"
 msgstr "Today"
 
@@ -396,9 +408,6 @@ msgstr "Top up"
 
 msgid "Transaction"
 msgstr "Transaction"
-
-msgid "Transactions"
-msgstr "Transactions"
 
 msgid "Turn"
 msgstr "Turn"

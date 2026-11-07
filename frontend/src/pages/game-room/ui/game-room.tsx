@@ -3,9 +3,10 @@ import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useGate, useUnit } from 'effector-react';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { ArrowLeft, History, Settings } from 'lucide-react';
 
 import { gameModel } from 'entities/game';
+import { HandHistorySheet } from 'features/hand-history';
 import { PlayerActions } from 'features/player-actions';
 import {
   useTelegramBackButton,
@@ -38,6 +39,7 @@ export const GameRoomPage = () => {
     gameModel.$connectionLost,
   ]);
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
   useTelegramBackButton(() => void navigate({ to: '/' }));
   // A stray swipe-down would otherwise drop the player out of a hand.
   useTelegramClosingConfirmation();
@@ -73,6 +75,21 @@ export const GameRoomPage = () => {
       >
         <Settings size={18} />
       </button>
+
+      <button
+        type="button"
+        className={styles.historyBtn}
+        onClick={() => setIsHistoryOpen(true)}
+        aria-label={t`Hand history`}
+        title={t`Hand history`}
+      >
+        <History size={18} />
+      </button>
+
+      <HandHistorySheet
+        open={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+      />
 
       <SettingsDialog
         open={isSettingsOpen}

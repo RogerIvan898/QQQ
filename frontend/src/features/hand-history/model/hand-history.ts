@@ -7,12 +7,25 @@ import { sessionModel } from 'entities/session';
 
 import type { HandAction, HandRecord, HandSeat } from './types';
 
-const STORAGE_KEY = 'poker:hand-history';
-const MAX_HANDS = 100;
+const STORAGE_PREFIX = 'poker:hand-history:';
+const MAX_HANDS_PER_ROOM = 50;
 
-const loadHands = (): HandRecord[] => {
+const storageKey = (roomId: string) => `${STORAGE_PREFIX}${roomId}`;
+
+// Hands used to be kept in one global list; it is superseded by per-room keys.
+try {
+  window.localStorage.removeItem('poker:hand-history');
+} catch {
+  // Storage blocked: nothing to clean up.
+}
+
+const loadHands = (roomId: string | null): HandRecord[] => {
+  if (!roomId) {
+    return [];
+  }
+
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(storageKey(roomId));
     const parsed: unknown = raw ? JSON.parse(raw) : [];
 
     return Array.isArray(parsed) ? (parsed as HandRecord[]) : [];
@@ -21,18 +34,17 @@ const loadHands = (): HandRecord[] => {
   }
 };
 
-const saveHands = (hands: HandRecord[]) => {
+const saveHands = (roomId: string, hands: HandRecord[]) => {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(hands));
+    window.localStorage.setItem(storageKey(roomId), JSON.stringify(hands));
   } catch {
     // Storage can be full or blocked (private mode); history is best-effort.
   }
 };
 
-/** The table the player is sitting at, so hands can be labelled with it. */
+/** The table the player sits at: hands are stored and shown per room. */
 export const tableEntered = createEvent<string | null>();
 const handRecorded = createEvent<HandRecord>();
-export const historyCleared = createEvent();
 
 const $roomId = createStore<string | null>(null).on(
   tableEntered,
@@ -40,18 +52,23 @@ const $roomId = createStore<string | null>(null).on(
 );
 
 // TODO: load from the backend once it keeps hand histories.
-export const $hands = createStore<HandRecord[]>(loadHands())
+/** Hands played at the current room, newest first. */
+export const $hands = createStore<HandRecord[]>([])
+  .on(tableEntered, (_, roomId) => loadHands(roomId))
   // Re-read storage so another tab (or a stale dev module copy) writing its own
   // list can't drop hands recorded elsewhere.
   .on(handRecorded, (_, hand) =>
-    [hand, ...loadHands().filter(saved => saved.id !== hand.id)].slice(
-      0,
-      MAX_HANDS
-    )
-  )
-  .reset(historyCleared);
+    [
+      hand,
+      ...loadHands(hand.roomId).filter(saved => saved.id !== hand.id),
+    ].slice(0, MAX_HANDS_PER_ROOM)
+  );
 
-$hands.updates.watch(saveHands);
+handRecorded.watch(hand => {
+  if (hand.roomId) {
+    saveHands(hand.roomId, $hands.getState());
+  }
+});
 
 interface Draft {
   record: Omit<HandRecord, 'finishedAt' | 'net' | 'pot' | 'winners'>;
@@ -91,7 +108,8 @@ const startHand = (
 
   draft = {
     mySeat,
-    startStack: me?.stack ?? null,
+    // Stacks arrive with the blinds already taken out; add them back.
+    startStack: me ? me.stack + (payload.initialBets[me.seat] ?? 0) : null,
     revealed: {},
     record: {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -101,7 +119,15 @@ const startHand = (
       bigBlind: state.bigBlind,
       myCards: null,
       board: [],
-      seats: [],
+      seats: Object.values(state.players)
+        .sort((a, b) => a.seat - b.seat)
+        .map(player => ({
+          seat: player.seat,
+          name: player.name,
+          isMe: player.seat === mySeat,
+          stack: player.stack + (payload.initialBets[player.seat] ?? 0),
+          cards: null,
+        })),
       actions: [
         blind(payload.smallBlindSeat, 'SB'),
         blind(payload.bigBlindSeat, 'BB'),
@@ -130,17 +156,13 @@ const finishHand = (
 
   const state = gameModel.$gameState.getState();
   const endStack = state.players[current.mySeat]?.stack ?? null;
-  const seats: HandSeat[] = Object.values(state.players)
-    .sort((a, b) => a.seat - b.seat)
-    .map(player => ({
-      seat: player.seat,
-      name: player.name,
-      isMe: player.seat === current.mySeat,
-      cards:
-        player.seat === current.mySeat
-          ? current.record.myCards
-          : (current.revealed[player.seat] ?? null),
-    }));
+  // Start stacks come from the draft; only the cards are known at the end.
+  const seats: HandSeat[] = current.record.seats.map(seat => ({
+    ...seat,
+    cards: seat.isMe
+      ? current.record.myCards
+      : (current.revealed[seat.seat] ?? null),
+  }));
   const winners = payload.winners.map(winner => ({
     seat: winner.seatIndex,
     name: nameOf(state.players, winner.seatIndex),

@@ -1,2 +1,2 @@
-export { $hands, historyCleared, tableEntered } from './hand-history';
+export { $hands, tableEntered } from './hand-history';
 export type * from './types';

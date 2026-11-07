@@ -24,6 +24,8 @@ export interface HandSeat {
   seat: number;
   name: string;
   isMe: boolean;
+  /** Stack at the start of the hand, before blinds. */
+  stack: number;
   /** Hole cards, when known (ours, or revealed at showdown). */
   cards: Card[] | null;
 }

@@ -53,9 +53,6 @@ msgstr "Большой блайнд"
 msgid "Blinds"
 msgstr "Блайнды"
 
-msgid "Board"
-msgstr "Борд"
-
 msgid "Buy-in"
 msgstr "Бай-ин"
 
@@ -198,11 +195,18 @@ msgstr "Полная ссылка для перевода с адресом и �
 msgid "Full transfer link with address, amount and memo."
 msgstr "Полная ссылка для перевода с адресом, суммой и Memo."
 
-msgid "Games"
-msgstr "Игры"
+#. placeholder {0}: time.format(new Date(selected.startedAt))
+msgid "Hand at {0}"
+msgstr "Раздача в {0}"
 
-msgid "Hand log"
-msgstr "Ход раздачи"
+msgid "Hand history"
+msgstr "История раздач"
+
+msgid "Hand started"
+msgstr "Раздача началась"
+
+msgid "Hand step"
+msgstr "Шаг раздачи"
 
 msgid "Heads-Up"
 msgstr "Хедз-ап"
@@ -261,17 +265,20 @@ msgstr "Мой кошелёк"
 msgid "Need {missing} more"
 msgstr "Не хватает {missing}"
 
-msgid "No hands played yet"
-msgstr "Вы ещё не сыграли ни одной раздачи"
+msgid "Next step"
+msgstr "Следующий шаг"
+
+msgid "No hands at this table yet"
+msgstr "За этим столом вы ещё не сыграли ни одной раздачи"
 
 msgid "No transactions yet"
 msgstr "Операций пока нет"
 
-msgid "Not dealt"
-msgstr "Не раздавался"
-
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Недостаточно средств на сумму и комиссию сети."
+
+msgid "Pause"
+msgstr "Пауза"
 
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
@@ -307,6 +314,9 @@ msgstr "Пот"
 msgid "Preflop"
 msgstr "Префлоп"
 
+msgid "Previous step"
+msgstr "Предыдущий шаг"
+
 msgid "Quick add amount"
 msgstr "Быстро добавить"
 
@@ -337,6 +347,9 @@ msgstr "Подготавливаем стол..."
 msgid "Settings"
 msgstr "Настройки"
 
+msgid "Showdown"
+msgstr "Вскрытие"
+
 msgid "Small blind"
 msgstr "Малый блайнд"
 
@@ -348,13 +361,6 @@ msgstr "Звук выключен"
 
 msgid "Sound on"
 msgstr "Звук включён"
-
-msgid "Table"
-msgstr "Стол"
-
-#. placeholder {0}: hand.roomId
-msgid "Table #{0}"
-msgstr "Стол #{0}"
 
 msgid "Table full"
 msgstr "Стол заполнен"
@@ -383,6 +389,12 @@ msgstr "Сеть отклонила перевод."
 msgid "The transfer was sent without the required memo. Contact support to get it credited."
 msgstr "Перевод отправлен без обязательного комментария (memo). Напишите в поддержку, чтобы его зачислили."
 
+msgid "To end"
+msgstr "В конец"
+
+msgid "To start"
+msgstr "В начало"
+
 msgid "Today"
 msgstr "Сегодня"
 
@@ -397,9 +409,6 @@ msgstr "Пополнить"
 
 msgid "Transaction"
 msgstr "Транзакция"
-
-msgid "Transactions"
-msgstr "Транзакции"
 
 msgid "Turn"
 msgstr "Тёрн"
