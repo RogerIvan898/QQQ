@@ -333,6 +333,31 @@
   visibility: hidden;
 }
 
-.fieldErrorIdle {
-  visibility: hidden;
+.destinationPanes .destControl {
+  box-sizing: border-box;
+  height: 56px;
+}
+
+.walletCard.destControl {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.destHint {
+  margin: 8px 0 0;
+  min-height: 2.8em;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+.destHintWarning {
+  color: var(--color-warning);
+}
+
+.destHintError {
+  color: var(--color-danger);
 }

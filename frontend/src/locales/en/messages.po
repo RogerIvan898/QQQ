@@ -182,9 +182,6 @@ msgstr "Disconnect wallet"
 msgid "Disconnecting…"
 msgstr "Disconnecting…"
 
-msgid "Double-check the TON address"
-msgstr "Double-check the TON address"
-
 msgid "Duration"
 msgstr "Duration"
 
@@ -229,6 +226,9 @@ msgstr "Full transfer link with address and amount."
 
 msgid "Full transfer link with address, amount and memo."
 msgstr "Full transfer link with address, amount and memo."
+
+msgid "Funds go to your connected wallet"
+msgstr "Funds go to your connected wallet"
 
 msgid "Game History"
 msgstr "Game History"
@@ -564,8 +564,8 @@ msgstr "Withdrawal"
 msgid "Withdrawals"
 msgstr "Withdrawals"
 
-msgid "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
-msgstr "Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds."
+msgid "Withdrawals are irreversible. Double-check it's a TON address."
+msgstr "Withdrawals are irreversible. Double-check it's a TON address."
 
 msgid "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
 msgstr "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."

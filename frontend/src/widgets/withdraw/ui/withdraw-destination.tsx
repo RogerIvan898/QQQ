@@ -1,6 +1,5 @@
 import { useLingui } from '@lingui/react/macro';
 
-import { Alert } from 'shared/ui/alert';
 import { cn } from 'shared/utils/cn';
 import { truncateMiddle } from 'shared/utils/format';
 
@@ -29,6 +28,7 @@ export const WithdrawDestinationBlock = ({
   const { t } = useLingui();
   const addressTouched = customAddress.trim().length > 0;
   const isAddressValid = isValidTonAddress(customAddress);
+  const addressInvalid = addressTouched && !isAddressValid;
 
   return (
     <div className={styles.field}>
@@ -60,8 +60,8 @@ export const WithdrawDestinationBlock = ({
         </button>
       </div>
 
-      {/* Both panes share one grid cell: the card is always as tall as the
-          larger one, so switching tabs doesn't make it jump. */}
+      {/* Both panes have the same shape (one 56px control + one hint line),
+          so switching tabs neither jumps nor leaves empty space. */}
       <div className={styles.destinationPanes}>
         <div
           className={cn(
@@ -71,26 +71,26 @@ export const WithdrawDestinationBlock = ({
           inert={destination !== 'wallet'}
         >
           {connectedAddress ? (
-            <div className={styles.walletCard}>
+            <div className={cn(styles.walletCard, styles.destControl)}>
               <span className={styles.walletLabel}>{t`Withdraw to`}</span>
               <span className={styles.walletAddress} title={connectedAddress}>
                 {truncateMiddle(connectedAddress, 6)}
               </span>
             </div>
           ) : (
-            <div className={styles.connectBlock}>
-              <p className={styles.connectText}>
-                {t`Connect a wallet to withdraw in one tap`}
-              </p>
-              <button
-                type="button"
-                className={styles.secondaryBtn}
-                onClick={onConnectWallet}
-              >
-                {t`Connect wallet`}
-              </button>
-            </div>
+            <button
+              type="button"
+              className={cn(styles.secondaryBtn, styles.destControl)}
+              onClick={onConnectWallet}
+            >
+              {t`Connect wallet`}
+            </button>
           )}
+          <p className={styles.destHint}>
+            {connectedAddress
+              ? t`Funds go to your connected wallet`
+              : t`Connect a wallet to withdraw in one tap`}
+          </p>
         </div>
 
         <div
@@ -100,41 +100,34 @@ export const WithdrawDestinationBlock = ({
           )}
           inert={destination !== 'address'}
         >
-          <div className={styles.addressSection}>
-            <div className={styles.warningWrap}>
-              <Alert variant="warning" title={t`Double-check the TON address`}>
-                {t`Withdrawals are irreversible. Send only to a TON address — a wrong network or typo means permanent loss of funds.`}
-              </Alert>
-            </div>
-
-            <div
-              className={cn(
-                styles.addressBox,
-                addressTouched && !isAddressValid && styles.fieldInvalid
-              )}
-            >
-              <input
-                className={styles.addressInput}
-                value={customAddress}
-                onChange={e => onCustomAddressChange(e.target.value)}
-                placeholder="UQ..."
-                spellCheck={false}
-                autoComplete="off"
-                aria-label={t`TON address`}
-              />
-            </div>
-
-            {/* Always rendered so showing the error doesn't change the height. */}
-            <p
-              className={cn(
-                styles.fieldError,
-                !(addressTouched && !isAddressValid) && styles.fieldErrorIdle
-              )}
-              aria-hidden={!(addressTouched && !isAddressValid)}
-            >
-              {t`Enter a valid TON address`}
-            </p>
+          <div
+            className={cn(
+              styles.addressBox,
+              styles.destControl,
+              addressInvalid && styles.fieldInvalid
+            )}
+          >
+            <input
+              className={styles.addressInput}
+              value={customAddress}
+              onChange={e => onCustomAddressChange(e.target.value)}
+              placeholder="UQ..."
+              spellCheck={false}
+              autoComplete="off"
+              aria-label={t`TON address`}
+            />
           </div>
+          <p
+            className={cn(
+              styles.destHint,
+              addressInvalid ? styles.destHintError : styles.destHintWarning
+            )}
+            role={addressInvalid ? 'alert' : undefined}
+          >
+            {addressInvalid
+              ? t`Enter a valid TON address`
+              : t`Withdrawals are irreversible. Double-check it's a TON address.`}
+          </p>
         </div>
       </div>
     </div>
