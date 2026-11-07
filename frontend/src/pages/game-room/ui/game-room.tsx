@@ -6,7 +6,11 @@ import { useGate, useUnit } from 'effector-react';
 import { ArrowLeft, History, Settings } from 'lucide-react';
 
 import { gameModel } from 'entities/game';
-import { HandHistorySheet, type HandRecord } from 'features/hand-history';
+import {
+  HAND_HISTORY_TOGGLE_ATTR,
+  HandHistorySheet,
+  type HandRecord,
+} from 'features/hand-history';
 import { PlayerActions } from 'features/player-actions';
 import {
   useTelegramBackButton,
@@ -81,7 +85,9 @@ export const GameRoomPage = () => {
       <button
         type="button"
         className={styles.historyBtn}
-        onClick={() => setIsHistoryOpen(true)}
+        onClick={() => setIsHistoryOpen(open => !open)}
+        aria-expanded={isHistoryOpen}
+        {...{ [HAND_HISTORY_TOGGLE_ATTR]: '' }}
         aria-label={t`Hand history`}
         title={t`Hand history`}
       >

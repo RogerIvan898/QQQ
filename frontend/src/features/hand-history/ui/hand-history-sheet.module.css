@@ -1,10 +1,95 @@
+/* Dropdown under the history button; no backdrop, the table stays usable. */
+.panel {
+  position: fixed;
+  top: calc(60px + var(--tg-safe-area-top));
+  right: calc(16px + var(--tg-safe-area-right));
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  width: 340px;
+  max-height: min(60vh, 520px);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px var(--color-shadow);
+  overflow: hidden;
+  animation: panelIn 0.16s ease-out;
+  transform-origin: top right;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 8px 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.heading {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus-visible {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  outline: none;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Phones: full width under the top bar, shorter so most of the table shows. */
+@media (max-width: 768px) {
+  .panel {
+    left: calc(12px + var(--tg-safe-area-left));
+    right: calc(12px + var(--tg-safe-area-right));
+    width: auto;
+    max-height: 45vh;
+  }
+}
+
 .list {
   margin: 0;
   padding: 0;
   list-style: none;
-  background: var(--color-bg-muted);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
 }
 
 .row {
