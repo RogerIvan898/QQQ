@@ -6,6 +6,13 @@
       var(--bet-vertical-extra)
   );
   --bet-slide: 40px;
+  /* Side seats sit level with the board, so their chips would land on the
+     cards: drop them below the board. 1 for a purely horizontal seat, 0 once
+     the seat is more than ~30° above or below the centre line. */
+  /* Half a board card (cards are ~25cqw tall, capped at 121px) + the badge. */
+  --bet-side-drop: calc(min(76px, 16cqw) + 22px);
+  --bet-side: max(0, 1 - var(--to-center-abs-y) * 2);
+  --bet-drop: calc(var(--bet-side) * var(--bet-side-drop));
 
   position: absolute;
   top: 50%;
@@ -16,7 +23,8 @@
     translate(
       calc(var(--to-center-x) * var(--bet-distance)),
       calc(var(--to-center-y) * var(--bet-distance))
-    );
+    )
+    translateY(var(--bet-drop));
   animation: chipSlideOut 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -95,7 +103,7 @@
         calc(var(--to-center-x) * (var(--bet-distance) - var(--bet-slide))),
         calc(var(--to-center-y) * (var(--bet-distance) - var(--bet-slide)))
       )
-      scale(0.65);
+      translateY(var(--bet-drop)) scale(0.65);
   }
   40% {
     opacity: 1;
@@ -107,7 +115,7 @@
         calc(var(--to-center-x) * var(--bet-distance)),
         calc(var(--to-center-y) * var(--bet-distance))
       )
-      scale(1);
+      translateY(var(--bet-drop)) scale(1);
   }
 }
 
