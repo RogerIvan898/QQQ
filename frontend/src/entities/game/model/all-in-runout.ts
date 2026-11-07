@@ -4,9 +4,15 @@ import type { GameStreet } from './types';
 
 const BADGE_MS = 500;
 const GATHER_MS = 450;
-const TENSION_MS = 700;
-const STREET_MS = 800;
-const CARD_GAP_MS = 180;
+// Paced so players can read the revealed hands and equity on each street.
+/** Hands face up before the first board card. */
+const TENSION_MS = 1400;
+/** Pause between flop, turn and river. */
+const STREET_MS = 1800;
+/** Between the three flop cards. */
+const CARD_GAP_MS = 280;
+/** River on the table before the winner is announced. */
+const RIVER_HOLD_MS = 1500;
 const WIN_MS = 1000;
 
 export interface RunoutStreet {
@@ -44,6 +50,7 @@ export const allInRunoutDuration = (streets: RunoutStreet[]) => {
     TENSION_MS +
     cardGaps * CARD_GAP_MS +
     Math.max(0, streets.length - 1) * STREET_MS +
+    (streets.length > 0 ? RIVER_HOLD_MS : 0) +
     WIN_MS
   );
 };
@@ -112,6 +119,14 @@ export const playAllInRunout = async (
       if (stopped(effects)) {
         return false;
       }
+    }
+  }
+
+  if (script.streets.length > 0) {
+    await delay(RIVER_HOLD_MS);
+
+    if (stopped(effects)) {
+      return false;
     }
   }
 
