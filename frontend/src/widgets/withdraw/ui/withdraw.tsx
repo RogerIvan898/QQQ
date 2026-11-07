@@ -6,13 +6,12 @@ import { useUnit } from 'effector-react';
 
 import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 import { Dialog } from 'shared/ui/dialog';
-import { formatBalance } from 'shared/utils/format';
 
 import { formatAmountDraft, isValidTonAddress, parseAmountDraft } from '../lib';
 import type { WithdrawDestination, WithdrawPayload } from '../model';
 
 import { WithdrawAmountField } from './withdraw-amount-field';
-import { WithdrawDestinationBlock as DestinationBlock } from './withdraw-destination';
+import { WithdrawDestinationBlock } from './withdraw-destination';
 import styles from './withdraw.module.css';
 
 interface Props {
@@ -22,36 +21,32 @@ interface Props {
   onSubmit?: (payload: WithdrawPayload) => void;
 }
 
+/** Withdraw to the connected TON wallet or to any TON address. */
 export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
-  const { t, i18n } = useLingui();
-  const connectedAddress = useUnit($tonWallet)?.friendlyAddress ?? '';
+  const { t } = useLingui();
+  const wallet = useUnit($tonWallet);
+  const connectedAddress = wallet?.friendlyAddress ?? '';
 
   const [amount, setAmount] = useState(0);
   const [draft, setDraft] = useState('');
   const [destination, setDestination] = useState<WithdrawDestination>('wallet');
   const [customAddress, setCustomAddress] = useState('');
 
+  // Default to the connected wallet when there is one.
   useEffect(() => {
-    if (!open) {
-      return;
+    if (open) {
+      setDestination(connectedAddress ? 'wallet' : 'address');
     }
-
-    setDestination(connectedAddress ? 'wallet' : 'address');
   }, [open, connectedAddress]);
-
-  const formattedBalance = formatBalance(balance, i18n.locale);
 
   const targetAddress =
     destination === 'wallet' ? connectedAddress : customAddress.trim();
-
-  const exceedsBalance = amount > balance;
-  const isAmountValid = amount > 0 && !exceedsBalance;
   const isAddressValid =
     destination === 'wallet'
       ? Boolean(connectedAddress)
       : isValidTonAddress(customAddress);
-
-  const canSubmit = isAmountValid && isAddressValid;
+  const exceedsBalance = amount > balance;
+  const canSubmit = isAddressValid && amount > 0 && !exceedsBalance;
 
   const submitLabel =
     destination === 'wallet' && !connectedAddress ? (
@@ -66,16 +61,11 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
       t`Withdraw`
     );
 
-  const resetForm = () => {
+  const handleClose = () => {
+    onClose();
     setAmount(0);
     setDraft('');
     setCustomAddress('');
-    setDestination(connectedAddress ? 'wallet' : 'address');
-  };
-
-  const handleClose = () => {
-    onClose();
-    resetForm();
   };
 
   const handleAmountChange = (value: string) => {
@@ -97,8 +87,14 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
     setDraft(formatAmountDraft(balance));
   };
 
+  const connectWallet = () => {
+    void getTonConnectUI()
+      .then(ui => ui.openModal())
+      .catch(() => undefined);
+  };
+
   const handleSubmit = () => {
-    if (!canSubmit || !targetAddress) {
+    if (!canSubmit) {
       return;
     }
 
@@ -119,16 +115,14 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
       variant="bottom"
     >
       <div className={styles.content}>
-        <button
-          type="button"
-          className={styles.balanceCard}
-          onClick={handleMax}
-          disabled={balance <= 0}
-        >
-          <span className={styles.balanceLabel}>{t`Available balance`}</span>
-          <span className={styles.balanceValue}>{formattedBalance} TON</span>
-          <span className={styles.balanceHint}>{t`Tap to use max`}</span>
-        </button>
+        <WithdrawDestinationBlock
+          destination={destination}
+          wallet={wallet}
+          customAddress={customAddress}
+          onDestinationChange={setDestination}
+          onCustomAddressChange={setCustomAddress}
+          onConnectWallet={connectWallet}
+        />
 
         <WithdrawAmountField
           draft={draft}
@@ -136,17 +130,6 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
           balance={balance}
           onChange={handleAmountChange}
           onMax={handleMax}
-        />
-
-        <DestinationBlock
-          destination={destination}
-          connectedAddress={connectedAddress || undefined}
-          customAddress={customAddress}
-          onDestinationChange={setDestination}
-          onCustomAddressChange={setCustomAddress}
-          onConnectWallet={() =>
-            void getTonConnectUI().then(ui => ui.openModal())
-          }
         />
 
         <button

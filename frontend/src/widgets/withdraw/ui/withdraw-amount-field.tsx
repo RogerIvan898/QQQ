@@ -2,6 +2,7 @@ import { useLingui } from '@lingui/react/macro';
 
 import { NumberField } from 'shared/ui/number-field';
 import { cn } from 'shared/utils/cn';
+import { formatBalance } from 'shared/utils/format';
 
 import styles from './withdraw.module.css';
 
@@ -20,7 +21,7 @@ export const WithdrawAmountField = ({
   onChange,
   onMax,
 }: Props) => {
-  const { t } = useLingui();
+  const { i18n, t } = useLingui();
 
   return (
     <div className={styles.field}>
@@ -28,14 +29,9 @@ export const WithdrawAmountField = ({
         <label className={styles.label} htmlFor="withdraw-amount">
           {t`Amount`}
         </label>
-        <button
-          type="button"
-          className={styles.maxBtn}
-          onClick={onMax}
-          disabled={balance <= 0}
-        >
-          MAX
-        </button>
+        <span className={styles.balanceInline}>
+          {t`Balance`} <b>{formatBalance(balance, i18n.locale)} TON</b>
+        </span>
       </div>
 
       <div
@@ -48,6 +44,14 @@ export const WithdrawAmountField = ({
           placeholder="0.00"
         />
         <span>TON</span>
+        <button
+          type="button"
+          className={styles.maxBtn}
+          onClick={onMax}
+          disabled={balance <= 0}
+        >
+          MAX
+        </button>
       </div>
 
       {exceedsBalance && (

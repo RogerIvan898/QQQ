@@ -50,6 +50,9 @@ msgstr "Доступные столы"
 msgid "Back"
 msgstr "Назад"
 
+msgid "Balance"
+msgstr "Баланс"
+
 msgid "BB"
 msgstr "ББ"
 
@@ -117,7 +120,7 @@ msgid "Connect"
 msgstr "Подключить"
 
 msgid "Connect a wallet to withdraw in one tap"
-msgstr "Подключите кошелёк для вывода в один клик"
+msgstr "Подключите кошелёк, чтобы выводить в один тап"
 
 msgid "Connect wallet"
 msgstr "Подключить кошелёк"
@@ -173,9 +176,6 @@ msgstr "Пополнение TON"
 
 msgid "Deposits"
 msgstr "Пополнения"
-
-msgid "Destination"
-msgstr "Куда отправить"
 
 msgid "Disconnect wallet"
 msgstr "Отключить кошелёк"
@@ -342,6 +342,9 @@ msgstr "Операций пока нет"
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Недостаточно средств на сумму и комиссию сети."
 
+msgid "Paste"
+msgstr "Вставить"
+
 msgid "Pause"
 msgstr "Пауза"
 
@@ -461,9 +464,6 @@ msgstr "ID стола"
 msgid "Tables"
 msgstr "Столы"
 
-msgid "Tap to use max"
-msgstr "Ввести максимум"
-
 msgid "The dealer is counting the cards..."
 msgstr "Дилер пересчитывает карты..."
 
@@ -499,6 +499,9 @@ msgstr "Сегодня"
 
 msgid "TON address"
 msgstr "TON-адрес"
+
+msgid "TON wallet"
+msgstr "TON-кошелёк"
 
 msgid "Tonkeeper / Telegram Wallet"
 msgstr "Tonkeeper / Telegram Wallet"
@@ -553,7 +556,7 @@ msgid "Withdraw {amount, number} TON"
 msgstr "Вывести {amount, number} TON"
 
 msgid "Withdraw to"
-msgstr "Вывод на"
+msgstr "Вывести на"
 
 msgid "Withdraw TON"
 msgstr "Вывод TON"

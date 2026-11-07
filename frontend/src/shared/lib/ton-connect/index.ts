@@ -12,6 +12,10 @@ export interface TonWalletInfo {
   address: string;
   /** User-friendly address, same as useTonAddress() returned. */
   friendlyAddress: string;
+  /** Wallet app name, e.g. "Tonkeeper", when known. */
+  name?: string;
+  /** Wallet app icon URL, when known. */
+  imageUrl?: string;
 }
 
 const tonWalletChanged = createEvent<TonWalletInfo | null>();
@@ -43,6 +47,15 @@ export const getTonConnectUI = (): Promise<TonConnectUI> => {
                   wallet.account.address,
                   wallet.account.chain === (CHAIN.TESTNET as string)
                 ),
+                // Present when connected through the TON Connect UI modal.
+                name:
+                  ('name' in wallet && typeof wallet.name === 'string'
+                    ? wallet.name
+                    : undefined) ?? wallet.device.appName,
+                imageUrl:
+                  'imageUrl' in wallet && typeof wallet.imageUrl === 'string'
+                    ? wallet.imageUrl
+                    : undefined,
               }
             : null
         );

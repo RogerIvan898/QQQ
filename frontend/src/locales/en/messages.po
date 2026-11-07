@@ -49,6 +49,9 @@ msgstr "Available tables"
 msgid "Back"
 msgstr "Back"
 
+msgid "Balance"
+msgstr "Balance"
+
 msgid "BB"
 msgstr "BB"
 
@@ -172,9 +175,6 @@ msgstr "Deposit TON"
 
 msgid "Deposits"
 msgstr "Deposits"
-
-msgid "Destination"
-msgstr "Destination"
 
 msgid "Disconnect wallet"
 msgstr "Disconnect wallet"
@@ -341,6 +341,9 @@ msgstr "No transactions yet"
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Not enough balance to cover the amount and the network fee."
 
+msgid "Paste"
+msgstr "Paste"
+
 msgid "Pause"
 msgstr "Pause"
 
@@ -460,9 +463,6 @@ msgstr "Table ID"
 msgid "Tables"
 msgstr "Tables"
 
-msgid "Tap to use max"
-msgstr "Tap to use max"
-
 msgid "The dealer is counting the cards..."
 msgstr "The dealer is counting the cards..."
 
@@ -498,6 +498,9 @@ msgstr "Today"
 
 msgid "TON address"
 msgstr "TON address"
+
+msgid "TON wallet"
+msgstr "TON wallet"
 
 msgid "Tonkeeper / Telegram Wallet"
 msgstr "Tonkeeper / Telegram Wallet"
