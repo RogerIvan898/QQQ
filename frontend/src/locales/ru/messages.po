@@ -47,8 +47,14 @@ msgstr "ББ"
 msgid "Bet"
 msgstr "Бет"
 
+msgid "Big blind"
+msgstr "Большой блайнд"
+
 msgid "Blinds"
 msgstr "Блайнды"
+
+msgid "Board"
+msgstr "Борд"
 
 msgid "Buy-in"
 msgstr "Бай-ин"
@@ -180,6 +186,9 @@ msgstr "Не удалось скопировать адрес"
 msgid "Fee"
 msgstr "Комиссия"
 
+msgid "Flop"
+msgstr "Флоп"
+
 msgid "Fold"
 msgstr "Фолд"
 
@@ -188,6 +197,12 @@ msgstr "Полная ссылка для перевода с адресом и �
 
 msgid "Full transfer link with address, amount and memo."
 msgstr "Полная ссылка для перевода с адресом, суммой и Memo."
+
+msgid "Games"
+msgstr "Игры"
+
+msgid "Hand log"
+msgstr "Ход раздачи"
 
 msgid "Heads-Up"
 msgstr "Хедз-ап"
@@ -246,8 +261,14 @@ msgstr "Мой кошелёк"
 msgid "Need {missing} more"
 msgstr "Не хватает {missing}"
 
+msgid "No hands played yet"
+msgstr "Вы ещё не сыграли ни одной раздачи"
+
 msgid "No transactions yet"
 msgstr "Операций пока нет"
+
+msgid "Not dealt"
+msgstr "Не раздавался"
 
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Недостаточно средств на сумму и комиссию сети."
@@ -283,6 +304,9 @@ msgstr "Игроки занимают свои позиции..."
 msgid "Pot"
 msgstr "Пот"
 
+msgid "Preflop"
+msgstr "Префлоп"
+
 msgid "Quick add amount"
 msgstr "Быстро добавить"
 
@@ -298,6 +322,9 @@ msgstr "Обязательно"
 msgid "Retry"
 msgstr "Повторить"
 
+msgid "River"
+msgstr "Ривер"
+
 msgid "SB"
 msgstr "МБ"
 
@@ -310,6 +337,9 @@ msgstr "Подготавливаем стол..."
 msgid "Settings"
 msgstr "Настройки"
 
+msgid "Small blind"
+msgstr "Малый блайнд"
+
 msgid "Sound"
 msgstr "Звук"
 
@@ -318,6 +348,13 @@ msgstr "Звук выключен"
 
 msgid "Sound on"
 msgstr "Звук включён"
+
+msgid "Table"
+msgstr "Стол"
+
+#. placeholder {0}: hand.roomId
+msgid "Table #{0}"
+msgstr "Стол #{0}"
 
 msgid "Table full"
 msgstr "Стол заполнен"
@@ -360,6 +397,12 @@ msgstr "Пополнить"
 
 msgid "Transaction"
 msgstr "Транзакция"
+
+msgid "Transactions"
+msgstr "Транзакции"
+
+msgid "Turn"
+msgstr "Тёрн"
 
 msgid "VIP"
 msgstr "VIP"
@@ -410,6 +453,9 @@ msgstr "Вывод обрабатывается в течение несколь
 
 msgid "Yesterday"
 msgstr "Вчера"
+
+msgid "You"
+msgstr "Вы"
 
 msgid "You folded"
 msgstr "Вы сбросили карты"

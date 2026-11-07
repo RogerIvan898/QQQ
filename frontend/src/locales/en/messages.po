@@ -46,8 +46,14 @@ msgstr "BB"
 msgid "Bet"
 msgstr "Bet"
 
+msgid "Big blind"
+msgstr "Big blind"
+
 msgid "Blinds"
 msgstr "Blinds"
+
+msgid "Board"
+msgstr "Board"
 
 msgid "Buy-in"
 msgstr "Buy-in"
@@ -179,6 +185,9 @@ msgstr "Failed to copy address"
 msgid "Fee"
 msgstr "Fee"
 
+msgid "Flop"
+msgstr "Flop"
+
 msgid "Fold"
 msgstr "Fold"
 
@@ -187,6 +196,12 @@ msgstr "Full transfer link with address and amount."
 
 msgid "Full transfer link with address, amount and memo."
 msgstr "Full transfer link with address, amount and memo."
+
+msgid "Games"
+msgstr "Games"
+
+msgid "Hand log"
+msgstr "Hand log"
 
 msgid "Heads-Up"
 msgstr "Heads-Up"
@@ -245,8 +260,14 @@ msgstr "My wallet"
 msgid "Need {missing} more"
 msgstr "Need {missing} more"
 
+msgid "No hands played yet"
+msgstr "No hands played yet"
+
 msgid "No transactions yet"
 msgstr "No transactions yet"
+
+msgid "Not dealt"
+msgstr "Not dealt"
 
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Not enough balance to cover the amount and the network fee."
@@ -282,6 +303,9 @@ msgstr "Players are taking their positions..."
 msgid "Pot"
 msgstr "Pot"
 
+msgid "Preflop"
+msgstr "Preflop"
+
 msgid "Quick add amount"
 msgstr "Quick add amount"
 
@@ -297,6 +321,9 @@ msgstr "Required"
 msgid "Retry"
 msgstr "Retry"
 
+msgid "River"
+msgstr "River"
+
 msgid "SB"
 msgstr "SB"
 
@@ -309,6 +336,9 @@ msgstr "Setting up the table..."
 msgid "Settings"
 msgstr "Settings"
 
+msgid "Small blind"
+msgstr "Small blind"
+
 msgid "Sound"
 msgstr "Sound"
 
@@ -317,6 +347,13 @@ msgstr "Sound off"
 
 msgid "Sound on"
 msgstr "Sound on"
+
+msgid "Table"
+msgstr "Table"
+
+#. placeholder {0}: hand.roomId
+msgid "Table #{0}"
+msgstr "Table #{0}"
 
 msgid "Table full"
 msgstr "Table full"
@@ -359,6 +396,12 @@ msgstr "Top up"
 
 msgid "Transaction"
 msgstr "Transaction"
+
+msgid "Transactions"
+msgstr "Transactions"
+
+msgid "Turn"
+msgstr "Turn"
 
 msgid "VIP"
 msgstr "VIP"
@@ -409,6 +452,9 @@ msgstr "Withdrawals are processed within a few minutes. The amount is already re
 
 msgid "Yesterday"
 msgstr "Yesterday"
+
+msgid "You"
+msgstr "You"
 
 msgid "You folded"
 msgstr "You folded"

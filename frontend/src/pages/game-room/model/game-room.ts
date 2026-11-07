@@ -2,9 +2,16 @@ import { sample } from 'effector';
 import { createGate } from 'effector-react';
 
 import { gameModel } from 'entities/game';
+import { handHistoryModel } from 'features/hand-history';
 import { setTonConnectPaused } from 'shared/lib/ton-connect';
 
-export const GamePageGate = createGate();
+export const GamePageGate = createGate<{ roomId: string }>();
+
+sample({
+  clock: GamePageGate.open,
+  fn: ({ roomId }) => roomId,
+  target: handHistoryModel.tableEntered,
+});
 
 sample({
   clock: GamePageGate.close,

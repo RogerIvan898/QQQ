@@ -1,12 +1,16 @@
 import React from 'react';
 
 import { useLingui } from '@lingui/react/macro';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { useGate, useUnit } from 'effector-react';
 import { ArrowLeft, Settings } from 'lucide-react';
 
 import { gameModel } from 'entities/game';
 import { PlayerActions } from 'features/player-actions';
+import {
+  useTelegramBackButton,
+  useTelegramClosingConfirmation,
+} from 'shared/lib/telegram';
 import { PokerBoard } from 'widgets/poker-table';
 import { SettingsDialog } from 'widgets/settings';
 
@@ -25,7 +29,8 @@ const RevealCardsButton = import.meta.env.DEV
 
 export const GameRoomPage = () => {
   const { t } = useLingui();
-  useGate(GamePageGate);
+  const { roomId } = useParams({ from: '/game/$roomId' });
+  useGate(GamePageGate, { roomId });
 
   const navigate = useNavigate();
   const [isLoading, connectionLost] = useUnit([
@@ -33,6 +38,9 @@ export const GameRoomPage = () => {
     gameModel.$connectionLost,
   ]);
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+  useTelegramBackButton(() => void navigate({ to: '/' }));
+  // A stray swipe-down would otherwise drop the player out of a hand.
+  useTelegramClosingConfirmation();
 
   if (isLoading) {
     return <GameLoader />;

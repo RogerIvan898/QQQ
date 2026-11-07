@@ -22,4 +22,9 @@ export {
   sendClientCommand,
 } from './game';
 export { CLIENT_COMMANDS, SERVER_EVENTS } from './constants';
-export type { AllowedPlayerActionsEvent, PlayerInfo } from './types';
+export type {
+  AllowedPlayerActionsEvent,
+  GameStreet,
+  PlayerInfo,
+  ServerGameEvent,
+} from './types';
