@@ -231,9 +231,6 @@ msgstr "Enter a valid TON address"
 msgid "Enter amount to continue"
 msgstr "Enter amount to continue"
 
-msgid "Enter the amount you want to deposit"
-msgstr "Enter the amount you want to deposit"
-
 msgid "Exceeds available balance"
 msgstr "Exceeds available balance"
 
@@ -678,6 +675,9 @@ msgstr "You"
 
 msgid "You can check for free"
 msgstr "You can check for free"
+
+msgid "You deposit"
+msgstr "You deposit"
 
 msgid "You folded"
 msgstr "You folded"

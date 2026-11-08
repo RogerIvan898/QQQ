@@ -1,0 +1,105 @@
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.amountBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 16px 20px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(
+      80% 120% at 50% 0%,
+      color-mix(in srgb, var(--color-primary) 12%, transparent),
+      transparent 70%
+    ),
+    var(--color-bg-input);
+  cursor: text;
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+
+.amountBox:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--color-primary) 22%, transparent);
+}
+
+.caption {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.amountRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.input {
+  min-width: 1.5ch;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 40px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  text-align: right;
+}
+
+.input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.45;
+}
+
+.currency {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.balance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: -4px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.balance b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.arrow {
+  color: var(--color-text-muted);
+}
+
+.balance .after {
+  color: var(--color-success);
+}

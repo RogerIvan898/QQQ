@@ -232,9 +232,6 @@ msgstr "Введите корректный TON-адрес"
 msgid "Enter amount to continue"
 msgstr "Введите сумму для продолжения"
 
-msgid "Enter the amount you want to deposit"
-msgstr "Введите сумму пополнения"
-
 msgid "Exceeds available balance"
 msgstr "Превышает доступный баланс"
 
@@ -323,7 +320,7 @@ msgid "Language"
 msgstr "Язык"
 
 msgid "Leave"
-msgstr ""
+msgstr "Покинуть"
 
 msgid "Leave table?"
 msgstr "Покинуть стол?"
@@ -679,6 +676,9 @@ msgstr "Вы"
 
 msgid "You can check for free"
 msgstr "Можно прочекать бесплатно"
+
+msgid "You deposit"
+msgstr "Вы пополняете"
 
 msgid "You folded"
 msgstr "Вы сбросили карты"

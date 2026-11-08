@@ -28,7 +28,7 @@ export const QuickAddOptions = ({ options, onAdd, disabled }: Props) => {
         >
           <span className={styles.quickBtnContent}>
             <span className={styles.quickBtnIcon} aria-hidden="true">
-              <Plus size={16} strokeWidth={2.5} />
+              <Plus size={14} strokeWidth={3} />
             </span>
             <span className={styles.quickBtnValue}>
               {value} <span className={styles.quickBtnUnit}>TON</span>
