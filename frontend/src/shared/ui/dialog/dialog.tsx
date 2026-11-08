@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { useLingui } from '@lingui/react/macro';
 import { X } from 'lucide-react';
 
+import { useMediaQuery } from 'shared/hooks/use-media-query';
 import { usePresence } from 'shared/hooks/use-presence';
 import { useSwipeToClose } from 'shared/hooks/use-swipe-to-close';
 import { cn } from 'shared/utils/cn';
@@ -35,7 +36,9 @@ export const Dialog = ({
 
   const { mounted: rendered, closing } = usePresence(open);
 
-  const swipe = useSwipeToClose(onClose, variant === 'bottom');
+  const isPhone = useMediaQuery('(max-width: 600px)');
+  const isSheet = variant === 'bottom' && isPhone;
+  const swipe = useSwipeToClose(onClose, isSheet);
   const dragY = swipe.offset;
   const dragHandlers = swipe.handlers;
   const resetSwipe = React.useEffectEvent(() => swipe.reset());
@@ -96,13 +99,16 @@ export const Dialog = ({
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
       >
-        {variant === 'bottom' && (
+        {isSheet && (
           <div className={styles.grabber} aria-hidden="true" {...dragHandlers}>
             <span className={styles.grabberBar} />
           </div>
         )}
 
-        <header className={styles.header} {...dragHandlers}>
+        <header
+          className={styles.header}
+          {...(isSheet ? dragHandlers : undefined)}
+        >
           {leading ?? <div className={styles.headerSide} />}
 
           <div className={styles.titleGroup}>
