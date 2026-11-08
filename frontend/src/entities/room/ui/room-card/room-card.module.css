@@ -191,3 +191,80 @@
     transition: none;
   }
 }
+
+/* Desktop: a lobby row instead of a phone card. The wrappers dissolve
+   (display: contents) so name, blinds, buy-in, players and the button line
+   up in shared columns; --room-cols comes from the list, so its header row
+   uses the very same grid. */
+@media (min-width: 1024px) {
+  .card {
+    display: grid;
+    grid-template-columns: var(
+      --room-cols,
+      minmax(200px, 1.6fr) 1fr 1.2fr 1fr 150px
+    );
+    align-items: center;
+    column-gap: 16px;
+    row-gap: 2px;
+    padding: 10px 14px 10px 18px;
+    border-radius: var(--radius-md);
+  }
+
+  .card:hover {
+    box-shadow: 0 6px 18px var(--color-shadow);
+  }
+
+  .info,
+  .meta {
+    display: contents;
+  }
+
+  .titleRow {
+    grid-column: 1;
+  }
+
+  .metaItem:nth-child(1) {
+    grid-column: 2;
+  }
+
+  .metaItem:nth-child(2) {
+    grid-column: 3;
+  }
+
+  /* The column header names them. */
+  .metaItem dt {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .metaItem dd {
+    font-size: 14px;
+  }
+
+  .statusRow {
+    grid-column: 4;
+  }
+
+  .action {
+    grid-column: 5;
+    grid-row: 1 / span 2;
+  }
+
+  .action > * {
+    width: 100%;
+  }
+
+  .shortfall {
+    grid-column: 1;
+  }
+
+  /* .info no longer draws, so fade its parts directly. */
+  .cardFull .titleRow,
+  .cardFull .metaItem,
+  .cardFull .statusRow {
+    opacity: 0.6;
+  }
+}

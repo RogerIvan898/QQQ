@@ -142,6 +142,61 @@
   }
 }
 
+/* Lobby header row: hidden on phones, where rooms are cards. */
+.roomHead {
+  display: none;
+}
+
+/* Desktop: a centred lobby instead of a stretched phone layout. Content is
+   capped at --lobby-width, tabs size to their labels, and rooms are rows in
+   a table with one shared column grid (--room-cols, read by RoomCard too). */
+@media (min-width: 1024px) {
+  .contentArea {
+    --lobby-width: 1040px;
+    --lobby-gutter: max(32px, calc((100% - var(--lobby-width)) / 2));
+  }
+
+  .stickyHeader,
+  .roomScroll {
+    padding-left: var(--lobby-gutter);
+    padding-right: var(--lobby-gutter);
+  }
+
+  .tabsContainer {
+    margin: 0;
+  }
+
+  .tabsScroll {
+    max-width: 420px;
+    padding: 0;
+  }
+
+  .tabIndicator {
+    --tab-track: 100%;
+
+    left: calc(var(--tab-track) * var(--tab-index) / var(--tab-count));
+  }
+
+  .roomGrid {
+    --room-cols: minmax(200px, 1.6fr) 1fr 1.2fr 1fr 150px;
+
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .roomHead {
+    display: grid;
+    grid-template-columns: var(--room-cols);
+    column-gap: 16px;
+    padding: 0 14px 4px 18px;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+}
+
 .bottomSpacer {
   height: 24px;
 }

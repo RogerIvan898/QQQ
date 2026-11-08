@@ -405,6 +405,9 @@ msgstr "Период"
 msgid "Play"
 msgstr "Играть"
 
+msgid "Players"
+msgstr "Игроки"
+
 msgid "Players are taking their positions..."
 msgstr "Игроки занимают свои позиции..."
 
@@ -491,6 +494,9 @@ msgstr "Стрит"
 
 msgid "Straight flush"
 msgstr "Стрит-флеш"
+
+msgid "Table"
+msgstr "Стол"
 
 #. placeholder {0}: session.roomId
 msgid "Table #{0}"

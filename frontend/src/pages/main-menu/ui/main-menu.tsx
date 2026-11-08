@@ -182,6 +182,14 @@ export const MenuPage = () => {
                 <h2 className={styles.sectionTitle}>{t`Available tables`}</h2>
               </div>
               <div className={styles.roomGrid}>
+                {/* Desktop only: column names for the lobby rows. */}
+                <div className={styles.roomHead} aria-hidden="true">
+                  <span>{t`Table`}</span>
+                  <span>{t`Blinds`}</span>
+                  <span>{t`Buy-in`}</span>
+                  <span>{t`Players`}</span>
+                  <span />
+                </div>
                 {visibleRooms.map(room => {
                   const shortfall =
                     balance === null ? 0 : Math.max(0, room.minBuy - balance);
