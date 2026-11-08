@@ -5,31 +5,29 @@ import { useRouter } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
 import { Coins, Swords } from 'lucide-react';
 
-import { RoomCard } from 'entities/room';
+import { $rooms, $roomsStatus, RoomCard, roomsRequested } from 'entities/room';
 import { sessionModel } from 'entities/session';
 import { walletModel } from 'entities/wallet';
 import { JoinRoomButton } from 'features/join-room';
 import { getTelegramUser } from 'shared/lib/telegram';
+import { Preloader } from 'shared/ui/preloader';
 import { cn } from 'shared/utils/cn';
 import { WalletPanel } from 'widgets/wallet-panel';
 
 import {
   filterRooms,
   ROOM_FILTERS,
-  ROOMS,
   roomFilterLabel,
   type RoomFilter,
 } from '../model';
 
+import { DepositEntry } from './deposit-entry';
 import { Header } from './header';
 import styles from './main-menu.module.css';
 
 const loadDepositDialog = () => import('widgets/deposit-dialog');
 const loadWithdrawModal = () => import('widgets/withdraw');
 
-const DepositDialog = React.lazy(() =>
-  loadDepositDialog().then(module => ({ default: module.DepositDialog }))
-);
 const WithdrawModal = React.lazy(() =>
   loadWithdrawModal().then(module => ({ default: module.WithdrawModal }))
 );
@@ -98,7 +96,7 @@ const Filters = ({ active, onChange }: FiltersProps) => {
 };
 
 export const MenuPage = () => {
-  const { i18n, t } = useLingui();
+  const { t } = useLingui();
   const [roomFilter, setRoomFilter] = React.useState<RoomFilter>('all');
   const [isDepositOpen, setIsDepositOpen] = React.useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false);
@@ -113,7 +111,18 @@ export const MenuPage = () => {
   const [telegramUser] = React.useState(getTelegramUser);
   // The nickname set in Settings wins over the Telegram name.
   const nickname = useUnit(sessionModel.$nickname);
-  const visibleRooms = filterRooms(ROOMS, roomFilter);
+  const [rooms, roomsStatus, requestRooms] = useUnit([
+    $rooms,
+    $roomsStatus,
+    roomsRequested,
+  ]);
+
+  // Fresh list (and seat counts) every time the lobby opens.
+  React.useEffect(() => {
+    requestRooms();
+  }, [requestRooms]);
+
+  const visibleRooms = filterRooms(rooms, roomFilter);
   const router = useRouter();
 
   React.useEffect(() => {
@@ -185,6 +194,24 @@ export const MenuPage = () => {
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>{t`Available tables`}</h2>
               </div>
+              {roomsStatus === 'failed' ? (
+                <div className={styles.roomsState} role="alert">
+                  <span>{t`Couldn't load tables`}</span>
+                  <button
+                    type="button"
+                    className={styles.roomsRetry}
+                    onClick={() => requestRooms()}
+                  >
+                    {t`Retry`}
+                  </button>
+                </div>
+              ) : rooms.length === 0 && roomsStatus !== 'ready' ? (
+                <div className={styles.roomsState} role="status">
+                  <Preloader label={t`Loading tables…`} />
+                </div>
+              ) : visibleRooms.length === 0 ? (
+                <div className={styles.roomsState}>{t`No tables here yet`}</div>
+              ) : null}
               <div className={styles.roomGrid}>
                 {/* Desktop only: column names for the lobby rows. */}
                 <div className={styles.roomHead} aria-hidden="true">
@@ -203,7 +230,8 @@ export const MenuPage = () => {
                       key={room.id}
                       shortfall={shortfall}
                       room={{
-                        name: i18n._(room.name),
+                        name: room.name,
+                        game: room.game,
                         mode: room.mode,
                         blinds: room.blinds,
                         players: room.players,
@@ -234,15 +262,12 @@ export const MenuPage = () => {
 
         <React.Suspense fallback={null}>
           {isDepositOpen && (
-            <DepositDialog
-              open
+            <DepositEntry
               onClose={() => setIsDepositOpen(false)}
               onSuccess={() => {
                 setIsDepositOpen(false);
                 refreshWallet();
               }}
-              depositAddress="UQA-hgA0arLRETGFy5ccxv11acPYBUpU49X8RyqfIju3tGci"
-              memo="1049285"
             />
           )}
 
@@ -251,9 +276,9 @@ export const MenuPage = () => {
               open
               onClose={() => setIsWithdrawOpen(false)}
               balance={balance ?? 0}
-              onSubmit={() => {
-                refreshWallet();
-              }}
+              onSubmit={({ address, amount }) =>
+                walletModel.withdrawFx({ address, amount })
+              }
             />
           )}
         </React.Suspense>

@@ -2,7 +2,6 @@ import { createEvent, merge, sample } from 'effector';
 
 import { CLIENT_COMMANDS, gameModel } from 'entities/game';
 import { PlayerAction } from 'entities/player';
-import { sessionModel } from 'entities/session';
 
 import type { RaisePayload } from './types';
 
@@ -28,13 +27,13 @@ const raiseActionTriggered = raise.map(({ amount }) =>
 
 const playerAction = merge([simpleActionTriggered, raiseActionTriggered]);
 
+// No player id in the command: the server knows who is acting from the
+// authenticated socket and must never trust an id sent by the client.
 sample({
   clock: playerAction,
-  source: sessionModel.$currentUserId,
-  filter: (playerId): playerId is string => Boolean(playerId),
-  fn: (playerId, payload) => ({
+  fn: payload => ({
     type: CLIENT_COMMANDS.PLAYER_ACTION,
-    payload: { playerId, payload },
+    payload,
   }),
   target: gameModel.sendClientCommand,
 });

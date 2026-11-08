@@ -1,6 +1,18 @@
-import { api } from 'shared/api/axios';
+import { api } from 'shared/api';
+
+export interface SessionUser {
+  id: string;
+}
+
+export interface LoginResponse {
+  /** Bearer token for REST; may be omitted if the backend uses a cookie. */
+  accessToken?: string;
+  user: SessionUser;
+}
 
 export const authApi = {
-  login: (initData: string) => api.post<null>('/auth/login', { initData }),
-  getMe: () => api.get<null>('/auth/me'),
+  /** Telegram `initData` (validated on the server) → session. */
+  login: (initData: string) =>
+    api.post<LoginResponse>('/auth/login', { initData }),
+  getMe: () => api.get<SessionUser>('/auth/me'),
 };

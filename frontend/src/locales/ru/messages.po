@@ -172,11 +172,17 @@ msgstr "Скопировать адрес"
 msgid "Couldn't load more. Try again"
 msgstr "Не удалось загрузить. Повторить"
 
+msgid "Couldn't load tables"
+msgstr "Не удалось загрузить столы"
+
 msgid "Couldn't load the page"
 msgstr "Не удалось загрузить страницу"
 
 msgid "Couldn't load transactions"
 msgstr "Не удалось загрузить транзакции"
+
+msgid "Couldn't load your deposit address"
+msgstr "Не удалось загрузить адрес для пополнения"
 
 msgid "Custom"
 msgstr "Период"
@@ -293,20 +299,11 @@ msgstr "Раздач сыграно"
 msgid "Heads-Up"
 msgstr "Хедз-ап"
 
-msgid "High"
-msgstr "High"
-
 msgid "High card"
 msgstr "Старшая карта"
 
 msgid "History"
 msgstr "История"
-
-msgid "HU Classic"
-msgstr "HU Classic"
-
-msgid "HU High Roller"
-msgstr "HU High Roller"
 
 msgid "Invalid amount"
 msgstr "Некорректная сумма"
@@ -323,32 +320,20 @@ msgstr "Только буквы, цифры, пробел, точка, дефи�
 msgid "Loading"
 msgstr "Загрузка"
 
+msgid "Loading tables…"
+msgstr "Загружаем столы…"
+
 msgid "Loading transactions…"
 msgstr "Загружаем транзакции…"
 
 msgid "Loading…"
 msgstr "Загрузка…"
 
-msgid "Low"
-msgstr "Low"
-
-msgid "Low+"
-msgstr "Low+"
-
 msgid "Making room for new players..."
 msgstr "Готовим места для новых игроков..."
 
-msgid "Medium"
-msgstr "Medium"
-
 msgid "Memo"
 msgstr "Memo"
-
-msgid "Micro"
-msgstr "Micro"
-
-msgid "Micro+"
-msgstr "Micro+"
 
 msgid "My wallet"
 msgstr "Мой кошелёк"
@@ -379,6 +364,9 @@ msgstr "За этим столом вы ещё не сыграли ни одно
 
 msgid "No sessions in this period"
 msgstr "За этот период сессий нет"
+
+msgid "No tables here yet"
+msgstr "Здесь пока нет столов"
 
 msgid "No transactions yet"
 msgstr "Операций пока нет"
@@ -474,6 +462,9 @@ msgstr "Прокрутить вправо"
 msgid "Sender address"
 msgstr "Адрес отправителя"
 
+msgid "Sending…"
+msgstr "Отправляем…"
+
 msgid "Session Details"
 msgstr "Детали сессии"
 
@@ -550,6 +541,9 @@ msgstr "Сеть отклонила перевод."
 msgid "The transfer was sent without the required memo. Contact support to get it credited."
 msgstr "Перевод отправлен без обязательного комментария (memo). Напишите в поддержку, чтобы его зачислили."
 
+msgid "The withdrawal didn't go through. Your balance is unchanged; try again."
+msgstr "Вывод не прошёл. Баланс не изменился, попробуйте ещё раз."
+
 msgid "Three of a kind"
 msgstr "Сет"
 
@@ -597,9 +591,6 @@ msgstr "Тёрн"
 
 msgid "Two pair"
 msgstr "Две пары"
-
-msgid "VIP"
-msgstr "VIP"
 
 msgid "Waiting for next hand..."
 msgstr "Ожидание следующей раздачи..."

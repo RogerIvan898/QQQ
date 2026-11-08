@@ -171,11 +171,17 @@ msgstr "Copy address"
 msgid "Couldn't load more. Try again"
 msgstr "Couldn't load more. Try again"
 
+msgid "Couldn't load tables"
+msgstr "Couldn't load tables"
+
 msgid "Couldn't load the page"
 msgstr "Couldn't load the page"
 
 msgid "Couldn't load transactions"
 msgstr "Couldn't load transactions"
+
+msgid "Couldn't load your deposit address"
+msgstr "Couldn't load your deposit address"
 
 msgid "Custom"
 msgstr "Custom"
@@ -292,20 +298,11 @@ msgstr "Hands Played"
 msgid "Heads-Up"
 msgstr "Heads-Up"
 
-msgid "High"
-msgstr "High"
-
 msgid "High card"
 msgstr "High card"
 
 msgid "History"
 msgstr "History"
-
-msgid "HU Classic"
-msgstr "HU Classic"
-
-msgid "HU High Roller"
-msgstr "HU High Roller"
 
 msgid "Invalid amount"
 msgstr "Invalid amount"
@@ -322,32 +319,20 @@ msgstr "Letters, digits, space, dot, dash and underscore only"
 msgid "Loading"
 msgstr "Loading"
 
+msgid "Loading tables…"
+msgstr "Loading tables…"
+
 msgid "Loading transactions…"
 msgstr "Loading transactions…"
 
 msgid "Loading…"
 msgstr "Loading…"
 
-msgid "Low"
-msgstr "Low"
-
-msgid "Low+"
-msgstr "Low+"
-
 msgid "Making room for new players..."
 msgstr "Making room for new players..."
 
-msgid "Medium"
-msgstr "Medium"
-
 msgid "Memo"
 msgstr "Memo"
-
-msgid "Micro"
-msgstr "Micro"
-
-msgid "Micro+"
-msgstr "Micro+"
 
 msgid "My wallet"
 msgstr "My wallet"
@@ -378,6 +363,9 @@ msgstr "No hands at this table yet"
 
 msgid "No sessions in this period"
 msgstr "No sessions in this period"
+
+msgid "No tables here yet"
+msgstr "No tables here yet"
 
 msgid "No transactions yet"
 msgstr "No transactions yet"
@@ -473,6 +461,9 @@ msgstr "Scroll right"
 msgid "Sender address"
 msgstr "Sender address"
 
+msgid "Sending…"
+msgstr "Sending…"
+
 msgid "Session Details"
 msgstr "Session Details"
 
@@ -549,6 +540,9 @@ msgstr "The transfer was rejected by the network."
 msgid "The transfer was sent without the required memo. Contact support to get it credited."
 msgstr "The transfer was sent without the required memo. Contact support to get it credited."
 
+msgid "The withdrawal didn't go through. Your balance is unchanged; try again."
+msgstr "The withdrawal didn't go through. Your balance is unchanged; try again."
+
 msgid "Three of a kind"
 msgstr "Three of a kind"
 
@@ -596,9 +590,6 @@ msgstr "Turn"
 
 msgid "Two pair"
 msgstr "Two pair"
-
-msgid "VIP"
-msgstr "VIP"
 
 msgid "Waiting for next hand..."
 msgstr "Waiting for next hand..."

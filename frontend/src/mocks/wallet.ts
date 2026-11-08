@@ -1,10 +1,13 @@
 import { delay, http, HttpResponse } from 'msw';
 
 import type {
+  DepositAddress,
   Transaction,
   TransactionsPage,
   WalletBalance,
+  WithdrawRequest,
 } from 'entities/wallet';
+import { isValidTonAddress } from 'widgets/withdraw/lib/ton-address';
 
 const ADDRESSES = [
   'UQBvW8Z5huBkMJYdnfAEM5JqTNkuWX3diqYENkWsIL0XggGG',
@@ -45,11 +48,65 @@ const TRANSACTIONS: Transaction[] = Array.from(
   }
 );
 
+/** Mock balance; withdrawals take from it like the real server would. */
+let available = 42.5;
+let nextWithdrawalId = TOTAL + 1;
+
 export const walletHandlers = [
   http.get('*/wallet/balance', async () => {
     await delay(250);
 
-    return HttpResponse.json<WalletBalance>({ available: 42.5 });
+    return HttpResponse.json<WalletBalance>({ available });
+  }),
+
+  // Per-player in reality; the memo credits the transfer to this account.
+  http.get('*/wallet/deposit-address', async () => {
+    await delay(300);
+
+    return HttpResponse.json<DepositAddress>({
+      address: 'UQA-hgA0arLRETGFy5ccxv11acPYBUpU49X8RyqfIju3tGci',
+      memo: '1049285',
+    });
+  }),
+
+  // Same checks the backend must make; never trust the client's numbers.
+  http.post('*/wallet/withdraw', async ({ request }) => {
+    await delay(700);
+
+    const body = (await request.json()) as Partial<WithdrawRequest>;
+    const amount = Number(body.amount);
+    const address = typeof body.address === 'string' ? body.address : '';
+
+    if (!isValidTonAddress(address)) {
+      return HttpResponse.json({ error: 'invalid_address' }, { status: 400 });
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return HttpResponse.json({ error: 'invalid_amount' }, { status: 400 });
+    }
+
+    if (amount > available) {
+      return HttpResponse.json(
+        { error: 'insufficient_funds' },
+        { status: 400 }
+      );
+    }
+
+    available = Math.round((available - amount) * 100) / 100;
+
+    const transaction: Transaction = {
+      id: `tx-${nextWithdrawalId++}`,
+      type: 'withdrawal',
+      status: 'pending',
+      amount,
+      createdAt: new Date().toISOString(),
+      address,
+      fee: 0.05,
+    };
+
+    TRANSACTIONS.unshift(transaction);
+
+    return HttpResponse.json(transaction);
   }),
 
   // Cursor = index of the first item of the page (opaque to the client).

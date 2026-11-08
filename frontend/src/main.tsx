@@ -2,7 +2,7 @@ import { createRoot } from 'react-dom/client';
 
 import { App } from 'app/App';
 import { router } from 'app/providers/router';
-import 'entities/session';
+import { sessionModel } from 'entities/session';
 // Importing the model segment only keeps the dev-only switch UI out of the production bundle.
 import { bootstrapMockServer } from 'features/mock-server/model';
 import { appStarted } from 'shared/config/init';
@@ -30,6 +30,8 @@ void (async () => {
   // go. Otherwise several loaders replace each other and the screen blinks.
   await Promise.all([
     prepareI18n(),
+    // The table needs to know who "you" are; a failed login doesn't block.
+    sessionModel.waitForAuth(),
     router.load().catch((error: unknown) => {
       // The router's error screen will handle it after render.
       console.error('[Router] Initial load failed', error);

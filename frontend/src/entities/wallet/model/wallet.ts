@@ -10,7 +10,13 @@ import {
 
 import { walletApi } from '../api';
 
-import type { Transaction, TransactionStatus, TransactionType } from './types';
+import type {
+  DepositAddress,
+  Transaction,
+  TransactionStatus,
+  TransactionType,
+  WithdrawRequest,
+} from './types';
 
 export const STATUS_LABELS = {
   completed: msg`Completed`,
@@ -31,6 +37,38 @@ export const $balance = createStore<number | null>(null).on(
 );
 
 sample({ clock: balanceRequested, target: fetchBalanceFx });
+
+// ---------- Deposit address ----------
+
+export const depositAddressRequested = createEvent();
+
+const fetchDepositAddressFx = createEffect(() => walletApi.getDepositAddress());
+
+/** This player's deposit address and memo; null until loaded. */
+export const $depositAddress = createStore<DepositAddress | null>(null).on(
+  fetchDepositAddressFx.doneData,
+  (_, address) => address
+);
+
+export const $depositAddressStatus = createStore<
+  'idle' | 'loading' | 'ready' | 'failed'
+>('idle')
+  .on(fetchDepositAddressFx, () => 'loading')
+  .on(fetchDepositAddressFx.done, () => 'ready')
+  .on(fetchDepositAddressFx.fail, () => 'failed');
+
+sample({
+  clock: depositAddressRequested,
+  filter: fetchDepositAddressFx.pending.map(pending => !pending),
+  target: fetchDepositAddressFx,
+});
+
+// ---------- Withdraw ----------
+
+/** Sends a withdrawal; resolves with the new (pending) transaction. */
+export const withdrawFx = createEffect((request: WithdrawRequest) =>
+  walletApi.withdraw(request)
+);
 
 // ---------- Transactions (cursor pagination) ----------
 
@@ -164,4 +202,10 @@ sample({
 sample({
   clock: walletRefreshRequested,
   target: [balanceRequested, transactionsReset],
+});
+
+// A withdrawal changes the balance and adds a transaction: reload both.
+sample({
+  clock: withdrawFx.done,
+  target: walletRefreshRequested,
 });

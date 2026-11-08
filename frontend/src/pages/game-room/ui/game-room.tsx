@@ -6,7 +6,7 @@ import { useGate, useUnit } from 'effector-react';
 import { ArrowLeft, History, Play, Settings, X } from 'lucide-react';
 
 import { gameModel } from 'entities/game';
-import { findRoom } from 'entities/room';
+import { $rooms, findRoom, roomsRequested } from 'entities/room';
 import {
   HAND_HISTORY_TOGGLE_ATTR,
   HandHistorySheet,
@@ -35,9 +35,17 @@ const RevealCardsButton = import.meta.env.DEV
   : null;
 
 export const GameRoomPage = () => {
-  const { i18n, t } = useLingui();
+  const { t } = useLingui();
   const { roomId } = useParams({ from: '/game/$roomId' });
-  const room = findRoom(roomId);
+  const [rooms, requestRooms] = useUnit([$rooms, roomsRequested]);
+  const room = findRoom(rooms, roomId);
+
+  // Opened straight from a link: the lobby list isn't loaded yet.
+  React.useEffect(() => {
+    if (rooms.length === 0) {
+      requestRooms();
+    }
+  }, [rooms.length, requestRooms]);
   useGate(GamePageGate, { roomId });
 
   const navigate = useNavigate();
@@ -94,7 +102,7 @@ export const GameRoomPage = () => {
 
       {room && (
         <p className={styles.tableInfo}>
-          {i18n._(room.name)} · {room.blinds} TON
+          {room.name} · {room.blinds} TON
         </p>
       )}
 

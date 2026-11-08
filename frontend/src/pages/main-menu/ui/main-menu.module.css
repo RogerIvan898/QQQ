@@ -142,6 +142,31 @@
   }
 }
 
+/* Lobby list states: loading, failed (with Retry), empty. */
+.roomsState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 16px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.roomsRetry {
+  composes: solid from '../../../shared/ui/button/solid-button.module.css';
+  height: 38px;
+  padding: 0 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+}
+
+/* No rows (loading, failed, empty filter): no grid, so no lonely header. */
+.roomGrid:not(:has(article)) {
+  display: none;
+}
+
 /* Lobby header row: hidden on phones, where rooms are cards. */
 .roomHead {
   display: none;

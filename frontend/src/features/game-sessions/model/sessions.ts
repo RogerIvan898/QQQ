@@ -2,7 +2,7 @@ import { createEvent, createStore } from 'effector';
 
 import { gameModel, SERVER_EVENTS } from 'entities/game';
 import type { PlayerType as Player } from 'entities/player';
-import { findRoom, roomBigBlind, roomFormat } from 'entities/room';
+import { $rooms, findRoom, roomBigBlind, roomFormat } from 'entities/room';
 import { sessionModel } from 'entities/session';
 
 import type { GameSession } from './types';
@@ -74,7 +74,7 @@ const finish = (draft: Draft) => {
     return;
   }
 
-  const room = findRoom(draft.roomId);
+  const room = findRoom($rooms.getState(), draft.roomId);
   const bigBlindTon = room ? roomBigBlind(room) : 0;
   const tonPerChip =
     bigBlindTon && draft.bigBlindChips ? bigBlindTon / draft.bigBlindChips : 0;

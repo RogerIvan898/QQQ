@@ -78,7 +78,6 @@ export const PlayerActions = () => {
     <div ref={containerRef} className={styles.actionContainer}>
       {isRaisePanelOpen ? (
         <BetManager
-          playerId={viewerId}
           minAmount={allowedActions?.minRaise ?? 0}
           maxAmount={allowedActions?.maxRaise ?? 1000}
           bigBlind={bigBlind}

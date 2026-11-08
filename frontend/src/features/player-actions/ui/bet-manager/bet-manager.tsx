@@ -21,7 +21,6 @@ const roundChips = (value: number) =>
   Math.round(value * CHIP_PRECISION) / CHIP_PRECISION;
 
 interface Props {
-  playerId: string;
   minAmount: number;
   maxAmount: number;
   bigBlind: number;
@@ -34,7 +33,6 @@ interface Props {
 }
 
 export const BetManager = ({
-  playerId,
   minAmount,
   maxAmount,
   bigBlind,
@@ -72,7 +70,6 @@ export const BetManager = ({
 
   const handleConfirm = () => {
     raise({
-      playerId,
       amount: legal(draftValue ?? amount),
     });
     onCancel();

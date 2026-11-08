@@ -8,6 +8,5 @@ export interface PreActionOptions {
 }
 
 export interface RaisePayload {
-  playerId: string;
   amount: number;
 }

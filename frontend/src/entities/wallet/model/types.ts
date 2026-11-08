@@ -32,3 +32,18 @@ export interface WalletBalance {
   /** Spendable TON, excluding amounts reserved by pending withdrawals. */
   available: number;
 }
+
+/** GET /wallet/deposit-address: per-player, never hard-coded in the client. */
+export interface DepositAddress {
+  address: string;
+  /** Comment the transfer must carry so the deposit is credited to you. */
+  memo: string;
+}
+
+/** POST /wallet/withdraw body. */
+export interface WithdrawRequest {
+  /** TON address to send to (user-friendly or raw). */
+  address: string;
+  /** Amount in TON. */
+  amount: number;
+}
