@@ -35,6 +35,36 @@ export const Snackbar = ({
   const { t } = useLingui();
   const { mounted, closing } = usePresence(open, 200);
   const [paused, setPaused] = React.useState(false);
+  const boxRef = React.useRef<HTMLDivElement | null>(null);
+  const lastShowId = React.useRef(showId);
+  const wasVisible = React.useRef(false);
+
+  React.useEffect(() => {
+    const repeated = lastShowId.current !== showId && wasVisible.current;
+
+    lastShowId.current = showId;
+    wasVisible.current = open;
+
+    if (!repeated || tone !== 'warning' || !boxRef.current) {
+      return;
+    }
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    boxRef.current.animate(
+      [
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-8px)' },
+        { transform: 'translateX(7px)' },
+        { transform: 'translateX(-5px)' },
+        { transform: 'translateX(3px)' },
+        { transform: 'translateX(0)' },
+      ],
+      { duration: 380, easing: 'ease-out' }
+    );
+  }, [showId, tone, open]);
   const close = React.useEffectEvent(onClose);
 
   React.useEffect(() => {
@@ -54,6 +84,7 @@ export const Snackbar = ({
   return createPortal(
     <div className={styles.viewport}>
       <div
+        ref={boxRef}
         className={cn(
           styles.snackbar,
           tone === 'warning' && styles.warning,
