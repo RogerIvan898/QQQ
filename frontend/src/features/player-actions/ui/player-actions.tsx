@@ -3,24 +3,29 @@ import React from 'react';
 import { useUnit } from 'effector-react';
 
 import { gameModel } from 'entities/game';
-import { findPlayerById, PlayerStatus } from 'entities/player';
-import { sessionModel } from 'entities/session';
+import { PlayerStatus } from 'entities/player';
 
-import { canPreAct, setRaisePanelRect } from '../model';
+import {
+  $committedTotal,
+  $viewer,
+  canPreAct,
+  setRaisePanelRect,
+} from '../model';
 
 import { ActionPanel } from './action-panel';
 import { BetManager } from './bet-manager';
 import styles from './player-actions.module.css';
 
 export const PlayerActions = () => {
-  const [viewerId, allowedActions, players, pot, bigBlind, round] = useUnit([
-    sessionModel.$currentUserId,
-    gameModel.$myAllowedActions,
-    gameModel.$players,
-    gameModel.$pot,
-    gameModel.$bigBlind,
-    gameModel.$round,
-  ]);
+  const [viewer, allowedActions, committedTotal, pot, bigBlind, round] =
+    useUnit([
+      $viewer,
+      gameModel.$myAllowedActions,
+      $committedTotal,
+      gameModel.$pot,
+      gameModel.$bigBlind,
+      gameModel.$round,
+    ]);
 
   const [isChangingAmount, setIsChangingAmount] = React.useState(false);
   const isMyTurn = Boolean(allowedActions);
@@ -61,12 +66,11 @@ export const PlayerActions = () => {
     };
   }, [isRaisePanelOpen]);
 
-  if (!viewerId) {
+  if (!viewer) {
     return null;
   }
 
-  const viewer = findPlayerById(players, viewerId);
-  const showPreActions = canPreAct(viewer?.status) && !isMyTurn;
+  const showPreActions = canPreAct(viewer.status) && !isMyTurn;
 
   const canBet = !allowedActions?.canCall || allowedActions.minRaise === 0;
   const canPutChips =
@@ -79,15 +83,9 @@ export const PlayerActions = () => {
           minAmount={allowedActions?.minRaise ?? 0}
           maxAmount={allowedActions?.maxRaise ?? 1000}
           bigBlind={bigBlind}
-          pot={
-            pot +
-            Object.values(players).reduce(
-              (sum, player) => sum + player.committed,
-              0
-            )
-          }
+          pot={pot + committedTotal}
           callAmount={allowedActions?.callAmount ?? 0}
-          committed={viewer?.committed ?? 0}
+          committed={viewer.committed ?? 0}
           preflop={round === 'PREFLOP'}
           onCancel={() => setIsChangingAmount(false)}
           variant={canBet ? 'bet' : 'raise'}
@@ -96,9 +94,9 @@ export const PlayerActions = () => {
         <ActionPanel
           isMyTurn={isMyTurn}
           showPreActions={showPreActions}
-          hasFolded={viewer?.status === PlayerStatus.FOLDED}
-          sittingOut={viewer?.status === PlayerStatus.SITTING_OUT}
-          returning={Boolean(viewer?.returning)}
+          hasFolded={viewer.status === PlayerStatus.FOLDED}
+          sittingOut={viewer.status === PlayerStatus.SITTING_OUT}
+          returning={Boolean(viewer.returning)}
           canFold={allowedActions?.canFold ?? true}
           canCall={allowedActions?.canCall ?? true}
           canRaise={canPutChips}

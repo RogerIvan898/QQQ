@@ -2,9 +2,15 @@ import React from 'react';
 
 import { HAND_INTRO_MS, MUCK_MS } from 'shared/config/table-timing';
 import { usePresence } from 'shared/hooks/use-presence';
+import { useSettled } from 'shared/hooks/use-settled';
 import { cn } from 'shared/utils/cn';
 
-import { useTurnTimer, useWinFlash } from '../hooks';
+import {
+  useDealerReach,
+  useKeptCards,
+  useTurnTimer,
+  useWinFlash,
+} from '../hooks';
 import {
   getDealerDirection,
   getHandKey,
@@ -114,22 +120,7 @@ const PlayerView = ({
     playSound: currentPlayer,
   });
 
-  const [readyHand, setReadyHand] = React.useState(handNumber);
-
-  React.useEffect(() => {
-    if (readyHand === handNumber) {
-      return;
-    }
-
-    const timer = window.setTimeout(
-      () => setReadyHand(handNumber),
-      HAND_INTRO_MS
-    );
-
-    return () => window.clearTimeout(timer);
-  }, [handNumber, readyHand]);
-
-  const dealReady = readyHand === handNumber;
+  const dealReady = useSettled(handNumber, HAND_INTRO_MS);
 
   const showCards =
     dealReady &&
@@ -151,46 +142,14 @@ const PlayerView = ({
 
   const plateRef = React.useRef<HTMLDivElement | null>(null);
 
-  React.useLayoutEffect(() => {
-    const plate = plateRef.current;
+  useDealerReach(plateRef, dealer, dealerDirection);
 
-    if (!dealer || !plate) {
-      return;
-    }
-
-    const ax = Math.abs(dealerDirection.x);
-    const ay = Math.abs(dealerDirection.y);
-    const measure = () => {
-      const reach = (ax * plate.offsetWidth + ay * plate.offsetHeight) / 2;
-
-      plate.style.setProperty('--plate-reach', `${Math.round(reach)}px`);
-    };
-
-    measure();
-
-    const observer = new ResizeObserver(measure);
-
-    observer.observe(plate);
-
-    return () => observer.disconnect();
-  }, [dealer, dealerDirection.x, dealerDirection.y]);
-
-  const liveCardsKey = `${handNumber}:${getHandKey(hand) ?? 'hidden'}`;
   const cardsPresence = usePresence(showCards, MUCK_MS);
-  const [shownCards, setShownCards] = React.useState({
-    key: liveCardsKey,
-    hand,
-  });
-
-  if (
-    showCards &&
-    (shownCards.key !== liveCardsKey || shownCards.hand !== hand)
-  ) {
-    setShownCards({ key: liveCardsKey, hand });
-  }
-
-  const cardsKey = showCards ? liveCardsKey : shownCards.key;
-  const cardsInView = showCards ? hand : shownCards.hand;
+  const { key: cardsKey, hand: cardsInView } = useKeptCards(
+    showCards,
+    `${handNumber}:${getHandKey(hand) ?? 'hidden'}`,
+    hand
+  );
 
   return (
     <section className={cn(styles.player, isSitOut && styles.sitOut)}>

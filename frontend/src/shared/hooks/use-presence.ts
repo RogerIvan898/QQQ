@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const EXIT_MS = 160;
+const EXIT_MS = 160;
 
 export const usePresence = (open: boolean, exitMs = EXIT_MS) => {
   const [mounted, setMounted] = React.useState(open);

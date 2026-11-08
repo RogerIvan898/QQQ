@@ -9,7 +9,7 @@ import type {
   WithdrawRequest,
 } from '../model/types';
 
-export const TRANSACTIONS_PAGE_SIZE = 20;
+const TRANSACTIONS_PAGE_SIZE = 20;
 
 export const walletApi = {
   getBalance: () => api.get<WalletBalance>('/wallet/balance'),

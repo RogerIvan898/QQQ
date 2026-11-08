@@ -23,7 +23,7 @@ export const findRoom = (
 export const roomFormat = (maxSeats: number) =>
   maxSeats <= 2 ? 'Heads-Up' : `${maxSeats}-Max`;
 
-export const roomBigBlind = (room: RoomListItem) =>
+export const roomBigBlind = (room: Pick<RoomListItem, 'blinds'>) =>
   Number(room.blinds.split('/')[1]) || 0;
 
 export type RoomTier = 'micro' | 'low' | 'mid' | 'high';

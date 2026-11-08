@@ -13,7 +13,7 @@ const readMockServerEnabled = (): boolean => {
   return DEFAULT_ENABLED;
 };
 
-export const mockServerChanged = createEvent<boolean>();
+const mockServerChanged = createEvent<boolean>();
 
 export const $mockServerEnabled = createStore(readMockServerEnabled()).on(
   mockServerChanged,

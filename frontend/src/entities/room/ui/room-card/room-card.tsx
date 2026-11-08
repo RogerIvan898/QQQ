@@ -6,7 +6,12 @@ import { useLingui } from '@lingui/react/macro';
 import { cn } from 'shared/utils/cn';
 import { formatBalance } from 'shared/utils/format';
 
-import { roomTier, type RoomCardInfo, type RoomGame } from '../../model';
+import {
+  roomBigBlind,
+  roomTier,
+  type RoomCardInfo,
+  type RoomGame,
+} from '../../model';
 
 import styles from './room-card.module.css';
 
@@ -23,12 +28,10 @@ interface Props {
   index?: number;
 }
 
-const bigBlindOf = (blinds: string) => Number(blinds.split('/')[1]) || 0;
-
 export const RoomCard = ({ room, action, index = 0 }: Props) => {
   const { i18n, t } = useLingui();
   const isFull = room.players >= room.max;
-  const tier = roomTier(bigBlindOf(room.blinds));
+  const tier = roomTier(roomBigBlind(room));
   const format = room.mode === 'heads-up' ? t`Heads-Up` : `${room.max}-max`;
 
   return (

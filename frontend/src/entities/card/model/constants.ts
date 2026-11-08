@@ -27,10 +27,3 @@ export const SUIT_BY_CODE = {
   c: CardSuit.CLUBS,
   s: CardSuit.SPADES,
 } as const;
-
-export const SUIT_SYMBOLS = {
-  [CardSuit.HEARTS]: '♥',
-  [CardSuit.DIAMONDS]: '♦',
-  [CardSuit.CLUBS]: '♣',
-  [CardSuit.SPADES]: '♠',
-} as const;

@@ -1,4 +1,4 @@
-export const formatAmount = (value: number, fractionDigits = 2) =>
+const formatAmount = (value: number, fractionDigits = 2) =>
   Number.isInteger(value) ? String(value) : value.toFixed(fractionDigits);
 
 export const formatCompactNumber = (value: number): string => {

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 
+import { DEALER_MOVE_MS } from 'shared/config/table-timing';
 import { cn } from 'shared/utils/cn';
 
 import styles from './dealer-button.module.css';
@@ -12,7 +13,6 @@ interface Props {
 type Point = { x: number; y: number };
 
 const HANDOFF_WINDOW_MS = 600;
-const SLIDE_MS = 750;
 const ARC_STEPS = 16;
 
 let lastSpot: (Point & { at: number }) | null = null;
@@ -91,7 +91,7 @@ export const DealerButton = ({ className, compact = false }: Props) => {
       const to = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
 
       element.animate(arcKeyframes(from, to), {
-        duration: SLIDE_MS,
+        duration: DEALER_MOVE_MS,
         easing: 'cubic-bezier(0.45, 0, 0.2, 1)',
       });
     }
