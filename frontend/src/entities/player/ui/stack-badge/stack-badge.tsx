@@ -15,14 +15,17 @@ const URGENT_MS = 5000;
 const TurnBorder = ({
   durationMs,
   bank,
+  final,
 }: {
   durationMs: number;
   bank: boolean;
+  /** Last phase (no time bank after it): only then the end goes red. */
+  final: boolean;
 }) => {
-  const [urgent, setUrgent] = React.useState(durationMs <= URGENT_MS);
+  const [urgent, setUrgent] = React.useState(final && durationMs <= URGENT_MS);
 
   React.useEffect(() => {
-    if (durationMs <= URGENT_MS) {
+    if (!final || durationMs <= URGENT_MS) {
       return;
     }
 
@@ -32,7 +35,7 @@ const TurnBorder = ({
     );
 
     return () => window.clearTimeout(timer);
-  }, [durationMs]);
+  }, [durationMs, final]);
 
   return (
     <div
@@ -57,6 +60,8 @@ interface Props {
   turnActive?: boolean;
   turnDurationMs?: number;
   usingBank?: boolean;
+  /** Whether a time bank follows the main time. */
+  hasTimeBank?: boolean;
   winAmount?: number;
   winId?: number;
   /** The viewer's own seat: highlighted so it stands out at a full table. */
@@ -71,6 +76,7 @@ export const StackBadge = ({
   turnActive = false,
   turnDurationMs = 0,
   usingBank = false,
+  hasTimeBank = true,
   winAmount,
   winId,
   hero = false,
@@ -123,6 +129,7 @@ export const StackBadge = ({
             key={usingBank ? 'bank' : 'turn'}
             durationMs={turnDurationMs}
             bank={usingBank}
+            final={usingBank || !hasTimeBank}
           />
         )}
 

@@ -47,6 +47,10 @@ export interface TurnChangedEvent {
   type: typeof SERVER_EVENTS.TURN_CHANGED;
   payload: {
     activeSeat: number;
+    /** Main thinking time for this turn, ms (server-authoritative). */
+    turnMs?: number;
+    /** Time bank that follows once the main time runs out, ms. */
+    timeBankMs?: number;
   };
 }
 

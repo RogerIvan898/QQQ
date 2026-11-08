@@ -172,6 +172,7 @@ const PlayerView = ({
             turnActive={showTimer}
             turnDurationMs={phaseDurationMs}
             usingBank={usingBank}
+            hasTimeBank={timeBankSec > 0}
             winAmount={winAmount}
             winId={winId}
             hero={currentPlayer}

@@ -81,17 +81,21 @@
 
 .turnBorder {
   --turn-color: var(--color-info);
+  --turn-arc: calc(var(--turn-left) * 360deg);
 
   position: absolute;
   inset: 0;
   z-index: 3;
-  padding: 2px;
+  padding: 2.5px;
   border-radius: inherit;
+  /* The remaining time brightens toward its leading edge, the spent part is
+     a faint track: you can see which way it drains. */
   background: conic-gradient(
-    var(--turn-color) calc(var(--turn-left) * 360deg),
-    color-mix(in srgb, var(--color-text) 14%, transparent) 0
+    color-mix(in srgb, var(--turn-color) 35%, transparent) 0deg,
+    var(--turn-color) var(--turn-arc),
+    color-mix(in srgb, var(--color-text) 10%, transparent) var(--turn-arc)
   );
-  /* Keep only the 2px ring: the content box is cut out. */
+  /* Keep only the ring: the content box is cut out. */
   mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);

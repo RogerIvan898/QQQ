@@ -79,11 +79,12 @@ const SeatView = ({
     keys: [seat],
     fn: (holes, [index]) => holes[index] ?? null,
   });
-  const [round, myCards, handNumber, dealerSeat] = useUnit([
+  const [round, myCards, handNumber, dealerSeat, turnTiming] = useUnit([
     gameModel.$round,
     gameModel.$myCards,
     gameModel.$handNumber,
     gameModel.$dealerSeat,
+    gameModel.$turnTiming,
   ]);
   const seatCount = useStoreMap(
     gameModel.$players,
@@ -127,6 +128,11 @@ const SeatView = ({
         collecting={collecting}
         equitySlot={equitySlot}
         handNumber={handNumber}
+        // The server's clock when it sends one; Player's defaults otherwise.
+        {...(turnTiming && {
+          turnDurationSec: turnTiming.turnMs / 1000,
+          timeBankSec: turnTiming.timeBankMs / 1000,
+        })}
         dealOrder={dealOrderFrom(seat, dealerSeat, seatCount)}
         combinationSlot={<SeatCombination hand={hand} />}
       />

@@ -23,7 +23,11 @@ const BOT_NAMES = [
   'Kai',
   'Mia',
 ] as const;
-const HERO_TURN_MS = 20_000;
+/** Turn clock sent with every turn change (the client draws it). */
+const TURN_MS = 15_000;
+const TIME_BANK_MS = 10_000;
+/** The hero is timed out once both run out. */
+const HERO_TURN_MS = TURN_MS + TIME_BANK_MS;
 const BOT_ACTION_MS = 1_600;
 const STREET_PAUSE_MS = 900;
 const BETWEEN_HANDS_MS = 1_600;
@@ -326,7 +330,11 @@ export class PokerTable {
 
       this.emit({
         type: SERVER_EVENTS.TURN_CHANGED,
-        payload: { activeSeat: seat.seat },
+        payload: {
+          activeSeat: seat.seat,
+          turnMs: TURN_MS,
+          timeBankMs: TIME_BANK_MS,
+        },
       });
 
       const action =

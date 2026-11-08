@@ -64,6 +64,22 @@ export const $gameState = createStore(INITIAL_GAME_STATE)
   .on(clearActiveSeat, state => ({ ...state, activeSeat: null }))
   .reset(disconnectGame);
 
+/** Turn clock the server announced with the last turn change, if any. */
+export const $turnTiming = createStore<{
+  turnMs: number;
+  timeBankMs: number;
+} | null>(null)
+  .on(incomingEvent, (timing, event) => {
+    if (event.type !== SERVER_EVENTS.TURN_CHANGED) {
+      return timing;
+    }
+
+    const { turnMs, timeBankMs } = event.payload;
+
+    return turnMs == null ? null : { turnMs, timeBankMs: timeBankMs ?? 0 };
+  })
+  .reset(disconnectGame);
+
 /** Increments on every new hand: a key that re-deals per-hand animations. */
 export const $handNumber = createStore(0)
   .on(incomingEvent, (count, event) =>

@@ -86,3 +86,22 @@ localStorage), which loses them across devices. Proposed endpoint:
 - `buyIn` = initial buy-in + all rebuys; `net = cashOut − buyIn`.
 - `summary` covers the whole `from`–`to` range, not just the page.
 - Wallet deposits and withdrawals are never part of these numbers.
+
+## Game socket: turn clock
+
+The client draws the turn timer from the server's numbers, so the drawn clock
+and the real timeout always agree. `EV_TURN_CHANGED` carries them:
+
+```json
+{
+  "type": "EV_TURN_CHANGED",
+  "payload": { "activeSeat": 3, "turnMs": 15000, "timeBankMs": 10000 }
+}
+```
+
+- `turnMs`: main thinking time for this turn.
+- `timeBankMs`: extra time that starts when `turnMs` runs out (0 if none).
+- The server times the player out after `turnMs + timeBankMs` (fold, or
+  check when nothing is owed).
+- Both are optional for now: without them the client falls back to 15 s +
+  10 s, which can disagree with the real timeout.
