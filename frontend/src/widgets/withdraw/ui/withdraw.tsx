@@ -36,9 +36,9 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
 
   useEffect(() => {
     if (open) {
-      setDestination(connectedAddress ? 'wallet' : 'address');
+      setDestination('wallet');
     }
-  }, [open, connectedAddress]);
+  }, [open]);
 
   const targetAddress =
     destination === 'wallet' ? connectedAddress : customAddress.trim();
