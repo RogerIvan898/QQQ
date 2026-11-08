@@ -13,9 +13,9 @@ export const TRANSACTIONS_PAGE_SIZE = 20;
 
 export const walletApi = {
   getBalance: () => api.get<WalletBalance>('/wallet/balance'),
-  /** Where this player sends TON, and the memo that ties it to them. */
+
   getDepositAddress: () => api.get<DepositAddress>('/wallet/deposit-address'),
-  /** Creates a pending withdrawal; the server checks balance and address. */
+
   withdraw: (request: WithdrawRequest) =>
     api.post<Transaction, WithdrawRequest>('/wallet/withdraw', request),
   getTransactions: (

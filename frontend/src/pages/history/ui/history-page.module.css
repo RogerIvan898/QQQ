@@ -41,8 +41,6 @@
   margin-right: auto;
 }
 
-/* ---------- Period filter ---------- */
-
 .periods {
   margin-bottom: 12px;
 }
@@ -73,8 +71,6 @@
   font-size: 14px;
   color-scheme: dark;
 }
-
-/* ---------- Summary ---------- */
 
 .stats {
   display: grid;
@@ -116,13 +112,11 @@
   color: var(--color-danger);
 }
 
-/* ---------- Sessions ---------- */
-
 .list {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  /* Vertical only: the sides stay auto to centre it like the rest (.scroll > *). */
+
   margin-top: 0;
   margin-bottom: 0;
   padding: 0;
@@ -159,7 +153,6 @@
   min-width: 0;
 }
 
-/* Two lines: title + profit, then time · hands · duration + buy-in → out. */
 .cardRow {
   display: flex;
   align-items: baseline;
@@ -222,8 +215,6 @@
   font-size: 14px;
   text-align: center;
 }
-
-/* ---------- Session details ---------- */
 
 .hero {
   display: flex;

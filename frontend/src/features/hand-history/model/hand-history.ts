@@ -12,11 +12,10 @@ const MAX_HANDS_PER_ROOM = 50;
 
 const storageKey = (roomId: string) => `${STORAGE_PREFIX}${roomId}`;
 
-// Hands used to be kept in one global list; it is superseded by per-room keys.
 try {
   window.localStorage.removeItem('poker:hand-history');
 } catch {
-  // Storage blocked: nothing to clean up.
+  void 0;
 }
 
 const loadHands = (roomId: string | null): HandRecord[] => {
@@ -38,11 +37,10 @@ const saveHands = (roomId: string, hands: HandRecord[]) => {
   try {
     window.localStorage.setItem(storageKey(roomId), JSON.stringify(hands));
   } catch {
-    // Storage can be full or blocked (private mode); history is best-effort.
+    void 0;
   }
 };
 
-/** The table the player sits at: hands are stored and shown per room. */
 export const tableEntered = createEvent<string | null>();
 const handRecorded = createEvent<HandRecord>();
 
@@ -51,12 +49,8 @@ const $roomId = createStore<string | null>(null).on(
   (_, roomId) => roomId
 );
 
-// TODO: load from the backend once it keeps hand histories.
-/** Hands played at the current room, newest first. */
 export const $hands = createStore<HandRecord[]>([])
   .on(tableEntered, (_, roomId) => loadHands(roomId))
-  // Re-read storage so another tab (or a stale dev module copy) writing its own
-  // list can't drop hands recorded elsewhere.
   .on(handRecorded, (_, hand) =>
     [
       hand,
@@ -108,7 +102,6 @@ const startHand = (
 
   draft = {
     mySeat,
-    // Stacks arrive with the blinds already taken out; add them back.
     startStack: me ? me.stack + (payload.initialBets[me.seat] ?? 0) : null,
     revealed: {},
     record: {
@@ -152,14 +145,12 @@ const finishHand = (
   const current = draft;
   draft = null;
 
-  // Not seated this hand: nothing personal to record.
   if (current.mySeat === null) {
     return;
   }
 
   const state = gameModel.$gameState.getState();
   const endStack = state.players[current.mySeat]?.stack ?? null;
-  // Start stacks come from the draft; only the cards are known at the end.
   const seats: HandSeat[] = current.record.seats.map(seat => ({
     ...seat,
     cards: seat.isMe
@@ -188,7 +179,6 @@ const finishHand = (
   });
 };
 
-// Events arrive here already applied to the game state, in table order.
 gameModel.incomingEvent.watch(event => {
   switch (event.type) {
     case SERVER_EVENTS.HAND_STARTED:
@@ -228,7 +218,6 @@ gameModel.incomingEvent.watch(event => {
   }
 });
 
-// A hand cut off by leaving the table is not recorded.
 gameModel.disconnectGame.watch(() => {
   draft = null;
 });

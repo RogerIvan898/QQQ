@@ -2,8 +2,6 @@ import { createEvent, createStore } from 'effector';
 
 const STORAGE_KEY = 'poker:mock-server';
 
-// On by default in development; production keeps it off unless explicitly
-// enabled (there's no toggle UI there to turn it back off).
 const DEFAULT_ENABLED = import.meta.env.DEV;
 
 const readMockServerEnabled = (): boolean => {
@@ -27,7 +25,6 @@ mockServerChanged.watch(enabled => {
 });
 
 export const setMockServerEnabled = async (enabled: boolean) => {
-  // Constant-false in production, so the MSW chunk is tree-shaken away.
   if (!import.meta.env.DEV) return;
 
   const { applyMockServer } = await import('../../../mocks/runtime');

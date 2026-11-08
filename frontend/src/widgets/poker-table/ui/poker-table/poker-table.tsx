@@ -14,7 +14,7 @@ interface Props {
   cards: CardType[];
   pot: number;
   showPot?: boolean;
-  /** 7+ seats: side players sit closer to the board, so it shrinks on phones. */
+
   crowded?: boolean;
   ref?: React.Ref<HTMLDivElement>;
 }

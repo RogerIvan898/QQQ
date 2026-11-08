@@ -1,15 +1,3 @@
-/**
- * Equity benchmark on the mock 9-handed all-in table.
- *
- *   bun run dev                      # in another terminal (mock server is dev-only)
- *   bun scripts/bench-equity.ts      # BENCH_URL, BENCH_SECONDS, BENCH_RATES to tweak
- *
- * For each CPU throttling rate (1× = this machine, 4× ≈ mid Android,
- * 6× ≈ low-end Android) it joins the table through the menu, auto-calls every
- * all-in and reports equity calc times, main-thread CPU, frames, long tasks
- * (with the scripts that caused them), JS heap and DOM size. App start-up is
- * excluded: only time spent seated at the table is measured.
- */
 import { chromium, type Page } from 'playwright';
 
 const URL = process.env.BENCH_URL ?? 'http://localhost:5173/';
@@ -35,12 +23,10 @@ interface Bench {
   heap: number[];
   dom: number[];
   measureFrom: number;
-  /** Times the board reached 5 cards on screen (runouts actually shown). */
   riversShown: number;
   lastBoard: number;
 }
 
-// Runs in the page before any app code.
 const instrument = () => {
   const bench: Bench = {
     calc: [],
@@ -118,7 +104,6 @@ const instrument = () => {
     }
   }).observe({ type: 'longtask', buffered: true });
 
-  // Long animation frames name the script (file:function) that took the time.
   try {
     new PerformanceObserver(list => {
       for (const entry of list.getEntries() as unknown as {
@@ -146,9 +131,7 @@ const instrument = () => {
         });
       }
     }).observe({ type: 'long-animation-frame', buffered: true });
-  } catch {
-    // Not supported: long tasks above still count.
-  }
+  } catch {}
 
   let last = performance.now();
   const frame = (now: number) => {
@@ -184,7 +167,6 @@ const instrument = () => {
 
     bench.lastBoard = board;
 
-    // Call every all-in so a runout follows each hand.
     const call = [...document.querySelectorAll('button')].find(
       button =>
         /^(call|check)/i.test(button.textContent?.trim() ?? '') &&
@@ -209,7 +191,6 @@ const stats = (values: number[]) => {
 };
 
 const runAt = async (rate: number) => {
-  // Precise heap numbers instead of Chromium's bucketed ones.
   const browser = await chromium.launch({
     args: ['--enable-precise-memory-info'],
   });
@@ -234,8 +215,6 @@ const runAt = async (rate: number) => {
     .click();
   await page.waitForURL(/\/game\//, { timeout: 30_000 });
 
-  // Skip app start-up (the dev server compiles modules on the fly): measure
-  // only once seated and the first hand is under way.
   await page.waitForTimeout(5000);
   await page.evaluate(() => {
     (window as unknown as { __bench: Bench }).__bench.measureFrom =
@@ -272,8 +251,6 @@ const runAt = async (rate: number) => {
   const from = bench.measureFrom;
   const delta = (key: string) => (after[key] ?? 0) - (before[key] ?? 0);
   const frames = bench.frames.filter(f => f.at >= from).map(f => f.ms);
-  // Heads-up and 6+ way preflop answer twice (quick sample, then exact):
-  // time the final answer, count each request once.
   const byBoard = (board: number) => {
     const last = new Map<number, number>();
 

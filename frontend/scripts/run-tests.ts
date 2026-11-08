@@ -1,4 +1,3 @@
-// Runs every src/**/*.test.ts file (plain node:assert scripts) and fails on the first error.
 const files = [...new Bun.Glob('src/**/*.test.{ts,tsx}').scanSync('.')].sort();
 
 for (const file of files) {

@@ -124,7 +124,6 @@ const startOfDay = (iso: string) => {
   ).getTime();
 };
 
-/** Consecutive runs of the same calendar day (items are newest first). */
 const groupByDay = (items: Transaction[]) => {
   const groups: { day: number; items: Transaction[] }[] = [];
 
@@ -142,7 +141,6 @@ const groupByDay = (items: Transaction[]) => {
   return groups;
 };
 
-/** Wallet transactions, loading older pages as the list scrolls. */
 export const TransactionsList = () => {
   const { i18n, t } = useLingui();
   const [typeFilter, changeFilter] = useUnit([
@@ -162,8 +160,6 @@ export const TransactionsList = () => {
   const [selected, setSelected] = React.useState<Transaction | null>(null);
   const sentinelRef = React.useRef<HTMLDivElement | null>(null);
 
-  // The sentinel sits after the last row; reaching it asks for the next page.
-  // The model drops the request while one is in flight or nothing is left.
   React.useEffect(() => {
     const sentinel = sentinelRef.current;
 

@@ -34,8 +34,6 @@ export const PlayerActions = () => {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const isRaisePanelOpen = isMyTurn && isChangingAmount;
 
-  // Report the open raise panel's box so the table can keep the
-  // viewer's cards visible above it.
   React.useLayoutEffect(() => {
     const element = containerRef.current;
 

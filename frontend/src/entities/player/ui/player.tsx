@@ -41,27 +41,23 @@ interface Props {
   onTurnTimeout?: () => void;
   turn: boolean;
   towardCenter?: SeatDirection;
-  /** Bets are flying into the pot: hide seat badges and animate bet chips. */
+
   collecting?: boolean;
   reveal?: boolean;
   winAmount?: number;
   winId?: number;
-  /**
-   * All-in equity badge. A slot, not a value: it subscribes to equity itself,
-   * so a % update re-renders only the badge, not the whole seat.
-   */
+
   equitySlot?: React.ReactNode;
-  /** Made-hand label under the stack ("Two pair"); hidden when folded. */
+
   combinationSlot?: React.ReactNode;
-  /** Changes every hand, so hole cards are dealt again. */
+
   handNumber?: number;
-  /** Place in the deal from the dealer's left: staggers the cards around the table. */
+
   dealOrder?: number;
 }
 
-/** Gap between seats as the hole cards go round the table. */
 const DEAL_STEP_MS = 70;
-/** Matches the muck animation in player-cards.module.css. */
+
 const MUCK_MS = 450;
 
 const PlayerView = ({
@@ -96,11 +92,8 @@ const PlayerView = ({
     blindRole
   );
 
-  // Winner: lit up (badge + gold frame) before the pot flies to them.
   const winning = useWinFlash(winId, winAmount);
-  // The hand each win belongs to, recorded when that win arrives (winId).
-  // Once a seat has won a hand, its old action badge (ALL IN, CALL…) must
-  // not come back when the gold Winner badge fades; the next hand resets it.
+
   const [winHand, setWinHand] = React.useState<{
     winId: number;
     hand: number;
@@ -111,8 +104,7 @@ const PlayerView = ({
   }
 
   const wonThisHand = winHand !== null && winHand.hand === handNumber;
-  // Badge and gold frame go together, and both stop as soon as the next
-  // hand starts (the flash may outlast the pause between hands).
+
   const showWinner = winning && wonThisHand;
 
   const { showTimer, usingBank, phaseDurationMs } = useTurnTimer({
@@ -140,7 +132,6 @@ const PlayerView = ({
   } as React.CSSProperties;
 
   const cardsKey = `${handNumber}:${getHandKey(hand) ?? 'hidden'}`;
-  // Keep the cards a moment after a fold so they can slide into the muck.
   const cardsPresence = usePresence(showCards, MUCK_MS);
 
   return (
@@ -177,8 +168,6 @@ const PlayerView = ({
           {showWinner ? (
             <ActionBadge action={SeatBadgeKind.WIN} />
           ) : seatActionBadge &&
-            // Street bets fly to the pot while collecting; ALL IN / FOLD
-            // stay put instead of blinking out and back in.
             (!collecting || isStatusBadge(seatActionBadge)) &&
             !wonThisHand ? (
             <ActionBadge

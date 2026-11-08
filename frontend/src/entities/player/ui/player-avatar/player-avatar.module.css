@@ -30,7 +30,6 @@
   opacity: 0.72;
 }
 
-/* Phones and portrait tablets share the compact, vertical table layout. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .avatar {
     width: 52px;
@@ -40,8 +39,6 @@
   }
 }
 
-/* Portrait tablets: same compact layout as phones, but the table is much
-   bigger there, so seat elements step up ~1.3x. */
 @media (orientation: portrait) and (min-width: 769px) and (max-width: 1100px) {
   .avatar {
     width: 68px;

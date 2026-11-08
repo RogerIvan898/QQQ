@@ -19,10 +19,6 @@ interface Props {
   onSave: (nickname: string) => void;
 }
 
-/**
- * The player's name with a pencil next to it: tap to edit in place.
- * Enter or tapping away saves (if valid), Escape cancels.
- */
 export const Nickname = ({ name, onSave }: Props) => {
   const { t } = useLingui();
   const [editing, setEditing] = React.useState(false);
@@ -88,7 +84,6 @@ export const Nickname = ({ name, onSave }: Props) => {
             if (event.key === 'Enter') finish(true);
             if (event.key === 'Escape') finish(false);
           }}
-          // Tapping away keeps a valid name, drops an invalid one.
           onBlur={() => finish(true)}
           maxLength={NICKNAME_MAX + 8}
           autoComplete="nickname"
@@ -99,7 +94,6 @@ export const Nickname = ({ name, onSave }: Props) => {
         <button
           type="button"
           className={styles.editName}
-          // Before blur, so the click itself counts as "save".
           onMouseDown={event => event.preventDefault()}
           onClick={() => finish(true)}
           disabled={Boolean(error)}

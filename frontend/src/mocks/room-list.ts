@@ -1,7 +1,5 @@
 import type { RoomListItem } from 'entities/room';
 
-/** What GET /rooms returns in dev (blinds and buy-ins in TON). */
-// NLH cash grid, micro to VIP; every table buys in for 40–100 BB.
 export const MOCK_ROOMS: RoomListItem[] = [
   {
     id: 1,

@@ -1,15 +1,15 @@
-/* ---------- Desktop / tablet popover ---------- */
+
 
 .popover {
   position: absolute;
   top: calc(100% + 8px);
-  /* Anchored to the balance button on the header's right edge. */
+
   right: 0;
   z-index: 60;
   display: flex;
   flex-direction: column;
   width: min(380px, calc(100vw - 32px));
-  /* Never past the bottom of the screen; the list scrolls inside. */
+
   max-height: min(640px, calc(100dvh - 120px - var(--tg-safe-area-top)));
   padding: 18px 18px 0;
   background: var(--color-bg-surface);
@@ -65,16 +65,12 @@
   padding: 0 18px 12px;
 }
 
-/* ---------- Shared content ---------- */
-
 .content {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-/* Phones: a near full-height sheet where only the transaction list scrolls;
-   status, balance and actions stay in place. */
 @media (max-width: 600px) {
   .content {
     height: calc(
@@ -103,7 +99,6 @@
   color: var(--color-text-secondary);
 }
 
-/* Balance and the two actions as one block, apart from status and history. */
 .walletCard {
   display: flex;
   flex-direction: column;
@@ -238,8 +233,6 @@
   font-weight: 700;
   color: var(--color-text-secondary);
 }
-
-/* ---------- Transactions ---------- */
 
 .filters {
   display: flex;

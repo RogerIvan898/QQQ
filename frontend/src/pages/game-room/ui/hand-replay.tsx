@@ -50,9 +50,8 @@ const ACTION_LABELS = {
   RAISE: msg`Raise`,
 } as const satisfies Record<ActionKind, MessageDescriptor>;
 
-/** Must match `--thumb` in hand-replay.module.css. */
 const SCRUBBER_THUMB_PX = 16;
-/** Half the tooltip's max width, so it never overflows the panel. */
+
 const TOOLTIP_EDGE_PX = 90;
 
 const STREET_LABELS: Partial<Record<GameStreet, MessageDescriptor>> = {
@@ -66,24 +65,17 @@ const STREET_LABELS: Partial<Record<GameStreet, MessageDescriptor>> = {
 interface Props {
   hand: HandRecord;
   onClose: () => void;
-  /**
-   * The live game needs the player (their turn): pause and step aside,
-   * keeping the current frame so watching can resume from there.
-   */
+
   suspended?: boolean;
 }
 
-/**
- * Step-by-step replay drawn with the real table widget: each step is fed into
- * an isolated effector scope, so the live game state is never touched.
- */
 export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
   const { i18n, t } = useLingui();
   const [viewerId, amountsInBb] = useUnit([
     sessionModel.$currentUserId,
     $amountsInBb,
   ]);
-  // The caption sits outside the replay scope: format with this hand's blind.
+
   const formatChips = (amount: number) =>
     amountsInBb && hand.bigBlind > 0
       ? formatBigBlinds(amount, hand.bigBlind)
@@ -93,7 +85,6 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
   const [step, setStep] = React.useState(0);
   const [playing, setPlaying] = React.useState(false);
 
-  // Your turn at the real table: stop autoplay right away.
   if (suspended && playing) {
     setPlaying(false);
   }
@@ -115,14 +106,13 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
         [gameModel.$debugHoles, {}],
         [gameModel.$collectingBets, false],
         [sessionModel.$currentUserId, viewerId],
-        // The scope starts from defaults; carry the setting and table blind in.
+
         [$amountsInBb, amountsInBb],
         [$displayBigBlind, hand.bigBlind],
       ],
     });
   }, [hand, timeline, step, viewerId, amountsInBb]);
 
-  // Autoplay stops by itself on the last step.
   const isPlaying = playing && step < lastStep;
 
   React.useEffect(() => {
@@ -153,7 +143,6 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
     setPlaying(true);
   };
 
-  /** Text for one replay step: the caption, and the scrubber's hover tooltip. */
   const describe = (item: ReplayStep): React.ReactNode => {
     if (item.kind === 'start') {
       return t`Hand started`;
@@ -184,7 +173,6 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
 
   const caption = describe(replay.step);
 
-  // Hover tooltip (mouse only; touch already shows the caption as you drag).
   const [hover, setHover] = React.useState<{
     index: number;
     x: number;
@@ -207,7 +195,6 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
 
     setHover({
       index,
-      // Keep the tooltip inside the panel near the ends.
       x: Math.min(
         rect.width - TOOLTIP_EDGE_PX,
         Math.max(TOOLTIP_EDGE_PX, tickX)
@@ -225,7 +212,6 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
       className={styles.overlay}
       role="dialog"
       aria-modal="true"
-      // Stays mounted (frame and position kept) but out of the way.
       hidden={suspended}
     >
       <header className={styles.header}>
@@ -278,7 +264,6 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
               {describe(timeline[hover.index])}
             </div>
           ) : null}
-          {/* One tick per step; new streets and the showdown get a tall one. */}
           <div className={styles.ticks} aria-hidden="true">
             {timeline.map((item, index) => (
               <span

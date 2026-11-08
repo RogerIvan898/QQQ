@@ -22,7 +22,6 @@ const hash = (seed: number) =>
     ((seed * 31 + index * 17) % 16).toString(16)
   ).join('');
 
-// Deterministic history, newest first: a few hours apart, older going down.
 const TRANSACTIONS: Transaction[] = Array.from(
   { length: TOTAL },
   (_, index) => {
@@ -48,7 +47,6 @@ const TRANSACTIONS: Transaction[] = Array.from(
   }
 );
 
-/** Mock balance; withdrawals take from it like the real server would. */
 let available = 42.5;
 let nextWithdrawalId = TOTAL + 1;
 
@@ -59,7 +57,6 @@ export const walletHandlers = [
     return HttpResponse.json<WalletBalance>({ available });
   }),
 
-  // Per-player in reality; the memo credits the transfer to this account.
   http.get('*/wallet/deposit-address', async () => {
     await delay(300);
 
@@ -69,7 +66,6 @@ export const walletHandlers = [
     });
   }),
 
-  // Same checks the backend must make; never trust the client's numbers.
   http.post('*/wallet/withdraw', async ({ request }) => {
     await delay(700);
 
@@ -109,7 +105,6 @@ export const walletHandlers = [
     return HttpResponse.json(transaction);
   }),
 
-  // Cursor = index of the first item of the page (opaque to the client).
   http.get('*/wallet/transactions', async ({ request }) => {
     await delay(600);
 

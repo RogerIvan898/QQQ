@@ -147,8 +147,6 @@ export const TransactionDetails = ({ transaction, onClose }: Props) => {
         <div className={styles.footer}>
           <a
             className={styles.txPill}
-            // Encoded: the hash comes from the server and must stay one path
-            // segment on tonviewer.com (no `../` or `?` tricks).
             href={`https://tonviewer.com/transaction/${encodeURIComponent(transaction.txHash)}`}
             target="_blank"
             rel="noreferrer"

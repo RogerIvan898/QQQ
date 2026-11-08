@@ -1,19 +1,16 @@
 import React from 'react';
 
 interface Options {
-  /** Listen only while true (the popover is open). */
   enabled: boolean;
-  /** Clicks inside these elements don't dismiss (the panel, its anchor). */
+
   insideRefs: React.RefObject<Element | null>[];
-  /** Clicks inside elements matching this selector don't dismiss either
-   *  (portaled dialogs, third-party modals, a toggle button). */
+
   keepOpenSelector?: string;
-  /** Escape pressed inside elements matching this selector is theirs. */
+
   ignoreEscapeSelector?: string;
   onDismiss: () => void;
 }
 
-/** Closes a non-modal popover on an outside pointer-down or on Escape. */
 export const useDismiss = ({
   enabled,
   insideRefs,

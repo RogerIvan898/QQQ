@@ -24,10 +24,10 @@ const BOT_NAMES = [
   'Kai',
   'Mia',
 ] as const;
-/** Turn clock sent with every turn change (the client draws it). */
+
 const TURN_MS = 15_000;
 const TIME_BANK_MS = 10_000;
-/** The hero is timed out once both run out. */
+
 const HERO_TURN_MS = TURN_MS + TIME_BANK_MS;
 const BOT_ACTION_MS = 1_600;
 const STREET_PAUSE_MS = 900;
@@ -161,7 +161,6 @@ export class PokerTable {
     this.deck = createShuffledDeck();
     this.board = [];
 
-    // Equity test table: everyone rebuys to 100 BB so all-ins keep coming.
     if (this.allInScenario) {
       this.seats.forEach(seat => {
         seat.stack = this.bigBlind * 100;
@@ -359,8 +358,6 @@ export class PokerTable {
       bankroll,
       seat.committed + this.minRaiseExtra(seat)
     );
-    // `>=`: with less than a min-raise behind, the minimum is clamped to the
-    // whole stack and an all-in for less must still be allowed.
     const canRaise = seat.stack > need && bankroll >= minTotal;
 
     this.emit({
@@ -396,7 +393,6 @@ export class PokerTable {
       return null;
     }
 
-    // Equity test table: everyone shoves (or calls off when short).
     if (this.allInScenario) {
       const need = Math.max(0, this.currentBet - seat.committed);
 
@@ -690,8 +686,6 @@ export class PokerTable {
       hand: rankHand([...seat.hole, ...this.board]),
     }));
 
-    // Split chips into side pots by commitment level so a short all-in can
-    // only win what each opponent matched.
     const levels = [...new Set(this.seats.map(seat => seat.totalCommitted))]
       .filter(level => level > 0)
       .sort((left, right) => left - right);
@@ -712,8 +706,6 @@ export class PokerTable {
         return;
       }
 
-      // Nobody still in covers this layer (e.g. a folded overbet): refund it
-      // to the live seats with the highest commitment.
       const contenders = eligible.length
         ? eligible
         : ranked.filter(

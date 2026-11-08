@@ -9,7 +9,7 @@
   position: absolute;
   transform: translate(-50%, -50%);
   pointer-events: auto;
-  /* `translate` composes with the centering transform above. */
+
   transition: translate 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -19,9 +19,6 @@
   }
 }
 
-/* Flights move on transform only (no layout per frame). The outer box
-   travels along X and the inner one along Y; their different eases make the
-   path curve in an arc. Distances come from --dx / --dy. */
 .flightX {
   position: absolute;
   z-index: 30;
@@ -37,7 +34,6 @@
   transition: transform 700ms cubic-bezier(0.6, -0.25, 0.4, 1);
 }
 
-/* Fade out as the chips land in the pot or reach the winner. */
 .arrived {
   transform: translateX(var(--dx));
   opacity: 0;
@@ -67,8 +63,6 @@
   animation: flightLift 700ms cubic-bezier(0.45, 0, 0.25, 1) forwards;
 }
 
-/* Uses the independent `scale` property so it composes with the
-   translate() centering above. */
 @keyframes flightLift {
   0% {
     scale: 0.9;
@@ -119,7 +113,6 @@
   }
 }
 
-/* Made hand under the seat; positioned by Player's combination slot. */
 .combination {
   display: block;
   padding: 1px 8px 2px;

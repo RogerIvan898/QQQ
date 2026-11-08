@@ -1,5 +1,4 @@
-/* Full-width solid primary call to action used in dialogs and panels.
-   Consumers compose it: `composes: solid from 'shared/ui/button/...'`. */
+
 .solid {
   display: flex;
   align-items: center;

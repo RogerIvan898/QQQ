@@ -6,16 +6,14 @@
   justify-content: center;
   padding: var(--tg-safe-area-top) var(--tg-safe-area-right)
     var(--tg-safe-area-bottom) var(--tg-safe-area-left);
-  /* A soft vignette rather than a flat veil: the centre stays a touch
-     lighter, so the panel reads as lifted off the page. */
+
   background: radial-gradient(
     ellipse at center,
     color-mix(in srgb, var(--color-overlay) 70%, transparent) 0%,
     var(--color-overlay) 75%
   );
   backdrop-filter: blur(8px);
-  /* Layering: action panel (900) < our dialogs < TonConnect modal (1000),
-     so dialogs can't be clicked through and the wallet modal opens on top. */
+
   z-index: 950;
   animation: overlayIn var(--dur-base) var(--ease-out);
 }
@@ -34,7 +32,7 @@
   display: flex;
   flex-direction: column;
   padding: 22px 24px 24px;
-  /* Lit from above: a faint primary tint at the top fading into the surface. */
+
   background:
     linear-gradient(
       180deg,
@@ -58,7 +56,6 @@
   animation: modalOut var(--dur-exit) var(--ease-in) forwards;
 }
 
-/* variant: bottom — только на мобильном */
 @media (max-width: 600px) {
   .overlay:has(.bottom) {
     align-items: flex-end;
@@ -87,13 +84,11 @@
     animation: sheetSlideDown var(--dur-exit) var(--ease-in) forwards;
   }
 
-  /* Follow the finger 1:1 while dragging; ease back only on release. */
   .bottom.dragging {
     transition: none;
   }
 }
 
-/* Grab handle: shows the sheet can be swiped down; only drawn on phones. */
 .grabber {
   display: none;
 }

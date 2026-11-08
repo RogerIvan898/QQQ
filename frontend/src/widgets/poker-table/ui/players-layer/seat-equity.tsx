@@ -7,7 +7,6 @@ interface Props {
   seat: number;
 }
 
-/** Subscribes to one seat's all-in equity; renders nothing outside runouts. */
 export const SeatEquity = ({ seat }: Props) => {
   const equity = useStoreMap({
     store: equityModel.$equity,

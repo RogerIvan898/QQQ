@@ -58,7 +58,6 @@
     border-color 0.15s ease;
 }
 
-/* Which table this is: room and blinds, under the back button. */
 .tableInfo {
   position: fixed;
   top: calc(60px + var(--tg-safe-area-top));
@@ -98,7 +97,6 @@
   transform: scaleX(-1);
 }
 
-/* Phones and portrait tablets share the compact, vertical table layout. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .container {
     justify-content: center;
@@ -151,8 +149,6 @@
   pointer-events: none;
 }
 
-/* Replay paused for the player's turn: a small pill to pick it up again,
-   top-centre so it never covers the action panel. */
 .resumeReplay {
   position: fixed;
   top: calc(60px + var(--tg-safe-area-top));

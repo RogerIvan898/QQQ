@@ -32,7 +32,6 @@
   opacity: 1;
 }
 
-/* Full and unaffordable tables stay readable but recede next to playable ones. */
 .cardFull,
 .cardLocked {
   background: color-mix(in srgb, var(--color-bg-elevated) 60%, transparent);
@@ -70,7 +69,6 @@
   min-width: 0;
 }
 
-/* "NL Hold'em": the game, quietly, under the table name. */
 .game {
   font-size: 12px;
   font-weight: 500;
@@ -181,7 +179,6 @@
   transition: width 0.4s ease;
 }
 
-/* Full is a normal state, not an error: neutral grey instead of red. */
 .occupancyFull {
   background: var(--color-text-muted);
 }
@@ -207,10 +204,6 @@
   }
 }
 
-/* Desktop: a lobby row instead of a phone card. The wrappers dissolve
-   (display: contents) so name, blinds, buy-in, players and the button line
-   up in shared columns; --room-cols comes from the list, so its header row
-   uses the very same grid. */
 @media (min-width: 1024px) {
   .card {
     display: grid;
@@ -246,7 +239,6 @@
     grid-column: 3;
   }
 
-  /* The column header names them. */
   .metaItem dt {
     position: absolute;
     width: 1px;
@@ -263,8 +255,6 @@
     grid-column: 4;
   }
 
-  /* One row: the button sits level with the text, not stretched over an
-     empty second row (that left a gap under every name). */
   .action {
     grid-column: 5;
     grid-row: 1;
@@ -275,13 +265,11 @@
     height: 36px;
   }
 
-  /* Only when the buy-in isn't affordable: a second line under the name. */
   .shortfall {
     grid-column: 1 / 5;
     grid-row: 2;
   }
 
-  /* .info no longer draws, so fade its parts directly. */
   .cardFull .heading,
   .cardFull .metaItem,
   .cardFull .statusRow {

@@ -5,11 +5,7 @@
     var(--bet-base-distance) + var(--to-center-abs-y) *
       var(--bet-vertical-extra)
   );
-  /* Side seats sit level with the board, so their chips would land on the
-     cards: drop them below the board. 1 for a purely horizontal seat, 0 once
-     the seat is more than ~30° above or below the centre line. */
-  /* Half a board card (cards are ~25cqw tall, capped at 121px) + the badge. */
-  /* Desktop: the board is narrow next to the side seats, nothing to avoid. */
+
   --bet-side-drop: 0px;
   --bet-side: max(0, 1 - var(--to-center-abs-y) * 2);
   --bet-drop: calc(var(--bet-side) * var(--bet-side-drop));
@@ -38,7 +34,7 @@
   height: 40px;
   padding: 0 18px;
   border-radius: 100px;
-  /* Quiet translucent pill (what the pot used to look like). */
+
   background: color-mix(in srgb, var(--color-bg) 72%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-text) 18%, transparent);
   box-shadow: 0 6px 16px var(--color-shadow);
@@ -83,9 +79,6 @@
   color: var(--color-primary-light);
 }
 
-/* Glow as a plain background on a wrapper: a drop-shadow filter would be
-   re-rasterized every frame of the scale animation, and rounding the SVG
-   itself clips the logo. */
 .amountLogoGlow {
   display: flex;
   flex-shrink: 0;
@@ -96,8 +89,7 @@
 }
 
 @keyframes chipSlideOut {
-  /* Starts at the seat's edge (a third of the way out, clear of the stack
-     numbers) and slides out to its spot toward the pot. */
+
   0% {
     opacity: 0;
     transform: translate(-50%, -50%)
@@ -128,10 +120,8 @@
   }
 }
 
-/* Phones and portrait tablets share the compact, vertical table layout. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
-  /* Compact layout: side seats sit level with the board, so their chips
-     would land on the cards. Drop them below it. */
+
   .betArea {
     --bet-side-drop: calc(min(76px, 16cqw) + 22px);
   }
@@ -158,8 +148,6 @@
   }
 }
 
-/* Portrait tablets: same compact layout as phones, but the table is much
-   bigger there, so seat elements step up ~1.3x. */
 @media (orientation: portrait) and (min-width: 769px) and (max-width: 1100px) {
   .amountBadge {
     height: 34px;

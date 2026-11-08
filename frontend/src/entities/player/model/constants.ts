@@ -15,11 +15,10 @@ export const PlayerStatus = {
   ALL_IN: 'ALL_IN',
 } as const;
 
-/** Seat badges that are not a player action. */
 export const SeatBadgeKind = {
   ALL_IN: 'ALL_IN',
   SB: 'SB',
   BB: 'BB',
-  /** The hand's winner, shown before the pot flies to them. */
+
   WIN: 'WIN',
 } as const;

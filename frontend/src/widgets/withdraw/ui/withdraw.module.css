@@ -194,7 +194,7 @@
 
 .addressInput {
   font-family: monospace;
-  /* Below 16px iOS zooms the page when the field is focused. */
+
   font-size: 16px;
 }
 
@@ -238,7 +238,6 @@
   }
 }
 
-/* Same look as the Settings → Wallet connect button. */
 .connectBtn {
   composes: solid from '../../../shared/ui/button/solid-button.module.css';
 }
@@ -249,7 +248,6 @@
   gap: 12px;
 }
 
-/* Alert carries its own bottom margin; spacing here comes from the gap. */
 .paneStack.paneStack > * {
   margin-bottom: 0;
 }

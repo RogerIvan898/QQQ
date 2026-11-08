@@ -71,7 +71,6 @@
   font-weight: 600;
 }
 
-/* One line of guidance under the amount field. */
 .hint {
   margin: -4px 0 0;
   color: var(--color-text-muted);

@@ -62,17 +62,12 @@ export const resolveSeatActionBadge = (
   return null;
 };
 
-/**
- * Badges that describe the player's state for the rest of the hand (all in,
- * folded), not a bet on this street: they stay up while bets are collected.
- */
 export const isStatusBadge = (badge: SeatActionBadge) =>
   badge === SeatBadgeKind.ALL_IN || badge === PlayerAction.FOLD;
 
 export const isBlindBadge = (badge: SeatActionBadge) =>
   badge === SeatBadgeKind.SB || badge === SeatBadgeKind.BB;
 
-// Off the seat-to-centre line (where the bet sits), but leaning to the centre.
 const DEALER_OFFSET_RAD = (35 * Math.PI) / 180;
 const DEALER_OFFSET_COS = Math.cos(DEALER_OFFSET_RAD);
 const DEALER_OFFSET_SIN = Math.sin(DEALER_OFFSET_RAD);

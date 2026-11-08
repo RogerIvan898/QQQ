@@ -20,8 +20,7 @@
 }
 
 .avatarPlaceholder {
-  /* Round, like a Telegram avatar; a bit smaller than the name + balance
-     block so it doesn't dominate the header. */
+
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -74,7 +73,6 @@
   position: relative;
 }
 
-/* Pencil (and the check while editing): small, quiet until hovered. */
 .editName {
   display: flex;
   align-items: center;
@@ -123,7 +121,6 @@
   border-color: var(--color-danger);
 }
 
-/* Under the field, floating so the header doesn't jump. */
 .nameError {
   position: absolute;
   top: calc(100% + 2px);
@@ -217,18 +214,15 @@
 
 .settingsBtn {
   composes: round from '../../../../shared/ui/icon-button/icon-button.module.css';
-  /* Centered on the header (the avatar's center). It sits far from the
-     balance row on wide screens, so lining it up with that row looks off. */
+
   align-self: center;
 }
 
-/* Extend the 36px buttons to a ~44px tap target. */
 .settingsBtn svg {
   width: 32px;
   height: 32px;
 }
 
-/* Very narrow phones: tighten the left block so the gear keeps a gap. */
 @media (max-width: 360px) {
   .header {
     padding-left: 12px;
@@ -240,7 +234,6 @@
   }
 }
 
-/* Desktop: lines up with the centred lobby below (same 1560px column). */
 @media (min-width: 1024px) {
   .header {
     padding-left: max(32px, calc((100% - 1560px) / 2));

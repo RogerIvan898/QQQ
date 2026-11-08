@@ -16,7 +16,6 @@
   animation: panelAppear 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
 }
 
-/* Presets: equal columns, same radius as every other control. */
 .shortcuts {
   display: grid;
   grid-auto-columns: 1fr;
@@ -72,11 +71,9 @@
   letter-spacing: 0.02em;
 }
 
-/* −  [ amount ]  + : the field takes the whole middle, all three one height. */
 .inputRow {
   display: grid;
-  /* The amount needs a few digits, not the whole row: keep it compact
-     and centred between the steppers. */
+
   grid-template-columns: var(--field-height) minmax(0, 180px) var(
       --field-height
     );
@@ -107,7 +104,6 @@
   min-width: 0;
 }
 
-/* Equal side padding keeps the number centred; the unit sits in the right one. */
 .input {
   box-sizing: border-box;
   width: 100%;
@@ -168,14 +164,12 @@
   margin: 0;
 }
 
-/* The thumb centre travels between half-thumb insets, so the fill is
-   offset the same way and always ends under the thumb. */
 .slider {
   -webkit-appearance: none;
   appearance: none;
   display: block;
   width: 100%;
-  /* Tall hit area for fingers; the visible 6px track is drawn centred. */
+
   height: 32px;
   margin: 0;
   background:
@@ -190,8 +184,7 @@
   border-radius: 999px;
   outline: none;
   cursor: pointer;
-  /* Keep horizontal drags on the slider instead of scrolling the page or
-     triggering app swipe gestures. */
+
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -251,8 +244,6 @@
   }
 }
 
-/* Phones and portrait tablets: the action container already draws the card,
-   so drop the inner frame and tighten rows to keep the hero's cards visible. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .wrapper {
     --row-gap: 10px;

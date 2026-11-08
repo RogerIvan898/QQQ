@@ -32,7 +32,7 @@ export const PreActions = () => {
     viewer && canPreAct(viewer.status)
       ? chipsToCall(currentBet, viewer.committed, viewer.stack)
       : 0;
-  // Same units as stacks and bets on the table, not big blinds.
+
   const callAmount = formatChips(toCall);
 
   const toggle = (action: PreAction) => {

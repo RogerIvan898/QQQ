@@ -40,7 +40,6 @@ export const GameRoomPage = () => {
   const [rooms, requestRooms] = useUnit([$rooms, roomsRequested]);
   const room = findRoom(rooms, roomId);
 
-  // Opened straight from a link: the lobby list isn't loaded yet.
   React.useEffect(() => {
     if (rooms.length === 0) {
       requestRooms();
@@ -56,8 +55,7 @@ export const GameRoomPage = () => {
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
   const [replayHand, setReplayHand] = React.useState<HandRecord | null>(null);
-  // The live game always wins: when it's the player's turn the replay pauses
-  // and steps aside; it then stays minimised until they choose to resume.
+
   const isMyTurn = useUnit(gameModel.$myAllowedActions) !== null;
   const [replayMinimized, setReplayMinimized] = React.useState(false);
 
@@ -75,7 +73,7 @@ export const GameRoomPage = () => {
     setReplayHand(null);
   };
   useTelegramBackButton(() => void navigate({ to: '/' }));
-  // A stray swipe-down would otherwise drop the player out of a hand.
+
   useTelegramClosingConfirmation();
 
   if (isLoading) {
@@ -143,7 +141,6 @@ export const GameRoomPage = () => {
         />
       ) : null}
 
-      {/* Paused for the player's turn: bring it back from the same frame. */}
       {replayHand && replayMinimized && !isMyTurn ? (
         <div className={styles.resumeReplay} role="status">
           <button
@@ -175,8 +172,6 @@ export const GameRoomPage = () => {
           <RevealCardsButton />
         </React.Suspense>
       ) : null}
-      {/* The replay covers the screen: hide the live table under it so it
-          stops animating and playing sounds, but keeps its state. */}
       <React.Activity mode={replayShown ? 'hidden' : 'visible'}>
         <PokerBoard />
         <PlayerActions />

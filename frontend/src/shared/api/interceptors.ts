@@ -29,8 +29,6 @@ export const setupInterceptors = (apiInstance: AxiosInstance) => {
         | CustomAxiosRequestConfig
         | undefined;
 
-      // Login/refresh answering 401 means "really signed out": retrying
-      // them would loop (refresh fails → re-login → 401 → refresh…).
       const isAuthCall = /\/(auth\/login|refresh)$/.test(
         originalRequest?.url ?? ''
       );

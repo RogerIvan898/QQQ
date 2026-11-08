@@ -38,8 +38,6 @@ const initializeGameFx = createEffect((params: GameConnectParams) =>
 );
 
 const sendClientCommandFx = createEffect((command: unknown) => {
-  // Goes to the live socket, which changes on reconnect; sending to a closed
-  // one would drop the command silently.
   if (!sendToGameSocket(command)) {
     console.warn('[WS] Cannot send action: socket is not open');
   }
@@ -64,7 +62,6 @@ export const $gameState = createStore(INITIAL_GAME_STATE)
   .on(clearActiveSeat, state => ({ ...state, activeSeat: null }))
   .reset(disconnectGame);
 
-/** Turn clock the server announced with the last turn change, if any. */
 export const $turnTiming = createStore<{
   turnMs: number;
   timeBankMs: number;
@@ -80,7 +77,6 @@ export const $turnTiming = createStore<{
   })
   .reset(disconnectGame);
 
-/** Increments on every new hand: a key that re-deals per-hand animations. */
 export const $handNumber = createStore(0)
   .on(incomingEvent, (count, event) =>
     event.type === SERVER_EVENTS.HAND_STARTED ? count + 1 : count
@@ -116,7 +112,6 @@ export const $pot = $gameState.map(state => state.pot);
 export const $community = $gameState.map(state => state.community);
 export const $round = $gameState.map(state => state.round);
 
-// Lets table widgets show amounts in big blinds (Settings → Display amounts in BB).
 sample({ clock: $bigBlind, target: displayBigBlindChanged });
 
 sample({

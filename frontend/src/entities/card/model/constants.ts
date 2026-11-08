@@ -21,7 +21,6 @@ export const CardRank = {
   ACE: 'A',
 } as const;
 
-/** Suit letter used by the server card notation, e.g. `"As"`. */
 export const SUIT_BY_CODE = {
   h: CardSuit.HEARTS,
   d: CardSuit.DIAMONDS,

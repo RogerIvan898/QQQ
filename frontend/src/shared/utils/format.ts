@@ -11,7 +11,6 @@ export const formatCompactNumber = (value: number): string => {
   if (value >= 10_000) {
     const rounded = Math.round(value / 100);
 
-    // 999_950+ rounds to 1000.0K; show it as 1.0M instead.
     if (rounded >= 10_000) {
       return formatCompactNumber(1_000_000);
     }
@@ -19,7 +18,6 @@ export const formatCompactNumber = (value: number): string => {
     return `${Math.floor(rounded / 10)}.${rounded % 10}K`;
   }
 
-  // Small amounts can be fractional (0.1/0.2 blinds): avoid float noise.
   return formatAmount(value);
 };
 

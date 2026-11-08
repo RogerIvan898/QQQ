@@ -12,7 +12,6 @@ import { formatSessionTime, formatSignedTon, formatTon } from '../lib/format';
 import styles from './history-page.module.css';
 import { useSessionTitle } from './use-session-title';
 
-/** Totals for one table session; hands themselves live in Table → Hand History. */
 export const SessionDetailsPage = () => {
   const { i18n, t } = useLingui();
   const navigate = useNavigate();

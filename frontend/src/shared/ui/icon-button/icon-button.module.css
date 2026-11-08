@@ -1,5 +1,4 @@
-/* Shared icon-only button looks. Consumers compose one variant and add
-   only positioning: `composes: floating from 'shared/ui/icon-button/...'`. */
+
 .base {
   display: flex;
   align-items: center;
@@ -31,7 +30,6 @@
   cursor: not-allowed;
 }
 
-/* 36px square with a frosted plate: controls floating over the table. */
 .floating {
   composes: base;
   width: 36px;
@@ -46,7 +44,6 @@
   border-color: var(--color-border-hover);
 }
 
-/* 44px round: navigation in page headers. */
 .round {
   composes: base;
   width: 44px;
@@ -58,7 +55,6 @@
   background: color-mix(in srgb, var(--color-text) 8%, transparent);
 }
 
-/* 32px round close / header action inside dialogs and sheets. */
 .close {
   composes: base;
   width: 32px;

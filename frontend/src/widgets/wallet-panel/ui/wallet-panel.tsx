@@ -17,12 +17,10 @@ import { formatBalance, truncateMiddle } from 'shared/utils/format';
 import { TransactionsList } from './transactions-list';
 import styles from './wallet-panel.module.css';
 
-// Matches the Dialog's bottom-sheet breakpoint.
 const MOBILE_QUERY = '(max-width: 600px)';
 
-/** Where the TON Connect UI renders its modal. */
 const TON_CONNECT_ROOT = '#tc-widget-root';
-/** Clicks here are not "outside" the popover. */
+
 const KEEP_OPEN_SELECTOR = `[role="dialog"], ${TON_CONNECT_ROOT}`;
 
 interface Props {
@@ -30,9 +28,7 @@ interface Props {
   onClose: () => void;
   onDeposit: () => void;
   onWithdraw: () => void;
-  /** Wallet button: clicks on it are not "outside" (it toggles the panel). */
   anchorRef: React.RefObject<HTMLElement | null>;
-  /** A deposit/withdraw form is open on top: keep the panel while it is. */
   suspended?: boolean;
 }
 
@@ -110,10 +106,6 @@ const WalletContent = ({
   );
 };
 
-/**
- * My Wallet: balance, deposit/withdraw and the only place with the
- * transaction history. Popover on desktop/tablet, bottom sheet on phones.
- */
 export const WalletPanel = ({
   open,
   onClose,
@@ -132,8 +124,6 @@ export const WalletPanel = ({
     walletModel.transactionsReset,
   ]);
 
-  // First open loads the newest page; later opens keep what is loaded.
-  // An effect event reads the latest list without re-running on its changes.
   const loadFirstPage = React.useEffectEvent(() => {
     if (items.length === 0 && !loading) {
       reset();
@@ -146,9 +136,6 @@ export const WalletPanel = ({
     }
   }, [open]);
 
-  // Desktop popover: close on outside click and Escape. Dialogs opened
-  // from the panel live in portals and TON Connect renders into its own
-  // root, so clicks there keep it open; Escape there closes that modal.
   useDismiss({
     enabled: open && !isMobile && !suspended,
     insideRefs: [panelRef, anchorRef],
@@ -157,7 +144,6 @@ export const WalletPanel = ({
     onDismiss: onClose,
   });
 
-  // Phones: the bottom-sheet Dialog plays its own enter and exit.
   if (isMobile) {
     return (
       <Dialog
@@ -171,7 +157,6 @@ export const WalletPanel = ({
     );
   }
 
-  // Desktop popover: stays mounted for its short exit animation.
   if (!presence.mounted) {
     return null;
   }

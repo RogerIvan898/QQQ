@@ -10,14 +10,8 @@ const axiosInstance = axios.create({
   timeout: API_TIMEOUT_MS,
 });
 
-// App header, Bearer token and one 401 → /refresh retry for every request.
 setupInterceptors(axiosInstance);
 
-/**
- * The API always answers JSON (or nothing: 204). Anything else, typically an
- * HTML page from a misrouted proxy or the SPA fallback, is an error, not data:
- * otherwise `undefined` fields leak into the stores.
- */
 const unwrap = <T>(response: AxiosResponse<T>): T => {
   if (response.status === 204) {
     return undefined as T;

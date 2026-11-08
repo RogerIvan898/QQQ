@@ -1,4 +1,4 @@
-/* Floats over the avatar/cards: appearing never moves anything on the table. */
+
 .badge {
   position: absolute;
   bottom: calc(100% + 2px);

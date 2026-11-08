@@ -15,7 +15,6 @@ import { potRaiseTo, raise, type BetPreset } from '../../model';
 
 import styles from './bet-manager.module.css';
 
-// Blinds can be fractional (e.g. 0.1/0.2), so round to cents, not integers.
 const CHIP_PRECISION = 100;
 const roundChips = (value: number) =>
   Math.round(value * CHIP_PRECISION) / CHIP_PRECISION;
@@ -48,8 +47,7 @@ export const BetManager = ({
   const [draft, setDraft] = useState<string | null>(null);
 
   const step = bigBlind > 0 ? bigBlind : 1;
-  // Settings → Display amounts in BB: the field shows and accepts big blinds,
-  // everything else (state, limits, the raise itself) stays in chips.
+
   const inBb = useUnit($amountsInBb) && bigBlind > 0;
   const toField = (chips: number) =>
     inBb ? Math.round((chips / bigBlind) * 10) / 10 : chips;
@@ -99,9 +97,6 @@ export const BetManager = ({
   const range = maxAmount - minAmount;
   const fillPercent = range > 0 ? ((amount - minAmount) / range) * 100 : 100;
 
-  // Mobile WebViews often cancel the native range drag (pointercancel) or
-  // only move it when the thumb itself is grabbed. Map the finger position
-  // to a value directly so dragging anywhere on the track updates the bet.
   const setFromTouch = (event: React.TouchEvent<HTMLInputElement>) => {
     const touch = event.touches[0];
 
@@ -126,8 +121,6 @@ export const BetManager = ({
   const raiseLabel = t`Raise`;
   const cancelLabel = t`Cancel`;
 
-  // Facing a preflop raise, fixed BB sizes fall below the minimum raise,
-  // so size relative to the bet being called instead.
   const currentBet = committed + callAmount;
   const facingRaise = currentBet > bigBlind;
   const presets: BetPreset[] = preflop
@@ -170,7 +163,6 @@ export const BetManager = ({
                 styles.shortcut,
                 preset.label === maxLabel && styles.shortcutAllIn
               )}
-              // Already all-in (slider, field or this button): nothing to pick.
               disabled={
                 preset.value < minAmount ||
                 (preset.label === maxLabel && amount >= maxAmount)

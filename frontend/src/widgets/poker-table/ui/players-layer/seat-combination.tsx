@@ -11,7 +11,6 @@ interface Props {
   hand: readonly Card[] | null;
 }
 
-/** "Two pair", "Flush"…: the hand a seat has made, once its cards are known. */
 export const SeatCombination = ({ hand }: Props) => {
   const { i18n } = useLingui();
   const community = useUnit(gameModel.$community);

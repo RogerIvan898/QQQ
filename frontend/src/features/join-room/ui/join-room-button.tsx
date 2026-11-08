@@ -14,7 +14,7 @@ import styles from './join-room-button.module.css';
 interface Props {
   roomId: string;
   isFull: boolean;
-  /** When set, the player can't afford this table: offer a top-up instead of joining. */
+
   onTopUp?: () => void;
 }
 

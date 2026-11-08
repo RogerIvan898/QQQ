@@ -1,6 +1,5 @@
 import React from 'react';
 
-/** Live `matchMedia` result, e.g. `useMediaQuery('(max-width: 767px)')`. */
 export const useMediaQuery = (query: string) => {
   const subscribe = React.useCallback(
     (onChange: () => void) => {

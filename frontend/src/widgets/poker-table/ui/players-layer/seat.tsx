@@ -22,11 +22,6 @@ interface Props {
   ref?: React.Ref<HTMLDivElement>;
 }
 
-/**
- * One seat subscribes only to its own slice of the game state, so an event
- * that touches one player re-renders one seat instead of the whole layer.
- */
-/** Seat's place in the deal, starting left of the dealer (0, 1, 2…). */
 const dealOrderFrom = (
   seat: number,
   dealerSeat: number | null,
@@ -128,7 +123,6 @@ const SeatView = ({
         collecting={collecting}
         equitySlot={equitySlot}
         handNumber={handNumber}
-        // The server's clock when it sends one; Player's defaults otherwise.
         {...(turnTiming && {
           turnDurationSec: turnTiming.turnMs / 1000,
           timeBankSec: turnTiming.timeBankMs / 1000,

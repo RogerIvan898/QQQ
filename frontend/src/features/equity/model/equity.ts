@@ -9,16 +9,13 @@ import { computeEquity } from '../lib/equity';
 import type { EquityRequest, EquityResponse } from '../lib/equity.worker';
 
 export interface EquityState {
-  /** Seat → share of the pot, 0..1. */
   bySeat: Record<number, number>;
-  /** Sampled estimates (3–5-way preflop) are shown
-   *  as whole percent: their ±0.5% noise makes a decimal meaningless. */
+
   exact: boolean;
 }
 
 const equityChanged = createEvent<EquityState | null>();
 
-/** Equity while an all-in runout is being dealt; `null` the rest of the time. */
 export const $equity = createStore<EquityState | null>(null).on(
   equityChanged,
   (_, equity) => equity
@@ -26,18 +23,15 @@ export const $equity = createStore<EquityState | null>(null).on(
 
 let worker: Worker | null = null;
 let requestId = 0;
-/** Seats of the latest request, in the order the worker answers. */
+
 let pendingSeats: number[] = [];
 let active = false;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
-/** Keep the final 100% / 0% up until the winner animation has played. */
 const HIDE_AFTER_WIN_MS = HAND_END_MS + 300;
-/** Board card deal animation (card.module.css `.play`): new numbers appear
- *  only once the card has landed face-up. */
+
 const CARD_DEAL_MS = 750;
 
-/** Earliest time the next result may be shown. */
 let revealAt = 0;
 let revealTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -48,7 +42,6 @@ const clearRevealTimer = () => {
   }
 };
 
-/** Shows `equity` no earlier than `revealAt`. */
 const publish = (equity: EquityState, id: number) => {
   clearRevealTimer();
   const wait = revealAt - performance.now();
@@ -84,7 +77,6 @@ const getWorker = () => {
       type: 'module',
     });
     worker.onmessage = (event: MessageEvent<EquityResponse>) => {
-      // Stale answer: the board moved on or the hand ended meanwhile.
       if (event.data.id !== requestId || !active) {
         return;
       }
@@ -144,7 +136,6 @@ const recalculate = () => {
   if (target) {
     target.postMessage(request);
   } else {
-    // No worker support: compute inline (rare, older WebViews).
     const result = computeEquity(request.hands, request.board);
 
     publish(
@@ -159,10 +150,6 @@ const recalculate = () => {
   }
 };
 
-// The runout is the only time hands are revealed before the river: betting is
-// over, at least one player is all-in and nobody can act any more. Equity is
-// recomputed per street; on the river it is exact (the result), and it stays
-// until the winner animation is over.
 gameModel.incomingEvent.watch(event => {
   switch (event.type) {
     case SERVER_EVENTS.SHOWDOWN:
@@ -172,8 +159,6 @@ gameModel.incomingEvent.watch(event => {
       }
       break;
     case SERVER_EVENTS.BOARD_DEALT: {
-      // The flop is dealt card by card for the animation; 1–2 cards on the
-      // board is not a real spot, so wait for the whole flop.
       const boardSize = gameModel.$gameState.getState().community.length;
 
       if (active && boardSize !== 1 && boardSize !== 2) {
@@ -183,8 +168,6 @@ gameModel.incomingEvent.watch(event => {
       break;
     }
     case SERVER_EVENTS.HAND_COMPLETED:
-      // The river already settled it to 100% / 0% (or a split); hold that
-      // while the pot flies to the winner, then clear.
       if (active) {
         clearHideTimer();
         hideTimer = setTimeout(stop, HIDE_AFTER_WIN_MS);
@@ -194,8 +177,7 @@ gameModel.incomingEvent.watch(event => {
       if (active || $equity.getState()) {
         stop();
       }
-      // Start the worker ahead of the first all-in: loading its module takes
-      // ~0.4 s on desktop and over a second on a slow phone.
+
       getWorker();
       break;
   }
@@ -203,6 +185,4 @@ gameModel.incomingEvent.watch(event => {
 
 gameModel.disconnectGame.watch(stop);
 
-// Load the worker as soon as the table code is loaded, so even the first
-// all-in of the session doesn't wait for its module.
 getWorker();

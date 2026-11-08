@@ -16,20 +16,15 @@ interface Props<T extends string> {
   items: readonly ChipItem<T>[];
   value: T;
   onChange: (id: T) => void;
-  /** Accessible name of the group, e.g. "Period". */
+
   label?: string;
   className?: string;
 }
 
-/** How far one arrow press scrolls, as a share of the visible width. */
 const PAGE_SHARE = 0.7;
-/** Ignore sub-pixel leftovers when deciding whether an edge is reached. */
+
 const EDGE_EPSILON = 2;
 
-/**
- * A single-choice row of chips. When they don't fit it scrolls sideways,
- * and arrows appear on whichever side still has hidden chips.
- */
 export const ChipGroup = <T extends string>({
   items,
   value,
@@ -75,7 +70,6 @@ export const ChipGroup = <T extends string>({
     };
   }, [updateEdges, items.length]);
 
-  // Keep the selected chip in view (e.g. picked from the far end).
   React.useEffect(() => {
     const chip = trackRef.current?.querySelector<HTMLElement>(
       '[aria-selected="true"]'

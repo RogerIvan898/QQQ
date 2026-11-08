@@ -18,11 +18,10 @@ interface Props {
   open: boolean;
   onClose: () => void;
   balance: number;
-  /** Sends the withdrawal; reject to keep the dialog open with an error. */
+
   onSubmit?: (payload: WithdrawPayload) => Promise<unknown> | void;
 }
 
-/** Withdraw to the connected TON wallet or to any TON address. */
 export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
   const { t } = useLingui();
   const wallet = useUnit($tonWallet);
@@ -35,7 +34,6 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [submitFailed, setSubmitFailed] = useState(false);
 
-  // Default to the connected wallet when there is one.
   useEffect(() => {
     if (open) {
       setDestination(connectedAddress ? 'wallet' : 'address');
@@ -107,7 +105,6 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
     setSubmitFailed(false);
 
     try {
-      // Close only once the server has accepted it.
       await onSubmit?.({
         amount,
         address: targetAddress,

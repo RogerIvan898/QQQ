@@ -4,7 +4,6 @@ import { useUnit } from 'effector-react';
 import { $rooms, findRoom } from 'entities/room';
 import type { GameSession } from 'features/game-sessions';
 
-/** "Micro · 9-Max", falling back to the table id for unknown rooms. */
 export const useSessionTitle = () => {
   const { t } = useLingui();
   const rooms = useUnit($rooms);

@@ -17,15 +17,15 @@ import { Nickname } from './nickname';
 
 interface Props {
   userName: string;
-  /** The player picked a new nickname next to their name. */
+
   onRename: (nickname: string) => void;
-  /** `null` while loading. */
+
   balance: number | null;
   avatarUrl?: string;
   isWalletOpen: boolean;
   onWalletClick: () => void;
   walletButtonRef: React.RefObject<HTMLButtonElement | null>;
-  /** Wallet Panel, anchored under the wallet button. */
+
   walletPanel?: React.ReactNode;
 }
 

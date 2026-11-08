@@ -62,17 +62,10 @@ export const enqueueServerEvent = (event: ServerGameEvent) => {
 
 let lastEnqueuedAt = 0;
 
-/** Quiet time that marks the end of a burst from the server. */
 const BURST_GAP_MS = 120;
-/** Never hold the queue longer than this waiting for a burst to finish. */
+
 const BURST_MAX_WAIT_MS = 500;
 
-/**
- * The server sends a whole all-in runout at once (street, showdown, board,
- * result), but each message lands as its own task. On a slow device the
- * first one is seen before the rest arrive, and the runout would be played
- * as plain streets. Wait until the burst goes quiet before deciding.
- */
 const waitForBurst = async () => {
   const started = performance.now();
 
@@ -85,17 +78,9 @@ const waitForBurst = async () => {
 };
 
 const SHOWDOWN_PAUSE_MS = 500;
-/** Winner reveal, pot flight and stack count (shared/config/table-timing). */
+
 const WIN_ANIMATION_MS = HAND_END_MS;
 
-// Animations are paced with timers, which a hidden WebView throttles to one
-// per second (one per minute after a while). Without this the queue would keep
-// growing in the background and replay minutes of old hands on return.
-//
-// Lagging by one hand is normal: the server starts the next hand while we
-// still animate the runout, and a 9-handed orbit alone is ~20 events. So only
-// skip ahead when a second hand is already waiting (or the backlog is huge),
-// otherwise the runout would be cut off and its board never shown.
 const BACKLOG_HARD_LIMIT = 80;
 
 const queuedHandStarts = () =>
@@ -105,7 +90,6 @@ const queuedHandStarts = () =>
     0
   );
 
-/** Dev-only counters for the equity benchmark (`scripts/bench-equity.ts`). */
 const debug = import.meta.env.DEV
   ? ((
       window as unknown as { __queueDebug?: Record<string, number> }
@@ -136,7 +120,6 @@ const shouldFastForward = () => {
   return false;
 };
 
-/** Applies everything queued at once, without pauses, animations or sounds. */
 const flushQueue = () => {
   collectingBets(false);
 
@@ -231,12 +214,6 @@ const isRunoutEvent = (event: ServerGameEvent | undefined) =>
   event?.type === SERVER_EVENTS.SHOWDOWN ||
   event?.type === SERVER_EVENTS.HAND_COMPLETED;
 
-/**
- * An all-in runout is one unbroken block of street/board/showdown/result
- * events at the head of the queue. Only that block counts: while the queue
- * lags, a later street's showdown (or the next hand) can already be queued,
- * and scanning the whole queue made a plain flop play as a slow runout.
- */
 const isAllInRunout = (events: ServerGameEvent[]) => {
   let showdown = false;
   let board = false;
@@ -349,8 +326,6 @@ const playRunout = async (gen: number) => {
     return;
   }
 
-  // Fast-forwarded: apply whatever the script did not get to. Board events
-  // are idempotent, showdown and the result must not be emitted twice.
   if (showdown && !handsRevealed) {
     emit(showdown);
   }

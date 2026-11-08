@@ -27,8 +27,6 @@ const raiseActionTriggered = raise.map(({ amount }) =>
 
 const playerAction = merge([simpleActionTriggered, raiseActionTriggered]);
 
-// No player id in the command: the server knows who is acting from the
-// authenticated socket and must never trust an id sent by the client.
 sample({
   clock: playerAction,
   fn: payload => ({

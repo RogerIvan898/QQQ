@@ -45,8 +45,6 @@
 
   --focus-ring: var(--color-primary-light);
 
-  /* Player actions at the table (seat badges). Each badge derives its tinted
-     fill, outline and text from one of these. */
   --action-fold: #94a3b8;
   --action-check: #4fb3ff;
   --action-call: #2dd4e0;
@@ -55,8 +53,6 @@
   --action-allin: #ff5c7a;
   --action-blind: var(--color-primary-light);
 
-  /* Motion: one vocabulary for the UI chrome. Enter decelerates (ease-out),
-     exit accelerates (ease-in) and is shorter, so closing never lags. */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-spring: cubic-bezier(0.22, 1.2, 0.36, 1);
@@ -67,8 +63,6 @@
   --dur-exit: 160ms;
   --font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
-  /* Selected / unselected look shared by option-like controls
-     (settings options, withdraw destination tabs). */
   --option-on-border: color-mix(in srgb, var(--color-primary) 45%, transparent);
   --option-on-bg: color-mix(
     in srgb,

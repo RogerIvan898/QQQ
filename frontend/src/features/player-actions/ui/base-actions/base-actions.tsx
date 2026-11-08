@@ -12,7 +12,7 @@ interface Props {
   canCall: boolean;
   canRaise: boolean;
   isBet: boolean;
-  /** Chips still to put in to call; shown on the button. */
+
   callAmount: number;
   onRaiseClick: () => void;
 }

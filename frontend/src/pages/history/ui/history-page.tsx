@@ -44,7 +44,7 @@ interface CardProps {
 const SessionCard = ({ session }: CardProps) => {
   const { i18n } = useLingui();
   const title = useSessionTitle();
-  // "Nov 7, 10:15 PM": the full range and buy-in/cash-out are on the details page.
+
   const shortTime = new Intl.DateTimeFormat(i18n.locale, {
     month: 'short',
     day: 'numeric',
@@ -89,7 +89,6 @@ const SessionCard = ({ session }: CardProps) => {
   );
 };
 
-/** Game History: results per table session (not wallet, not single hands). */
 export const HistoryPage = () => {
   const { i18n, t } = useLingui();
   const navigate = useNavigate();

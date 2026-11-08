@@ -35,8 +35,6 @@ export const DepositDialog = ({
   const [step, setStep] = useState<DepositStep>(DEPOSIT_STEP.Amount);
   const [amount, setAmount] = useState(0);
 
-  // Сброс при открытии: диалог всегда открывается с первого шага и пустой суммы.
-  // Сброс при закрытии тоже работал бы, но давал лишний setState при первом монтировании.
   useEffect(() => {
     if (open) {
       setStep(DEPOSIT_STEP.Amount);

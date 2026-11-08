@@ -34,8 +34,6 @@
   }
 }
 
-/* Every kind is the same recipe from its theme token: a dark tinted fill,
-   a thin outline and the colour as text. */
 .check,
 .call,
 .bet,
@@ -72,7 +70,6 @@
   --action-color: var(--action-raise);
 }
 
-/* Everything in: a slow pulse on top so it reads from across the table. */
 .allIn {
   --action-color: var(--action-allin);
 
@@ -100,7 +97,6 @@
   --action-color: var(--action-blind);
 }
 
-/* Winner: solid gold so it outranks every action badge. */
 .win {
   background: linear-gradient(180deg, #ffd96a, var(--color-warning));
   border-color: color-mix(in srgb, #fff 45%, var(--color-warning));
@@ -126,7 +122,6 @@
   }
 }
 
-/* Phones and portrait tablets share the compact, vertical table layout. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .badge {
     height: 20px;
@@ -135,8 +130,6 @@
   }
 }
 
-/* Portrait tablets: same compact layout as phones, but the table is much
-   bigger there, so seat elements step up ~1.3x. */
 @media (orientation: portrait) and (min-width: 769px) and (max-width: 1100px) {
   .badge {
     height: 26px;

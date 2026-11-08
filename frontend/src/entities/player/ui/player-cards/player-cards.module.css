@@ -12,8 +12,6 @@
   pointer-events: none;
 }
 
-/* Dealt from the table centre: a hidden card waits toward the centre
-   (--to-center-* come from the seat) and flies out to the seat. */
 .cardSlot {
   --deal-from: 80px;
 
@@ -29,7 +27,6 @@
     transform 0.42s var(--ease-spring);
 }
 
-/* Fan the second hole card in slightly after the first. */
 .cardSlot + .cardSlot {
   transform: translate(
       calc(var(--to-center-x, 0) * var(--deal-from)),
@@ -39,7 +36,6 @@
   transition-delay: 90ms;
 }
 
-/* Showdown: an opponent's cards turn over in place. */
 .flip {
   perspective: 600px;
 }
@@ -56,8 +52,6 @@
   transition-delay: 0ms;
 }
 
-/* Fold: the cards lift and dim for a beat, then fly to the centre of the
-   table and vanish into the muck, so a fold reads at a glance. */
 .mucking .cardSlot.visible.visible {
   animation: muckLeft 0.45s var(--ease-in) forwards;
 }
@@ -124,7 +118,6 @@
     transition: opacity 0.2s ease-out;
   }
 
-  /* Fold: just fade out, no flight. */
   .mucking .cardSlot.visible.visible,
   .mucking .cardSlot.visible + .cardSlot.visible {
     animation: muckFade 0.25s ease-out forwards;
@@ -143,16 +136,14 @@
   z-index: 2;
 }
 
-/* Doubled class beats the `.cardSlot + .cardSlot` hidden state. */
 .cardSlot.visible.visible {
   opacity: 1;
   transform: translateY(0) rotate(-4deg) scale(1);
 }
 
-/* Phones and portrait tablets share the compact, vertical table layout. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .cards {
-    /* ~15% of the table width (set by the players layer), not 11vw. */
+
     --card-width: clamp(34px, calc(var(--table-w, 300px) * 0.15), 84px);
 
     transform: translate(-50%, -62%) scale(0.6);

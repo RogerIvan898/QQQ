@@ -45,8 +45,6 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
   const walletAddress = useUnit($tonWallet)?.friendlyAddress ?? '';
   const [currentLocale, setLocale] = useUnit([$currentLocale, changeLocale]);
 
-  // Other languages download only once Settings is opened, so the switch
-  // below is instant and the startup bundle stays one language.
   useEffect(() => {
     if (open) {
       preloadOtherLocales(currentLocale);
@@ -75,7 +73,7 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
       if (action === 'connect') await tonConnectUI.openModal();
       else await tonConnectUI.disconnect();
     } catch {
-      // тут лучше показать toast/inline-error, если есть общий механизм
+      void 0;
     } finally {
       setWalletAction(null);
     }

@@ -1,18 +1,13 @@
 import React from 'react';
 
-/** Share of the sheet's height it must be dragged down to close on release. */
 const CLOSE_SHARE = 0.4;
-/** ...or a quick flick down at least this fast (px per ms) closes it too. */
+
 const FLICK_SPEED = 0.8;
-/** A flick still needs a little travel, so a twitch doesn't close it. */
+
 const FLICK_MIN_PX = 40;
-/** Movement before the drag takes the pointer, so plain taps still click. */
+
 const DRAG_START_PX = 4;
 
-/**
- * Swipe-down-to-close for bottom sheets. Spread `handlers` on the grab
- * handle / header and apply `offset` as translateY while `dragging`.
- */
 export const useSwipeToClose = (onClose: () => void, enabled = true) => {
   const [offset, setOffset] = React.useState(0);
   const start = React.useRef<number | null>(null);
@@ -25,7 +20,7 @@ export const useSwipeToClose = (onClose: () => void, enabled = true) => {
     }
 
     start.current = event.clientY;
-    // The handle and the header sit directly in the sheet.
+
     sheetHeight.current =
       event.currentTarget.parentElement?.getBoundingClientRect().height ?? 0;
     lastMove.current = { y: event.clientY, time: event.timeStamp, speed: 0 };

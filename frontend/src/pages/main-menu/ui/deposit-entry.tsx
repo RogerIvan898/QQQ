@@ -20,10 +20,6 @@ interface Props {
   onSuccess: () => void;
 }
 
-/**
- * Deposit with this player's own address and memo from the server. Until
- * they arrive it shows a loader (or a retry), never a hard-coded address.
- */
 export const DepositEntry = ({ onClose, onSuccess }: Props) => {
   const { t } = useLingui();
   const [address, status, request] = useUnit([

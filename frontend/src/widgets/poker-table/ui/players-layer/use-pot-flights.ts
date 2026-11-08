@@ -28,8 +28,6 @@ export const usePotFlights = (
     }
   };
 
-  // An effect event sees the latest seats, table and callback, so the
-  // subscription is made once instead of on every layout change.
   const onTableEvent = React.useEffectEvent((event: ServerGameEvent) => {
     if (event.type === SERVER_EVENTS.HAND_STARTED) {
       clearReveal();
@@ -82,8 +80,6 @@ export const usePotFlights = (
       return updated;
     });
 
-    // The winner lights up first (seats react to `wins`); the pot only
-    // leaves the middle once everyone has seen who took it.
     clearReveal();
     revealTimer.current = window.setTimeout(() => {
       revealTimer.current = null;

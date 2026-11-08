@@ -35,7 +35,6 @@ export const initTelegramWebApp = () => {
   tg.setHeaderColor(APP_BG);
   tg.setBackgroundColor(APP_BG);
 
-  // Fullscreen exists since Bot API 8.0; older clients log an error on call.
   if (tg.isVersionAtLeast('8.0')) {
     try {
       tg.requestFullscreen();

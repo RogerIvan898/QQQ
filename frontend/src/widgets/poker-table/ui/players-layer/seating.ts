@@ -14,7 +14,6 @@ interface TableSize {
 
 const COMPACT_TABLE_WIDTH = 380;
 
-/** Seat ring relative to the table: past the rail, so seats don't hug the felt. */
 const ELLIPSE_SCALE = {
   compact: { x: 0.54, y: 0.57 },
   regular: { x: 0.58, y: 0.54 },
@@ -40,8 +39,7 @@ export const computeSeats = (
   const radiusX = table.width * scale.x;
   const radiusY = table.height * scale.y;
   const referenceSeat = viewerSeat ?? seats[0];
-  // Include the reference seat so a viewer seated outside the occupied range
-  // (e.g. a spectator on a high empty seat) still wraps correctly.
+
   const seatSpan = Math.max(referenceSeat, ...seats) + 1;
   const distanceFromReference = (seat: number) =>
     (((seat - referenceSeat) % seatSpan) + seatSpan) % seatSpan;

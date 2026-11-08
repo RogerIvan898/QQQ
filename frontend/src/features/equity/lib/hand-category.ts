@@ -6,7 +6,6 @@ import type { CardType as Card } from 'entities/card';
 import { cardToInt } from './card-int';
 import { evaluateHand } from './evaluator';
 
-/** Indexed by the evaluator's category (score >> 20). */
 const CATEGORY_LABELS: MessageDescriptor[] = [
   msg`High card`,
   msg`Pair`,
@@ -21,10 +20,6 @@ const CATEGORY_LABELS: MessageDescriptor[] = [
 
 const CATEGORY_SHIFT = 20;
 
-/**
- * Name of the best hand the hole cards make with the board, or `null`
- * before the flop (fewer than five cards).
- */
 export const handCategoryLabel = (
   hole: readonly Card[],
   board: readonly Card[]

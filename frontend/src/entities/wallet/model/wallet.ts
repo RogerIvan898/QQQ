@@ -24,13 +24,10 @@ export const STATUS_LABELS = {
   failed: msg`Failed`,
 } as const satisfies Record<TransactionStatus, MessageDescriptor>;
 
-// ---------- Balance ----------
-
 export const balanceRequested = createEvent();
 
 const fetchBalanceFx = createEffect(() => walletApi.getBalance());
 
-/** Spendable TON; `null` until the first successful load. */
 export const $balance = createStore<number | null>(null).on(
   fetchBalanceFx.doneData,
   (_, balance) => balance.available
@@ -38,13 +35,10 @@ export const $balance = createStore<number | null>(null).on(
 
 sample({ clock: balanceRequested, target: fetchBalanceFx });
 
-// ---------- Deposit address ----------
-
 export const depositAddressRequested = createEvent();
 
 const fetchDepositAddressFx = createEffect(() => walletApi.getDepositAddress());
 
-/** This player's deposit address and memo; null until loaded. */
 export const $depositAddress = createStore<DepositAddress | null>(null).on(
   fetchDepositAddressFx.doneData,
   (_, address) => address
@@ -63,36 +57,28 @@ sample({
   target: fetchDepositAddressFx,
 });
 
-// ---------- Withdraw ----------
-
-/** Sends a withdrawal; resolves with the new (pending) transaction. */
 export const withdrawFx = createEffect((request: WithdrawRequest) =>
   walletApi.withdraw(request)
 );
 
-// ---------- Transactions (cursor pagination) ----------
-
-/** Drops what is loaded and fetches the newest page. */
 export const transactionsReset = createEvent();
-/** Fetches the next (older) page, if there is one and none is in flight. */
+
 export const nextPageRequested = createEvent();
-/** Repeats the request that failed. */
+
 export const retryRequested = createEvent();
 
-/** All / deposits / withdrawals; `null` = all. Changing it reloads page 1. */
 export const typeFilterChanged = createEvent<TransactionType | null>();
 export const $typeFilter = createStore<TransactionType | null>(null).on(
   typeFilterChanged,
   (_, type) => type
 );
 
-/** Balance and history after a deposit or withdrawal. */
 export const walletRefreshRequested = createEvent();
 
 interface PageRequest {
   cursor: string | null;
   type: TransactionType | null;
-  /** Requests from before a reset are ignored when they come back. */
+
   generation: number;
 }
 
@@ -104,14 +90,14 @@ const $generation = createStore(0).on(transactionsReset, value => value + 1);
 
 export const $transactions = createStore<Transaction[]>([]);
 const $nextCursor = createStore<string | null>(null);
-/** `false` once the server says there is nothing older. */
+
 export const $hasMore = createStore(true);
 export const $transactionsError = createStore(false);
-/** The cursor of the last request, to retry it and to never ask twice. */
+
 const $lastRequest = createStore<PageRequest | null>(null);
 
 export const $isLoadingPage = fetchPageFx.pending;
-/** True before the first page has arrived (initial skeleton/spinner). */
+
 export const $isInitialLoad = combine(
   $transactions,
   $isLoadingPage,
@@ -152,8 +138,7 @@ sample({
     error: $transactionsError,
     last: $lastRequest,
   },
-  // One request at a time, never past the end, never the same page twice,
-  // and no auto-retry loop while an error is shown.
+
   filter: ({ cursor, hasMore, loading, error, last }) =>
     hasMore && !loading && !error && cursor !== null && last?.cursor !== cursor,
   fn: ({ cursor, type, generation }): PageRequest => ({
@@ -183,7 +168,6 @@ const pageLoaded = sample({
 });
 
 $transactions.on(pageLoaded, (items, page) => {
-  // Guard against overlap if the server shifted (e.g. a new transaction).
   const seen = new Set(items.map(item => item.id));
 
   return [...items, ...page.items.filter(item => !seen.has(item.id))];
@@ -204,7 +188,6 @@ sample({
   target: [balanceRequested, transactionsReset],
 });
 
-// A withdrawal changes the balance and adds a transaction: reload both.
 sample({
   clock: withdrawFx.done,
   target: walletRefreshRequested,

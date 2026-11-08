@@ -33,7 +33,6 @@ const WithdrawModal = React.lazy(() =>
 );
 
 const prefetchWalletDialogs = () => {
-  // Prefetch is best-effort; React.lazy retries the import on open.
   loadDepositDialog().catch(() => {});
   loadWithdrawModal().catch(() => {});
 };
@@ -70,7 +69,6 @@ const Filters = ({ active, onChange }: FiltersProps) => {
           } as React.CSSProperties
         }
       >
-        {/* One underline that slides between the equal-width tabs. */}
         <span className={styles.tabIndicator} aria-hidden="true" />
         {ROOM_FILTERS.map(filter => {
           const Icon = filter === 'all' ? null : FILTER_ICONS[filter];
@@ -109,7 +107,7 @@ export const MenuPage = () => {
   ]);
   const closeWallet = React.useCallback(() => setIsWalletOpen(false), []);
   const [telegramUser] = React.useState(getTelegramUser);
-  // The nickname set in Settings wins over the Telegram name.
+
   const nickname = useUnit(sessionModel.$nickname);
   const [rooms, roomsStatus, requestRooms] = useUnit([
     $rooms,
@@ -117,7 +115,6 @@ export const MenuPage = () => {
     roomsRequested,
   ]);
 
-  // Fresh list (and seat counts) every time the lobby opens.
   React.useEffect(() => {
     requestRooms();
   }, [requestRooms]);
@@ -132,8 +129,7 @@ export const MenuPage = () => {
   React.useEffect(() => {
     const prefetch = () => {
       prefetchWalletDialogs();
-      // The game route is code-split; without this, the first "Play" shows
-      // the router's generic loader while its chunk downloads.
+
       router
         .loadRouteChunk(router.routesById['/game/$roomId'])
         ?.catch(() => undefined);
@@ -213,7 +209,6 @@ export const MenuPage = () => {
                 <div className={styles.roomsState}>{t`No tables here yet`}</div>
               ) : null}
               <div className={styles.roomGrid}>
-                {/* Desktop only: column names for the lobby rows. */}
                 <div className={styles.roomHead} aria-hidden="true">
                   <span>{t`Table`}</span>
                   <span>{t`Blinds`}</span>

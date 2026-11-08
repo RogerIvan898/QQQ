@@ -7,7 +7,6 @@ import { PlayerAction, SeatBadgeKind, type SeatActionBadge } from '../../model';
 
 import styles from './action-badge.module.css';
 
-/** Colour by meaning: passive green/blue, aggressive amber/orange, all-in red. */
 const KIND_CLASS: Record<SeatActionBadge, string> = {
   [PlayerAction.FOLD]: styles.fold,
   [PlayerAction.CHECK]: styles.check,
@@ -46,7 +45,6 @@ export const ActionBadge = ({ action, amount }: Props) => {
 
   return (
     <div className={styles.root}>
-      {/* Re-keyed per action so each new action pops in. */}
       <span key={action} className={cn(styles.badge, KIND_CLASS[action])}>
         {labels[action]}
         {showAmount ? ` ${formatChips(amount)}` : null}

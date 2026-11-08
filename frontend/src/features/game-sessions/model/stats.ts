@@ -10,7 +10,6 @@ export interface PeriodRange {
   to: number;
 }
 
-/** Inclusive time range for a period; custom uses `custom` (local dates). */
 export const periodRange = (
   period: SessionPeriod,
   custom: { from: string; to: string },
@@ -65,7 +64,6 @@ export const sessionStats = (sessions: GameSession[]) => ({
   ),
 });
 
-/** "18h 42m" / "25m". */
 export const formatDuration = (ms: number) => {
   const totalMinutes = Math.round(ms / 60_000);
   const hours = Math.floor(totalMinutes / 60);

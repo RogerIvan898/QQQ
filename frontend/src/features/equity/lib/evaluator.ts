@@ -1,16 +1,3 @@
-/**
- * Cards are ints 0..51: rank * 4 + suit, rank 0 = deuce … 12 = ace.
- * Scores: higher is better, equal is a tie. Layout: category << 20, then five
- * 4-bit rank slots, highest first.
- *
- * Hot path, so it works on bitmasks only (no arrays, no allocation):
- * - `clubs`, `diamonds`, `hearts`, `spades`: ranks present per suit (13-bit masks),
- * - `atLeastOne` … `atLeastFour`: bit-sliced rank counts — bit r of
- *   `atLeastTwo` is set when rank r appears at least twice.
- * A hand state is those eight ints; adding a card is a few bit operations,
- * so the shared board is built once and each player only adds two cards.
- */
-
 const CATEGORY_SHIFT = 20;
 const RANK_BITS = 4;
 const SLOT_COUNT = 5;
@@ -28,7 +15,6 @@ const HandCategory = {
   StraightFlush: 8,
 } as const;
 
-/** State slot indices. */
 const StateIndex = {
   AtLeastOne: 4,
   AtLeastTwo: 5,
@@ -36,15 +22,13 @@ const StateIndex = {
   AtLeastFour: 7,
 } as const;
 
-/** Number of set bits for every 13-bit rank mask. */
 const POPCOUNT = new Uint8Array(RANK_MASK_SIZE);
-/** Highest rank of a straight inside a 13-bit rank mask, or -1 (wheel included). */
+
 const STRAIGHT_HIGH_RANK = new Int8Array(RANK_MASK_SIZE);
 
 for (let rankMask = 0; rankMask < RANK_MASK_SIZE; rankMask += 1) {
   POPCOUNT[rankMask] = (rankMask & 1) + POPCOUNT[rankMask >> 1];
 
-  // The ace also plays low: copy it below the deuce for the wheel.
   const withLowAce = (rankMask << 1) | ((rankMask >> 12) & 1);
   let highRank = -1;
 
@@ -60,16 +44,11 @@ for (let rankMask = 0; rankMask < RANK_MASK_SIZE; rankMask += 1) {
   STRAIGHT_HIGH_RANK[rankMask] = highRank;
 }
 
-/** Index of the highest set bit of a non-zero mask. */
 const highestRank = (rankMask: number) => 31 - Math.clz32(rankMask);
 
 const withCategory = (category: number, slots: number) =>
   (category << CATEGORY_SHIFT) | slots;
 
-/**
- * Appends the `count` highest ranks of `rankMask` to `slots` (which already
- * holds `filledSlots` ranks) and left-aligns the result to five slots.
- */
 const appendKickers = (
   slots: number,
   filledSlots: number,
@@ -91,7 +70,6 @@ const appendKickers = (
   return packed << (RANK_BITS * (SLOT_COUNT - filledSlots - appended));
 };
 
-/** Scores a complete hand state (5–7 cards). */
 export const scoreHandState = (
   clubs: number,
   diamonds: number,
@@ -194,15 +172,10 @@ export const scoreHandState = (
   );
 };
 
-/**
- * Hand state: [clubs, diamonds, hearts, spades,
- * atLeastOne, atLeastTwo, atLeastThree, atLeastFour].
- */
 export type HandState = Int32Array;
 
 export const createHandState = (): HandState => new Int32Array(8);
 
-/** Writes `source` plus one card into `target` (they may be the same array). */
 export const addCardToState = (
   source: HandState,
   target: HandState,
@@ -225,7 +198,6 @@ export const addCardToState = (
   target[StateIndex.AtLeastOne] = atLeastOne | rankBit;
 };
 
-/** Scores `boardState` plus two hole cards without modifying `boardState`. */
 export const scoreBoardWithHoleCards = (
   boardState: HandState,
   firstCard: number,
@@ -240,7 +212,6 @@ export const scoreBoardWithHoleCards = (
   let atLeastThree = boardState[StateIndex.AtLeastThree];
   let atLeastFour = boardState[StateIndex.AtLeastFour];
 
-  // addCardToState inlined twice: this runs millions of times per request.
   let rankBit = 1 << (firstCard >> 2);
   let suit = firstCard & 3;
 
@@ -279,7 +250,6 @@ export const scoreBoardWithHoleCards = (
 
 const scratchState = createHandState();
 
-/** Scores 5–7 cards. */
 export const evaluateHand = (cards: ArrayLike<number>) => {
   scratchState.fill(0);
 

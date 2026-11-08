@@ -5,11 +5,6 @@ import {
   type HandState,
 } from './evaluator';
 
-/**
- * Enumerate every runout while it costs at most this many hand evaluations
- * (boards × players). Heads-up preflop (1.7M boards × 2) fits; 3-way preflop
- * does not and is sampled.
- */
 export const EXACT_EVAL_LIMIT = 4_000_000;
 export const SAMPLES = 40_000;
 
@@ -17,7 +12,7 @@ export type EquityMode = 'auto' | 'sample';
 
 export interface EquityResult {
   equities: number[];
-  /** `false` for a sampled (Monte Carlo) estimate, good to about ±0.5%. */
+
   exact: boolean;
 }
 
@@ -43,11 +38,6 @@ export const choose = (n: number, k: number) => {
   return Math.round(result);
 };
 
-/**
- * FNV-1a over the spot's cards (hands in seat order, then the board): stays in
- * 32 bits for any table size, so every client derives the same seed and
- * therefore the same sampled numbers, and different spots get different seeds.
- */
 const seedFor = (hands: number[][], board: number[]) => {
   let hash = 0x811c9dc5;
 
@@ -59,7 +49,6 @@ const seedFor = (hands: number[][], board: number[]) => {
   return hash >>> 0;
 };
 
-/** Mulberry32: tiny seeded PRNG, so a given spot always gives the same %. */
 const prng = (seed: number) => () => {
   seed |= 0;
   seed = (seed + 0x6d2b79f5) | 0;
@@ -69,11 +58,6 @@ const prng = (seed: number) => () => {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 
-/**
- * Share of the pot each hand wins on average over the remaining board cards
- * (ties split). `hands` are two-card arrays, `board` 0–5 cards; returns
- * fractions summing to 1.
- */
 export const computeEquity = (
   hands: number[][],
   board: number[],
@@ -87,13 +71,11 @@ export const computeEquity = (
   const scores = new Int32Array(playerCount);
   const firstHoleCards = Uint8Array.from(hands, hand => hand[0]);
   const secondHoleCards = Uint8Array.from(hands, hand => hand[1]);
-  /** Ties split the pot: share for k winners, precomputed. */
+
   const tieShare = Float64Array.from({ length: playerCount + 1 }, (_, k) =>
     k ? 1 / k : 0
   );
 
-  // runoutStates[d] = board plus the first d runout cards. The board is shared by
-  // every player, so it is built once and each player only adds two cards.
   const runoutStates = Array.from(
     { length: missingCards + 1 },
     createHandState
@@ -143,8 +125,6 @@ export const computeEquity = (
     mode === 'auto' &&
     choose(deck.length, missingCards) * playerCount <= EXACT_EVAL_LIMIT
   ) {
-    // Every runout in lexicographic order, iteratively. Only the cards that
-    // changed are re-added: moving the last index touches one state.
     const deckSize = deck.length;
     const cardIndices = new Int32Array(missingCards);
 
@@ -192,7 +172,6 @@ export const computeEquity = (
     const sampleState = runoutStates[missingCards];
 
     for (let sample = 0; sample < SAMPLES; sample += 1) {
-      // Partial Fisher–Yates: the first `missingCards` slots become the runout.
       for (let slot = 0; slot < missingCards; slot += 1) {
         const pick =
           slot + Math.floor(nextRandom() * (shuffledDeck.length - slot));

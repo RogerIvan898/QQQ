@@ -11,18 +11,17 @@ const SESSIONS_KEY = 'poker:game-sessions';
 const DRAFT_KEY = 'poker:game-session-draft';
 const MAX_SESSIONS = 500;
 
-/** A table sitting in progress; persisted so a closed app still counts it. */
 interface Draft {
   id: string;
   roomId: string;
   startedAt: string;
   lastSeenAt: string;
-  /** All chips brought to the table (initial buy-in; rebuys add to it). */
+
   buyInChips: number | null;
   stackChips: number | null;
   bigBlindChips: number | null;
   hands: number;
-  /** Seated when the current hand started, so it counts towards `hands`. */
+
   inHand: boolean;
 }
 
@@ -44,18 +43,15 @@ const write = (key: string, value: unknown) => {
       window.localStorage.setItem(key, JSON.stringify(value));
     }
   } catch {
-    // Storage full or blocked: history is best-effort until the backend has it.
+    void 0;
   }
 };
 
 const sessionRecorded = createEvent<GameSession>();
 
-// TODO: replace with `GET /history/sessions` once the backend keeps sessions.
-/** Finished table sessions, newest first. */
 export const $sessions = createStore<GameSession[]>(
   read<GameSession[]>(SESSIONS_KEY, [])
 ).on(sessionRecorded, (_, session) =>
-  // Re-read so another tab writing its own list can't drop sessions.
   [
     session,
     ...read<GameSession[]>(SESSIONS_KEY, []).filter(
@@ -68,7 +64,6 @@ $sessions.updates.watch(sessions => write(SESSIONS_KEY, sessions));
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
-/** Chips → TON via the room's big blind (the table only knows chips). */
 const finish = (draft: Draft) => {
   if (draft.hands === 0 || draft.buyInChips === null) {
     return;
@@ -100,7 +95,6 @@ let draft: Draft | null = null;
 
 const save = () => write(DRAFT_KEY, draft);
 
-// A draft left over from a closed tab or crash ends where it was last seen.
 const stale = read<Draft | null>(DRAFT_KEY, null);
 
 if (stale) {
@@ -108,9 +102,8 @@ if (stale) {
   write(DRAFT_KEY, null);
 }
 
-/** Sitting down at a table starts a session (one per table sitting). */
 export const sessionStarted = createEvent<string>();
-/** Leaving the table ends it. */
+
 export const sessionEnded = createEvent();
 
 sessionStarted.watch(roomId => {
@@ -160,8 +153,6 @@ gameModel.incomingEvent.watch(event => {
     return;
   }
 
-  // The first stack we see is the buy-in. Rebuys would add to it here once
-  // the table supports them.
   if (draft.buyInChips === null) {
     const blind =
       event.type === SERVER_EVENTS.HAND_STARTED

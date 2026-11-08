@@ -19,8 +19,6 @@ const createTonConnectManifest = (origin: string) => {
   };
 };
 
-// MSW only runs in dev (see features/mock-server), so its service worker
-// from public/ must not ship with the production build.
 const stripMockServiceWorkerPlugin = (): Plugin => {
   let outDir = 'dist';
 
@@ -82,7 +80,6 @@ export default defineConfig({
     }),
     lingui({ macroTransform: true }),
     react(),
-    // React Compiler: memoizes components and hooks at build time.
     babel({ presets: [reactCompilerPreset()] }),
     nodePolyfills({
       include: ['buffer'],

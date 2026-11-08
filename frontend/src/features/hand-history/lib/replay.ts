@@ -21,7 +21,6 @@ const STREETS: GameStreet[] = ['PREFLOP', 'FLOP', 'TURN', 'RIVER'];
 const streetForBoard = (size: number): GameStreet =>
   size >= 5 ? 'RIVER' : size >= 4 ? 'TURN' : size >= 3 ? 'FLOP' : 'PREFLOP';
 
-/** Splits a recorded hand into steps a player can scrub through one by one. */
 export const buildTimeline = (hand: HandRecord): ReplayStep[] => {
   const steps: ReplayStep[] = [{ kind: 'start' }];
   let street: GameStreet = 'PREFLOP';
@@ -45,7 +44,6 @@ export const buildTimeline = (hand: HandRecord): ReplayStep[] => {
     steps.push({ kind: 'action', action });
   }
 
-  // Board cards dealt with no betting left (everyone all-in, or checked down).
   dealUpTo(streetForBoard(hand.board.length));
 
   if (hand.winners.length > 0) {
@@ -60,12 +58,12 @@ export interface ReplaySeat {
   name: string;
   isMe: boolean;
   stack: number;
-  /** Chips in front of the player on the current street. */
+
   bet: number;
   folded: boolean;
-  /** Last action on the current street, for the seat badge. */
+
   lastAction: HandAction['action'] | null;
-  /** `null` = face down. */
+
   cards: Card[] | null;
   isActing: boolean;
   isWinner: boolean;
@@ -74,13 +72,12 @@ export interface ReplaySeat {
 export interface ReplayState {
   street: GameStreet;
   board: Card[];
-  /** Chips collected from previous streets. */
+
   pot: number;
   seats: ReplaySeat[];
   step: ReplayStep;
 }
 
-/** The table as it looked after `stepIndex` steps of `timeline`. */
 export const replayState = (
   hand: HandRecord,
   timeline: ReplayStep[],

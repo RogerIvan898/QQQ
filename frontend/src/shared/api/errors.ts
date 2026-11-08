@@ -1,12 +1,5 @@
 import { AxiosError } from 'axios';
 
-/**
- * One error shape for every API call. `code` is the backend's machine code
- * (`{ "error": "short" }` / `{ "code": "..." }`), or a client-side one:
- * - `network`: no response (offline, CORS, server down),
- * - `timeout`: no answer in time,
- * - `bad_response`: not JSON (e.g. a web server's HTML page instead of the API).
- */
 export class ApiError extends Error {
   readonly status: number | null;
   readonly code: string;
@@ -36,7 +29,6 @@ const bodyCode = (data: unknown) => {
       : null;
 };
 
-/** Turns whatever axios threw into an ApiError. */
 export const toApiError = (error: unknown): ApiError => {
   if (isApiError(error)) {
     return error;

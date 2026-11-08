@@ -187,8 +187,6 @@ class PokerSoundEngine {
         this.init();
       }
 
-      // Awaiting resume() would release every queued action at the same
-      // instant once audio unlocks; skip sounds until the context runs.
       if (this.context?.state !== 'running') {
         await this.resume();
         return;

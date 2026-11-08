@@ -32,10 +32,6 @@ interface FlightProps {
   className?: string;
 }
 
-/**
- * Moves on transform only: the outer box animates X and the inner one Y with
- * different easings, which together trace an arc without touching layout.
- */
 const ChipFlight = ({
   amount,
   fromX,
@@ -75,10 +71,6 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
     gameModel.$collectingBets,
     $raisePanelRect,
   ]);
-  // Primitive selections: the layer re-renders only when seating changes,
-  // per-player updates are handled inside <Seat>.
-  // "seat:playerId" pairs; the id keeps a seat remounting when someone else
-  // sits down, as keying by player id did before.
   const seatingKey = useStoreMap(gameModel.$players, players =>
     Object.values(players)
       .map(player => `${player.seat}:${player.id}`)
@@ -127,9 +119,6 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
     onHidePot
   );
 
-  // Lift the viewer's seat just enough to clear the raise panel. Uses the
-  // layout box (offsetTop/offsetHeight), which the lift's `translate` and its
-  // transition don't affect, so repeated measurements stay stable.
   React.useLayoutEffect(() => {
     const element = viewerSeatRef.current;
     const parent = element?.offsetParent;
@@ -139,8 +128,6 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
       return;
     }
 
-    // Only lift when the panel is actually under the seat: on desktop it
-    // sits off to the side and the seat should stay put.
     const seatBox = element.getBoundingClientRect();
     const overlapsHorizontally =
       seatBox.right > raisePanel.left && seatBox.left < raisePanel.right;
@@ -150,7 +137,6 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
       return;
     }
 
-    // The wrapper is centered on its anchor with translate(-50%, -50%).
     const restingBottom =
       parent.getBoundingClientRect().top +
       element.offsetTop +
@@ -166,8 +152,6 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
   return createPortal(
     <div
       className={styles.playersLayer}
-      // Seat elements size themselves from the table, not the viewport: a
-      // wide window with a short table must not get oversized hole cards.
       style={{ '--table-w': `${tableSize.width}px` } as React.CSSProperties}
     >
       {collectFlights?.map(flight => (

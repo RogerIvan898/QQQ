@@ -2,7 +2,6 @@ import React from 'react';
 
 const DURATION_MS = 450;
 
-/** Eases from the previous value to `target` over ~0.45 s. */
 export const useAnimatedNumber = (target: number) => {
   const [value, setValue] = React.useState(target);
   const fromRef = React.useRef(target);

@@ -30,16 +30,14 @@ export const Dialog = ({
 }: React.PropsWithChildren<Props>) => {
   const { t } = useLingui();
   const panelRef = React.useRef<HTMLDivElement | null>(null);
-  // Stay mounted while the exit animation plays after `open` turns false.
+
   const { mounted: rendered, closing } = usePresence(open);
-  // Swipe-down to dismiss, from the grab handle or the header only, so
-  // scrolling the body never drags the sheet.
+
   const swipe = useSwipeToClose(onClose, variant === 'bottom');
   const dragY = swipe.offset;
   const dragHandlers = swipe.handlers;
   const resetSwipe = React.useEffectEvent(() => swipe.reset());
 
-  // Clear a swipe offset once the sheet has fully gone.
   React.useEffect(() => {
     if (!rendered) {
       resetSwipe();

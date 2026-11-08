@@ -25,6 +25,5 @@ sample({
   target: [gameSessionsModel.sessionEnded, gameModel.disconnectGame],
 });
 
-// The wallet bridge connection is not needed during play.
 GamePageGate.open.watch(() => setTonConnectPaused(true));
 GamePageGate.close.watch(() => setTonConnectPaused(false));

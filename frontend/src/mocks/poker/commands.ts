@@ -59,7 +59,6 @@ export const readPlayerAction = (data: unknown): ChosenAction | null => {
     return null;
   }
 
-  // `{ action, amount? }`: no player id, the socket identifies the player.
   const inner = message.payload;
 
   const action = (inner as { action?: unknown }).action;

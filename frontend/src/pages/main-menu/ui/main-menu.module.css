@@ -28,7 +28,6 @@
   overflow: hidden;
 }
 
-/* Filters stay put; only the room list below scrolls (and owns the scrollbar). */
 .stickyHeader {
   flex-shrink: 0;
   background: var(--color-bg-subtle);
@@ -142,7 +141,6 @@
   }
 }
 
-/* Lobby list states: loading, failed (with Retry), empty. */
 .roomsState {
   display: flex;
   flex-direction: column;
@@ -162,19 +160,14 @@
   font-size: 14px;
 }
 
-/* No rows (loading, failed, empty filter): no grid, so no lonely header. */
 .roomGrid:not(:has(article)) {
   display: none;
 }
 
-/* Lobby header row: hidden on phones, where rooms are cards. */
 .roomHead {
   display: none;
 }
 
-/* Desktop: a centred lobby instead of a stretched phone layout. Content is
-   capped at --lobby-width, tabs size to their labels, and rooms are rows in
-   a table with one shared column grid (--room-cols, read by RoomCard too). */
 @media (min-width: 1024px) {
   .contentArea {
     --lobby-width: 1560px;
@@ -231,7 +224,6 @@
   height: 24px;
 }
 
-/* Dev only: entry to the mock all-in equity test table. */
 .devTable {
   display: flex;
   align-items: center;

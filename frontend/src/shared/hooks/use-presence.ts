@@ -1,12 +1,7 @@
 import React from 'react';
 
-/** Matches `--dur-exit` in theme.css. */
 export const EXIT_MS = 160;
 
-/**
- * Keeps an element mounted while its exit animation plays. `mounted` says
- * whether to render it; `closing` is true during the exit, for an exit class.
- */
 export const usePresence = (open: boolean, exitMs = EXIT_MS) => {
   const [mounted, setMounted] = React.useState(open);
   const [closing, setClosing] = React.useState(false);

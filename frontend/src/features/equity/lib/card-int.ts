@@ -17,6 +17,5 @@ const RANKS = [
 ];
 const SUITS: Card['suit'][] = ['clubs', 'diamonds', 'hearts', 'spades'];
 
-/** Evaluator card id: rank * 4 + suit (see evaluator.ts). */
 export const cardToInt = (card: Card) =>
   RANKS.indexOf(card.rank) * 4 + SUITS.indexOf(card.suit);

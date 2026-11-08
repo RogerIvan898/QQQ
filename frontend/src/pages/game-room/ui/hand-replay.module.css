@@ -1,4 +1,4 @@
-/* Same backdrop as the live table, laid over it. */
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -23,7 +23,6 @@
     );
 }
 
-/* Paused for the player's turn at the live table. */
 .overlay[hidden] {
   display: none;
 }
@@ -40,8 +39,7 @@
 }
 
 .backBtn {
-  /* The very same button as "← Tables" on the live table: same place,
-     same look, so the top of the screen doesn't change under the thumb. */
+
   composes: backBtn from './game-room.module.css';
   font-family: inherit;
   cursor: pointer;
@@ -53,9 +51,6 @@
   color: var(--color-text);
 }
 
-/* The table area: whatever is left between the header and the controls.
-   The bottom seat hangs below the felt, so the table keeps room for it
-   instead of running into the panel. */
 .stage {
   --table-reserve: 200px;
 
@@ -95,7 +90,6 @@
   display: block;
 }
 
-/* Custom range: fixed thumb size, so the ticks line up with every step. */
 .scrubberTrack {
   --thumb: 16px;
   position: relative;
@@ -164,7 +158,6 @@
     color-mix(in srgb, var(--color-primary) 45%, transparent);
 }
 
-/* Hover tooltip with the step under the pointer. */
 .tooltip {
   position: absolute;
   bottom: calc(100% + 6px);
@@ -196,8 +189,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Ticks sit under the track; the thumb centre travels between the two
-   half-thumb insets, so the ticks use the same insets. */
 .ticks {
   position: absolute;
   left: calc(var(--thumb) / 2);

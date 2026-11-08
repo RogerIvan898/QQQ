@@ -1,6 +1,5 @@
 .root {
-  /* Page colour the edge shade fades from; override where the row sits on
-     another background. */
+
   --chip-group-bg: var(--color-bg-subtle);
 
   position: relative;
@@ -69,7 +68,6 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Just a chevron on a shade: the hidden chips dim out under it. */
 .arrowLeft {
   left: 0;
   justify-content: flex-start;

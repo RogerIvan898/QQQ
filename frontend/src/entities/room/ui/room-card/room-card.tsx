@@ -25,7 +25,7 @@ const CURRENCY = 'TON';
 interface Props {
   room: RoomCardInfo;
   action: ReactNode;
-  /** TON the player is missing for the minimum buy-in; 0 when affordable. */
+
   shortfall?: number;
 }
 

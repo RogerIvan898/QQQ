@@ -5,12 +5,9 @@ import { appStarted } from 'shared/config/init';
 
 import { authApi } from '../api';
 
-/** The mock server's player id (dev only); real ids come from /auth/login. */
 export const VIEWER_ID = '100';
 
 const loginFx = createEffect(async () => {
-  // Outside Telegram (plain browser) there is no initData: the server
-  // decides (rejects, or a dev backend may accept it).
   const initData = window.Telegram?.WebApp?.initData ?? '';
   const session = await authApi.login(initData);
 
@@ -19,7 +16,6 @@ const loginFx = createEffect(async () => {
   return session.user;
 });
 
-/** The signed-in player's id; null until login (or if it failed). */
 export const $currentUserId = createStore<string | null>(null)
   .on(loginFx.doneData, (_, user) => user.id)
   .reset(loginFx.fail);
@@ -30,7 +26,6 @@ export const $authStatus = createStore<'pending' | 'ready' | 'failed'>(
   .on(loginFx.done, () => 'ready')
   .on(loginFx.fail, () => 'failed');
 
-/** Resolves once the first login attempt has finished, either way. */
 export const waitForAuth = () =>
   new Promise<void>(resolve => {
     if ($authStatus.getState() !== 'pending') {
@@ -51,7 +46,6 @@ sample({
   target: loginFx,
 });
 
-// A refresh failed (session gone): sign in again with Telegram's initData.
 tokenManager.onSessionExpired(() => {
   void loginFx();
 });
@@ -66,13 +60,8 @@ const readNickname = () => {
   }
 };
 
-/** Set by the player next to their name in the menu. */
 export const saveNickname = createEvent<string>();
 
-/**
- * Local for now (no server yet): kept in this browser. Null until the player
- * picks one, then the Telegram name is replaced everywhere.
- */
 export const $nickname = createStore<string | null>(readNickname()).on(
   saveNickname,
   (_, nickname) => nickname
@@ -84,6 +73,6 @@ $nickname.updates.watch(nickname => {
       localStorage.setItem(NICKNAME_KEY, nickname);
     }
   } catch {
-    // Private mode: keep it for this session only.
+    void 0;
   }
 });
