@@ -461,6 +461,9 @@ msgstr "Resume replay"
 msgid "Retry"
 msgstr "Retry"
 
+msgid "Return to game"
+msgstr "Return to game"
+
 msgid "River"
 msgstr "River"
 
@@ -508,6 +511,9 @@ msgstr "Show QR code"
 
 msgid "Showdown"
 msgstr "Showdown"
+
+msgid "Sitting out"
+msgstr "Sitting out"
 
 msgid "Small blind"
 msgstr "Small blind"
@@ -686,6 +692,9 @@ msgstr "Yesterday"
 msgid "You"
 msgstr "You"
 
+msgid "You are sitting out"
+msgstr "You are sitting out"
+
 msgid "You can check for free"
 msgstr "You can check for free"
 
@@ -694,3 +703,9 @@ msgstr "You deposit"
 
 msgid "You folded"
 msgstr "You folded"
+
+msgid "You will be dealt in from the next hand"
+msgstr "You will be dealt in from the next hand"
+
+msgid "Your seat and stack are kept"
+msgstr "Your seat and stack are kept"

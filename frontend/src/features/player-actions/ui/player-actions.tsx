@@ -97,6 +97,8 @@ export const PlayerActions = () => {
           isMyTurn={isMyTurn}
           showPreActions={showPreActions}
           hasFolded={viewer?.status === PlayerStatus.FOLDED}
+          sittingOut={viewer?.status === PlayerStatus.SITTING_OUT}
+          returning={Boolean(viewer?.returning)}
           canFold={allowedActions?.canFold ?? true}
           canCall={allowedActions?.canCall ?? true}
           canRaise={canPutChips}

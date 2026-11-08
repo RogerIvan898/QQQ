@@ -462,6 +462,9 @@ msgstr "Продолжить повтор"
 msgid "Retry"
 msgstr "Повторить"
 
+msgid "Return to game"
+msgstr "Вернуться в игру"
+
 msgid "River"
 msgstr "Ривер"
 
@@ -509,6 +512,9 @@ msgstr "Показать QR-код"
 
 msgid "Showdown"
 msgstr "Вскрытие"
+
+msgid "Sitting out"
+msgstr "На паузе"
 
 msgid "Small blind"
 msgstr "Малый блайнд"
@@ -687,6 +693,9 @@ msgstr "Вчера"
 msgid "You"
 msgstr "Вы"
 
+msgid "You are sitting out"
+msgstr "Вы на паузе"
+
 msgid "You can check for free"
 msgstr "Можно прочекать бесплатно"
 
@@ -695,3 +704,9 @@ msgstr "Вы пополняете"
 
 msgid "You folded"
 msgstr "Вы сбросили карты"
+
+msgid "You will be dealt in from the next hand"
+msgstr "Вернётесь со следующей раздачи"
+
+msgid "Your seat and stack are kept"
+msgstr "Место и стек сохранены"

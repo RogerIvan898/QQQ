@@ -16,6 +16,7 @@ const KIND_CLASS: Record<SeatActionBadge, string> = {
   [SeatBadgeKind.ALL_IN]: styles.allIn,
   [SeatBadgeKind.SB]: styles.blind,
   [SeatBadgeKind.BB]: styles.blind,
+  [SeatBadgeKind.SIT_OUT]: styles.sitOut,
   [SeatBadgeKind.WIN]: styles.win,
 };
 
@@ -37,6 +38,7 @@ export const ActionBadge = ({ action, amount }: Props) => {
     [SeatBadgeKind.ALL_IN]: t`All in`,
     [SeatBadgeKind.SB]: t`SB`,
     [SeatBadgeKind.BB]: t`BB`,
+    [SeatBadgeKind.SIT_OUT]: t`Sitting out`,
     [SeatBadgeKind.WIN]: t`Winner`,
   };
 

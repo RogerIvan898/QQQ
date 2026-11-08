@@ -9,6 +9,7 @@ export const fold = createEvent();
 export const call = createEvent();
 export const check = createEvent();
 export const raise = createEvent<RaisePayload>();
+export const sitIn = createEvent();
 
 const action = (type: string, amount?: number) => ({
   action: type,
@@ -33,5 +34,11 @@ sample({
     type: CLIENT_COMMANDS.PLAYER_ACTION,
     payload,
   }),
+  target: gameModel.sendClientCommand,
+});
+
+sample({
+  clock: sitIn,
+  fn: () => ({ type: CLIENT_COMMANDS.SIT_IN, payload: {} }),
   target: gameModel.sendClientCommand,
 });

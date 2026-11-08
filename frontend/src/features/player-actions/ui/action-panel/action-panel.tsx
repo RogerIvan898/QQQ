@@ -1,11 +1,14 @@
 import { BaseActions } from '../base-actions';
 import { FoldedNotice } from '../folded-notice';
 import { PreActions } from '../pre-actions';
+import { SitOutNotice } from '../sit-out-notice';
 
 interface Props {
   isMyTurn: boolean;
   showPreActions: boolean;
   hasFolded: boolean;
+  sittingOut: boolean;
+  returning: boolean;
   canFold: boolean;
   canCall: boolean;
   canRaise: boolean;
@@ -18,6 +21,8 @@ export const ActionPanel = ({
   isMyTurn,
   showPreActions,
   hasFolded,
+  sittingOut,
+  returning,
   canFold,
   canCall,
   canRaise,
@@ -36,6 +41,10 @@ export const ActionPanel = ({
         onRaiseClick={onRaiseClick}
       />
     );
+  }
+
+  if (sittingOut) {
+    return <SitOutNotice returning={returning} />;
   }
 
   if (hasFolded) {

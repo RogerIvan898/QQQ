@@ -3,7 +3,7 @@ export {
   setRaisePanelRect,
   type RaisePanelRect,
 } from './action-panel';
-export { call, check, fold, raise } from './actions';
+export { call, check, fold, raise, sitIn } from './actions';
 export { potRaiseTo } from './pot-raise';
 export { $preAction, setPreAction } from './pre-action';
 export { canPreAct, chipsToCall } from './pre-action-rules';

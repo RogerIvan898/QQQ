@@ -74,3 +74,6 @@ export const readPlayerAction = (data: unknown): ChosenAction | null => {
     amount: Number.isFinite(amount) ? amount : undefined,
   };
 };
+
+export const readSitIn = (data: unknown) =>
+  parseMessage(data)?.type === CLIENT_COMMANDS.SIT_IN;

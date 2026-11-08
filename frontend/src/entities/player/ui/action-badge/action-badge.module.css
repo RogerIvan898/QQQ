@@ -97,6 +97,16 @@
   --action-color: var(--action-blind);
 }
 
+.sitOut {
+  background: color-mix(
+    in srgb,
+    var(--color-text) 8%,
+    var(--color-bg-elevated)
+  );
+  border-color: color-mix(in srgb, var(--color-text) 14%, transparent);
+  color: var(--color-text-secondary);
+}
+
 .win {
   background: linear-gradient(180deg, #ffd96a, var(--color-warning));
   border-color: color-mix(in srgb, #fff 45%, var(--color-warning));

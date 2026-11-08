@@ -39,6 +39,10 @@ export const resolveSeatActionBadge = (
   status: PlayerStatusType,
   blindRole?: BlindRole | null
 ): SeatActionBadge | null => {
+  if (status === PlayerStatus.SITTING_OUT) {
+    return SeatBadgeKind.SIT_OUT;
+  }
+
   if (status === PlayerStatus.ALL_IN) {
     return SeatBadgeKind.ALL_IN;
   }
@@ -63,7 +67,9 @@ export const resolveSeatActionBadge = (
 };
 
 export const isStatusBadge = (badge: SeatActionBadge) =>
-  badge === SeatBadgeKind.ALL_IN || badge === PlayerAction.FOLD;
+  badge === SeatBadgeKind.ALL_IN ||
+  badge === PlayerAction.FOLD ||
+  badge === SeatBadgeKind.SIT_OUT;
 
 export const isBlindBadge = (badge: SeatActionBadge) =>
   badge === SeatBadgeKind.SB || badge === SeatBadgeKind.BB;

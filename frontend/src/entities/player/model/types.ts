@@ -28,4 +28,6 @@ export interface Player {
   committed: number;
   lastAction: PlayerActionType | null;
   lastActionAmount: number | null;
+
+  returning?: boolean;
 }

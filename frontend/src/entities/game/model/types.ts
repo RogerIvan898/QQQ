@@ -99,6 +99,15 @@ export interface PlayerInfo {
   status: PlayerStatusType;
 }
 
+export interface PlayerStatusEvent {
+  type: typeof SERVER_EVENTS.PLAYER_STATUS;
+  payload: {
+    seat: number;
+    status: PlayerStatusType;
+    returning?: boolean;
+  };
+}
+
 export interface PlayerSeatedEvent {
   type: typeof SERVER_EVENTS.PLAYER_SEATED;
   payload: {
@@ -158,7 +167,8 @@ export type ServerGameEvent =
   | BoardDealtEvent
   | ShowdownEvent
   | HandCompleteEvent
-  | DebugHolesEvent;
+  | DebugHolesEvent
+  | PlayerStatusEvent;
 
 type ClientCommands = (typeof CLIENT_COMMANDS)[keyof typeof CLIENT_COMMANDS];
 

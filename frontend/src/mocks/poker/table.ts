@@ -10,7 +10,12 @@ import { getMockNickname } from '../profile';
 import type { MockRoomConfig } from '../rooms';
 
 import { chooseBotAction } from './bot-policy';
-import { readPlayerAction, readReveal, type ChosenAction } from './commands';
+import {
+  readPlayerAction,
+  readSitIn,
+  readReveal,
+  type ChosenAction,
+} from './commands';
 import { createShuffledDeck } from './deck';
 import { rankHand } from './rank';
 
@@ -44,6 +49,7 @@ interface Seat {
   folded: boolean;
   allIn: boolean;
   acted: boolean;
+  sittingOut: boolean;
 }
 
 interface MockSocket {
@@ -99,6 +105,12 @@ export class PokerTable {
       ),
     ];
     this.button = this.seats.length - 1;
+
+    const away = this.seats[this.seats.length - 1];
+
+    if (!this.allInScenario && this.seats.length > 3 && away) {
+      away.sittingOut = true;
+    }
   }
 
   start() {
@@ -141,6 +153,7 @@ export class PokerTable {
       folded: false,
       allIn: false,
       acted: false,
+      sittingOut: false,
     };
   }
 
@@ -168,7 +181,7 @@ export class PokerTable {
     }
 
     this.seats.forEach(seat => {
-      const playing = seat.stack > 0;
+      const playing = seat.stack > 0 && !seat.sittingOut;
 
       seat.folded = !playing;
       seat.allIn = false;
@@ -377,6 +390,7 @@ export class PokerTable {
       this.clearHeroTimer();
       this.heroTimer = setTimeout(() => {
         this.heroTimer = null;
+        seat.sittingOut = true;
         this.resolveHero(
           need > 0
             ? { action: PlayerAction.FOLD }
@@ -506,6 +520,24 @@ export class PokerTable {
     if (reveal !== null) {
       this.holesVisible = reveal;
       this.emitHoles();
+      return;
+    }
+
+    if (readSitIn(data)) {
+      const hero = this.seats.find(seat => seat.id === VIEWER_ID);
+
+      if (hero?.sittingOut) {
+        hero.sittingOut = false;
+        this.emit({
+          type: SERVER_EVENTS.PLAYER_STATUS,
+          payload: {
+            seat: hero.seat,
+            status: PlayerStatus.SITTING_OUT,
+            returning: true,
+          },
+        });
+      }
+
       return;
     }
 
