@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { useLingui } from '@lingui/react/macro';
 import { X } from 'lucide-react';
 
+import { usePresence } from 'shared/hooks/use-presence';
 import { useSwipeToClose } from 'shared/hooks/use-swipe-to-close';
 import { cn } from 'shared/utils/cn';
 
@@ -18,9 +19,6 @@ interface Props {
   variant?: 'center' | 'bottom';
 }
 
-/** Must match the exit animations in dialog.module.css. */
-const EXIT_MS = 200;
-
 export const Dialog = ({
   open,
   onClose,
@@ -33,8 +31,7 @@ export const Dialog = ({
   const { t } = useLingui();
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   // Stay mounted while the exit animation plays after `open` turns false.
-  const [rendered, setRendered] = React.useState(open);
-  const [closing, setClosing] = React.useState(false);
+  const { mounted: rendered, closing } = usePresence(open);
   // Swipe-down to dismiss, from the grab handle or the header only, so
   // scrolling the body never drags the sheet.
   const swipe = useSwipeToClose(onClose, variant === 'bottom');
@@ -42,28 +39,12 @@ export const Dialog = ({
   const dragHandlers = swipe.handlers;
   const resetSwipe = React.useEffectEvent(() => swipe.reset());
 
-  if (open && !rendered) {
-    setRendered(true);
-    setClosing(false);
-  }
-
-  if (!open && rendered && !closing) {
-    setClosing(true);
-  }
-
+  // Clear a swipe offset once the sheet has fully gone.
   React.useEffect(() => {
-    if (!closing) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setRendered(false);
-      setClosing(false);
+    if (!rendered) {
       resetSwipe();
-    }, EXIT_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [closing]);
+    }
+  }, [rendered]);
 
   const close = React.useEffectEvent(onClose);
 

@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { useAnimatedNumber } from 'shared/hooks/use-animated-number';
 import { useChipFormatter } from 'shared/lib/display-settings';
 import { Logo } from 'shared/ui/logo';
 import { cn } from 'shared/utils/cn';
@@ -39,6 +40,9 @@ export const StackBadge = ({
   const isHoldingWin = Boolean(winId && winAmount && winId !== settledWinId);
   const displayAmount =
     isHoldingWin && winAmount ? Math.max(0, amount - winAmount) : amount;
+  const counted = useAnimatedNumber(displayAmount);
+  // Winnings count up once the pot lands; bets drop the stack at once (min).
+  const shownAmount = Math.min(displayAmount, Math.round(counted * 100) / 100);
 
   React.useEffect(() => {
     if (!isHoldingWin || !winId) {
@@ -73,7 +77,7 @@ export const StackBadge = ({
           <span className={styles.name}>{name}</span>
           <div className={styles.stackRow}>
             <span className={styles.stackAmount}>
-              {formatChips(displayAmount)}
+              {formatChips(shownAmount)}
             </span>
             <Logo size={16} className={styles.stackLogo} />
           </div>

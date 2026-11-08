@@ -62,7 +62,17 @@ const Filters = ({ active, onChange }: FiltersProps) => {
 
   return (
     <div className={styles.tabsContainer}>
-      <div className={styles.tabsScroll}>
+      <div
+        className={styles.tabsScroll}
+        style={
+          {
+            '--tab-index': Math.max(0, ROOM_FILTERS.indexOf(active)),
+            '--tab-count': ROOM_FILTERS.length,
+          } as React.CSSProperties
+        }
+      >
+        {/* One underline that slides between the equal-width tabs. */}
+        <span className={styles.tabIndicator} aria-hidden="true" />
         {ROOM_FILTERS.map(filter => {
           const Icon = filter === 'all' ? null : FILTER_ICONS[filter];
 

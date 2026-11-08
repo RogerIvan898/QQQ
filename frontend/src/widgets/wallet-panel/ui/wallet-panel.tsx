@@ -7,6 +7,7 @@ import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react';
 import { walletModel } from 'entities/wallet';
 import { useDismiss } from 'shared/hooks/use-dismiss';
 import { useMediaQuery } from 'shared/hooks/use-media-query';
+import { usePresence } from 'shared/hooks/use-presence';
 import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 import { Dialog } from 'shared/ui/dialog';
 import { Logo } from 'shared/ui/logo';
@@ -123,6 +124,7 @@ export const WalletPanel = ({
 }: Props) => {
   const { t } = useLingui();
   const isMobile = useMediaQuery(MOBILE_QUERY);
+  const presence = usePresence(open && !isMobile);
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const [items, loading, reset] = useUnit([
     walletModel.$transactions,
@@ -155,22 +157,29 @@ export const WalletPanel = ({
     onDismiss: onClose,
   });
 
-  if (!open) {
-    return null;
-  }
-
+  // Phones: the bottom-sheet Dialog plays its own enter and exit.
   if (isMobile) {
     return (
-      <Dialog open variant="bottom" onClose={onClose} title={t`My Wallet`}>
+      <Dialog
+        open={open}
+        variant="bottom"
+        onClose={onClose}
+        title={t`My Wallet`}
+      >
         <WalletContent onDeposit={onDeposit} onWithdraw={onWithdraw} />
       </Dialog>
     );
   }
 
+  // Desktop popover: stays mounted for its short exit animation.
+  if (!presence.mounted) {
+    return null;
+  }
+
   return (
     <div
       ref={panelRef}
-      className={styles.popover}
+      className={cn(styles.popover, presence.closing && styles.popoverClosing)}
       role="dialog"
       aria-label={t`My Wallet`}
     >

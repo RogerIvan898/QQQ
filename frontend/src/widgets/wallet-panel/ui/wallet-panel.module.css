@@ -16,8 +16,21 @@
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-lg);
   box-shadow: 0 16px 40px var(--color-shadow);
-  animation: popIn 0.16s ease-out;
+  animation: popIn var(--dur-fast) var(--ease-out);
   overflow: hidden;
+  transform-origin: top right;
+}
+
+.popoverClosing {
+  animation: popOut var(--dur-exit) var(--ease-in) forwards;
+  pointer-events: none;
+}
+
+@keyframes popOut {
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
 }
 
 @keyframes popIn {

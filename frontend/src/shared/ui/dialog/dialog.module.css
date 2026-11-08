@@ -17,11 +17,11 @@
   /* Layering: action panel (900) < our dialogs < TonConnect modal (1000),
      so dialogs can't be clicked through and the wallet modal opens on top. */
   z-index: 950;
-  animation: overlayIn 0.2s ease-out;
+  animation: overlayIn var(--dur-base) var(--ease-out);
 }
 
 .overlayClosing {
-  animation: overlayOut 0.2s ease-in forwards;
+  animation: overlayOut var(--dur-exit) var(--ease-in) forwards;
 }
 
 .panel {
@@ -51,11 +51,11 @@
   color: var(--color-text);
   outline: none;
   overflow: hidden;
-  animation: modalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalIn var(--dur-base) var(--ease-out);
 }
 
 .panelClosing {
-  animation: modalOut 0.2s ease-in forwards;
+  animation: modalOut var(--dur-exit) var(--ease-in) forwards;
 }
 
 /* variant: bottom — только на мобильном */
@@ -79,12 +79,12 @@
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, var(--color-text) 8%, transparent),
       0 -12px 40px rgba(0, 0, 0, 0.45);
-    animation: sheetSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: sheetSlideUp var(--dur-slow) var(--ease-out);
+    transition: transform var(--dur-base) var(--ease-out);
   }
 
   .bottom.panelClosing {
-    animation: sheetSlideDown 0.2s ease-in forwards;
+    animation: sheetSlideDown var(--dur-exit) var(--ease-in) forwards;
   }
 
   /* Follow the finger 1:1 while dragging; ease back only on release. */

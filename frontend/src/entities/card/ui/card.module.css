@@ -110,8 +110,6 @@
 }
 
 .card {
-  --ease-spring: cubic-bezier(0.22, 1.2, 0.36, 1);
-  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 }
 

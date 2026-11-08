@@ -7,6 +7,7 @@ import { ChevronRight, Spade, X } from 'lucide-react';
 import { MiniCard } from 'entities/card';
 import { useDismiss } from 'shared/hooks/use-dismiss';
 import { useMediaQuery } from 'shared/hooks/use-media-query';
+import { usePresence } from 'shared/hooks/use-presence';
 import { useSwipeToClose } from 'shared/hooks/use-swipe-to-close';
 import { cn } from 'shared/utils/cn';
 
@@ -43,13 +44,16 @@ export const HandHistorySheet = ({ open, onClose, onSelect }: Props) => {
   const swipe = useSwipeToClose(onClose, isSheet);
   const resetSwipe = React.useEffectEvent(() => swipe.reset());
 
+  const presence = usePresence(open);
+
   // The sheet stays mounted while closed, so a swipe-close would leave its
-  // drag offset behind and the next open would start pushed down.
+  // drag offset behind and the next open would start pushed down. Cleared
+  // once the exit animation is over, so the slide-out starts from the finger.
   React.useEffect(() => {
-    if (!open) {
+    if (!presence.mounted) {
       resetSwipe();
     }
-  }, [open]);
+  }, [presence.mounted]);
   const time = new Intl.DateTimeFormat(i18n.locale, {
     hour: '2-digit',
     minute: '2-digit',
@@ -62,14 +66,18 @@ export const HandHistorySheet = ({ open, onClose, onSelect }: Props) => {
     onDismiss: onClose,
   });
 
-  if (!open) {
+  if (!presence.mounted) {
     return null;
   }
 
   return (
     <section
       ref={panelRef}
-      className={cn(styles.panel, swipe.dragging && styles.dragging)}
+      className={cn(
+        styles.panel,
+        swipe.dragging && styles.dragging,
+        presence.closing && styles.closing
+      )}
       style={
         swipe.dragging
           ? { transform: `translateY(${swipe.offset}px)` }
