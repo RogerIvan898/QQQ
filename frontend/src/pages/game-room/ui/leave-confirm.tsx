@@ -1,5 +1,5 @@
 import { useLingui } from '@lingui/react/macro';
-import { LogOut } from 'lucide-react';
+import { DoorOpen } from 'lucide-react';
 
 import { Dialog } from 'shared/ui/dialog';
 
@@ -18,13 +18,15 @@ export const LeaveConfirm = ({ open, onStay, onLeave }: Props) => {
     <Dialog
       open={open}
       onClose={onStay}
-      variant="bottom"
       title={t`Leave table?`}
+      hideHeader
+      className={styles.panel}
     >
       <div className={styles.body}>
         <span className={styles.icon} aria-hidden="true">
-          <LogOut size={22} />
+          <DoorOpen size={26} strokeWidth={2} />
         </span>
+        <h2 className={styles.title}>{t`Leave table?`}</h2>
         <p className={styles.text}>
           {t`If you are in a hand, your cards will be folded.`}
         </p>
@@ -33,7 +35,7 @@ export const LeaveConfirm = ({ open, onStay, onLeave }: Props) => {
             {t`Stay`}
           </button>
           <button type="button" className={styles.leave} onClick={onLeave}>
-            {t`Leave`}
+            {t`Leave table`}
           </button>
         </div>
       </div>

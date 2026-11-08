@@ -322,8 +322,8 @@ msgstr "Подключение к столу…"
 msgid "Language"
 msgstr "Язык"
 
-msgid "Leave"
-msgstr "Покинуть"
+msgid "Leave table"
+msgstr "Покинуть стол"
 
 msgid "Leave table?"
 msgstr "Покинуть стол?"
