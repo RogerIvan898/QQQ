@@ -47,6 +47,7 @@ export const ExchangePanel = ({
             label={t`Memo`}
             value={memo}
             badgeText={requiredLabel}
+            info={t`Include this memo when sending the deposit. It is required to credit the funds to your game balance automatically.`}
             hint={t`Without the memo an exchange deposit will not be credited.`}
             onCopy={() => onCopyText?.(memo, 'memo')}
           />

@@ -168,6 +168,9 @@ msgstr "Продолжить"
 msgid "Copied"
 msgstr "Скопировано"
 
+msgid "Copy"
+msgstr "Копировать"
+
 msgid "Copy address"
 msgstr "Скопировать адрес"
 
@@ -309,6 +312,9 @@ msgstr "История"
 
 msgid "If you are in a hand, your cards will be folded."
 msgstr "Если вы в раздаче, ваши карты будут сброшены."
+
+msgid "Include this memo when sending the deposit. It is required to credit the funds to your game balance automatically."
+msgstr "Укажите этот memo при отправке депозита. Он необходим для автоматического зачисления средств на ваш игровой баланс."
 
 msgid "Invalid amount"
 msgstr "Некорректная сумма"
@@ -638,6 +644,9 @@ msgstr "Кошелёк не подключён"
 
 msgid "Web3 wallet"
 msgstr "Web3-кошелёк"
+
+msgid "What is {label}?"
+msgstr "Что такое {label}?"
 
 msgid "Winner"
 msgstr "Победа"
