@@ -72,13 +72,16 @@
 
 .allIn {
   --action-color: var(--action-allin);
-
-  animation:
-    badgeIn 0.24s var(--ease-spring),
-    allInPulse 1.8s ease-out 0.3s infinite;
 }
 
-@keyframes allInPulse {
+.raise,
+.allIn {
+  animation:
+    badgeIn 0.24s var(--ease-spring),
+    actionPulse 1.8s ease-out 0.3s infinite;
+}
+
+@keyframes actionPulse {
   0% {
     box-shadow:
       0 3px 10px var(--color-shadow),
@@ -117,6 +120,7 @@
 @media (prefers-reduced-motion: reduce) {
   .win,
   .badge,
+  .raise,
   .allIn {
     animation: none;
   }
