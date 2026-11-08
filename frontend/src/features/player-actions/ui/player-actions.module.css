@@ -1,7 +1,9 @@
 .actionContainer {
+  /* Same 16px screen inset as the other game-screen controls (back,
+     history, settings), instead of touching the right edge. */
   position: fixed;
-  right: 0;
-  bottom: calc(1rem + var(--tg-safe-area-bottom));
+  right: calc(16px + var(--tg-safe-area-right));
+  bottom: calc(16px + var(--tg-safe-area-bottom));
   z-index: 900;
   display: flex;
   gap: 1rem;
@@ -9,7 +11,7 @@
   height: auto;
   background: var(--color-overlay);
   border-radius: var(--radius-md);
-  width: min(460px, calc(100vw - 2rem));
+  width: min(460px, calc(100vw - 32px));
   min-width: 300px;
   backdrop-filter: blur(10px);
   border: 1px solid var(--color-border);

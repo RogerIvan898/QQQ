@@ -97,6 +97,15 @@ const PlayerView = ({
 
   // Winner: lit up (badge + gold frame) before the pot flies to them.
   const winning = useWinFlash(winId, winAmount);
+  // Once a seat has won this hand, its old action badge (ALL IN, CALL…) must
+  // not come back when the gold Winner badge fades; the next hand resets it.
+  const [wonHand, setWonHand] = React.useState<number | null>(null);
+
+  if (winning && wonHand !== handNumber) {
+    setWonHand(handNumber);
+  }
+
+  const wonThisHand = wonHand === handNumber;
 
   const { showTimer, usingBank, phaseDurationMs } = useTurnTimer({
     isTurn: turn,
@@ -159,7 +168,7 @@ const PlayerView = ({
         <div className={styles.stackArea}>
           {winning ? (
             <ActionBadge action={SeatBadgeKind.WIN} />
-          ) : seatActionBadge && !collecting ? (
+          ) : seatActionBadge && !collecting && !wonThisHand ? (
             <ActionBadge
               action={seatActionBadge}
               amount={
