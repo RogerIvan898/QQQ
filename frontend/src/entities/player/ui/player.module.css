@@ -44,7 +44,7 @@
 }
 
 .dealerWrap {
-  --dealer-distance: clamp(112px, calc(var(--table-w, 900px) * 0.14), 170px);
+  --dealer-distance: clamp(100px, calc(var(--table-w, 900px) * 0.115), 145px);
 
   position: absolute;
   top: 50%;
