@@ -25,6 +25,7 @@ export const ExchangePanel = ({
   const { t } = useLingui();
 
   const requiredLabel = t`Required`;
+  const memoInfo = t`When you send TON from an exchange, paste this memo into the “Memo” or “Comment” field. It tells us the deposit is yours, so it lands on your game balance automatically.`;
   const [showQr, setShowQr] = useState(false);
 
   return (
@@ -47,7 +48,7 @@ export const ExchangePanel = ({
             label={t`Memo`}
             value={memo}
             badgeText={requiredLabel}
-            info={t`Include this memo when sending the deposit. It is required to credit the funds to your game balance automatically.`}
+            info={memoInfo}
             hint={t`Without the memo an exchange deposit will not be credited.`}
             onCopy={() => onCopyText?.(memo, 'memo')}
           />

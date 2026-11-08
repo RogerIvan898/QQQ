@@ -312,9 +312,6 @@ msgstr "History"
 msgid "If you are in a hand, your cards will be folded."
 msgstr "If you are in a hand, your cards will be folded."
 
-msgid "Include this memo when sending the deposit. It is required to credit the funds to your game balance automatically."
-msgstr "Include this memo when sending the deposit. It is required to credit the funds to your game balance automatically."
-
 msgid "Invalid amount"
 msgstr "Invalid amount"
 
@@ -646,6 +643,9 @@ msgstr "Web3 wallet"
 
 msgid "What is {label}?"
 msgstr "What is {label}?"
+
+msgid "When you send TON from an exchange, paste this memo into the “Memo” or “Comment” field. It tells us the deposit is yours, so it lands on your game balance automatically."
+msgstr "When you send TON from an exchange, paste this memo into the “Memo” or “Comment” field. It tells us the deposit is yours, so it lands on your game balance automatically."
 
 msgid "Winner"
 msgstr "Winner"

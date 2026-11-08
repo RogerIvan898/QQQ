@@ -313,9 +313,6 @@ msgstr "История"
 msgid "If you are in a hand, your cards will be folded."
 msgstr "Если вы в раздаче, ваши карты будут сброшены."
 
-msgid "Include this memo when sending the deposit. It is required to credit the funds to your game balance automatically."
-msgstr "Укажите этот memo при отправке депозита. Он необходим для автоматического зачисления средств на ваш игровой баланс."
-
 msgid "Invalid amount"
 msgstr "Некорректная сумма"
 
@@ -647,6 +644,9 @@ msgstr "Web3-кошелёк"
 
 msgid "What is {label}?"
 msgstr "Что такое {label}?"
+
+msgid "When you send TON from an exchange, paste this memo into the “Memo” or “Comment” field. It tells us the deposit is yours, so it lands on your game balance automatically."
+msgstr "При отправке TON с биржи вставьте этот memo в поле «Memo» или «Комментарий». По нему мы узнаём, что депозит ваш, и сразу зачисляем его на игровой баланс."
 
 msgid "Winner"
 msgstr "Победа"
