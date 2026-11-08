@@ -30,7 +30,13 @@ const DepositLoading = ({ onClose, failed, onRetry }: LoadingProps) => {
   const { t } = useLingui();
 
   return (
-    <Dialog open variant="bottom" title={t`Deposit TON`} onClose={onClose}>
+    <Dialog
+      open
+      variant="bottom"
+      title={t`Deposit TON`}
+      titleAddon={<span>1/2</span>}
+      onClose={onClose}
+    >
       {failed ? (
         <div className={styles.state} role="alert">
           <span>{t`Couldn't load your deposit address`}</span>

@@ -166,6 +166,7 @@ export const MenuPage = () => {
   React.useEffect(() => {
     const prefetch = () => {
       prefetchWalletDialogs();
+      walletModel.depositAddressRequested();
 
       router
         .loadRouteChunk(router.routesById['/game/$roomId'])
