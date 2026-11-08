@@ -14,15 +14,21 @@
   padding: 7px 12px 8px;
   border-radius: var(--radius-sm);
   background: var(--color-bg-elevated);
-  border: 1.5px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  --frame-border: 1.5px;
+
+  border: var(--frame-border) solid
+    color-mix(in srgb, var(--color-primary) 40%, transparent);
   box-shadow: 0 4px 14px var(--color-shadow);
   pointer-events: none;
-  overflow: hidden;
+  /* The border fades out under the turn timer and back after it. */
+  transition: border-color 0.3s ease;
 }
 
 /* The viewer's seat: solid primary frame, tinted fill and a soft glow. */
 .frameHero {
-  border: 2px solid var(--color-primary);
+  --frame-border: 2px;
+
+  border: var(--frame-border) solid var(--color-primary);
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--color-primary) 26%, var(--color-bg-elevated)) 0%,
@@ -40,7 +46,9 @@
 /* Winner: a gold frame and fill that light up before the pot flies over,
    breathe while it lands and the stack counts up, then the seat calms down. */
 .frameWin {
-  border: 2px solid var(--color-warning);
+  --frame-border: 2px;
+
+  border: var(--frame-border) solid var(--color-warning);
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--color-warning) 26%, var(--color-bg-elevated)) 0%,
@@ -90,10 +98,12 @@
   --turn-color: var(--color-info);
   --turn-arc: calc(var(--turn-left) * 360deg);
 
+  /* Exactly where the frame's border is, at the same thickness, so the
+     border seems to become the timer rather than being swapped for it. */
   position: absolute;
-  inset: 0;
+  inset: calc(var(--frame-border) * -1);
   z-index: 3;
-  padding: 2.5px;
+  padding: var(--frame-border);
   border-radius: inherit;
   /* Drains clockwise: the remaining arc ends at 12 o'clock and its moving
      edge (brightest) travels round to meet it; the spent part is a faint
@@ -114,6 +124,26 @@
   animation-name: turnDrain;
   animation-timing-function: linear;
   animation-fill-mode: forwards;
+  transition: opacity 0.25s ease-in;
+}
+
+/* First phase of a turn: fades in over the border instead of popping. */
+.turnBorderEnter {
+  animation-name: turnDrain, turnFadeIn;
+  animation-timing-function: linear, ease-out;
+  animation-fill-mode: forwards, none;
+}
+
+/* Turn over: fades out where it stopped while the border comes back. */
+.turnBorderLeave {
+  opacity: 0;
+  animation-play-state: paused;
+}
+
+@keyframes turnFadeIn {
+  from {
+    opacity: 0;
+  }
 }
 
 .turnBorderBank {

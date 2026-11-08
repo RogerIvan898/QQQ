@@ -2,6 +2,7 @@ import React from 'react';
 
 import { POT_FLIGHT_MS, WINNER_REVEAL_MS } from 'shared/config/table-timing';
 import { useAnimatedNumber } from 'shared/hooks/use-animated-number';
+import { usePresence } from 'shared/hooks/use-presence';
 import { useChipFormatter } from 'shared/lib/display-settings';
 import { Logo } from 'shared/ui/logo';
 import { cn } from 'shared/utils/cn';
@@ -14,15 +15,22 @@ const WIN_MS = WINNER_REVEAL_MS + POT_FLIGHT_MS;
 const URGENT_MS = 5000;
 
 /** The badge outline as a draining timer; re-keyed when turn → time bank. */
+/** Ring fade-in at the start of a turn, and fade-out after it. */
+const TURN_FADE_MS = 300;
+const TURN_LEAVE_MS = 250;
+
 const TurnBorder = ({
   durationMs,
   bank,
   final,
+  leaving,
 }: {
   durationMs: number;
   bank: boolean;
   /** Last phase (no time bank after it): only then the end goes red. */
   final: boolean;
+  /** The turn just ended: fade out where it stopped. */
+  leaving: boolean;
 }) => {
   const [urgent, setUrgent] = React.useState(final && durationMs <= URGENT_MS);
 
@@ -43,10 +51,17 @@ const TurnBorder = ({
     <div
       className={cn(
         styles.turnBorder,
+        // The bank picks up where the turn left off: no second fade-in.
+        !bank && styles.turnBorderEnter,
         bank && styles.turnBorderBank,
-        urgent && styles.turnBorderUrgent
+        urgent && styles.turnBorderUrgent,
+        leaving && styles.turnBorderLeave
       )}
-      style={{ animationDuration: `${durationMs}ms` }}
+      style={{
+        animationDuration: bank
+          ? `${durationMs}ms`
+          : `${durationMs}ms, ${TURN_FADE_MS}ms`,
+      }}
       aria-hidden
     />
   );
@@ -85,6 +100,8 @@ export const StackBadge = ({
   hero = false,
 }: Props) => {
   const formatChips = useChipFormatter();
+  // Keeps the timer ring for its fade-out once the turn is over.
+  const turnPresence = usePresence(turnActive, TURN_LEAVE_MS);
   const [settledWinId, setSettledWinId] = React.useState<number | null>(null);
   const isHoldingWin = Boolean(winId && winAmount && winId !== settledWinId);
   const displayAmount =
@@ -115,12 +132,13 @@ export const StackBadge = ({
           sitOut && styles.frameSitOut
         )}
       >
-        {turnActive && (
+        {turnPresence.mounted && (
           <TurnBorder
             key={usingBank ? 'bank' : 'turn'}
             durationMs={turnDurationMs}
             bank={usingBank}
             final={usingBank || !hasTimeBank}
+            leaving={turnPresence.closing}
           />
         )}
 
