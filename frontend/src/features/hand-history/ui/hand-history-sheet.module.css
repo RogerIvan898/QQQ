@@ -73,7 +73,9 @@
     padding-bottom: var(--tg-safe-area-bottom);
     border-bottom: none;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    animation-name: sheetIn;
+    /* Same slide as the other bottom sheets: long enough to read as motion,
+       not a jump from the bottom edge. */
+    animation: sheetIn 0.32s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
