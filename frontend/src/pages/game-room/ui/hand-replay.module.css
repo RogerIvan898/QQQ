@@ -62,6 +62,18 @@
   color: var(--color-text);
 }
 
+/* The table area: whatever is left between the header and the controls.
+   The bottom seat hangs below the felt, so the table keeps room for it
+   instead of running into the panel. */
+.stage {
+  --table-reserve: 200px;
+
+  display: flex;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
 .panel {
   display: flex;
   flex-direction: column;

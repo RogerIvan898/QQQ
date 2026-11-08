@@ -77,11 +77,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .turnGlow::after {
-    animation: none;
-    opacity: 0.5;
-  }
-
   .frameWin {
     animation: none;
   }
@@ -113,11 +108,15 @@
   /* Drains clockwise: the remaining arc ends at 12 o'clock and its moving
      edge (brightest) travels round to meet it; the spent part is a faint
      track. */
+  /* A short bright spark rides the moving edge, so the clock feels alive
+     without anything blinking. */
+  --turn-edge: calc(360deg - var(--turn-arc));
+
   background: conic-gradient(
-    color-mix(in srgb, var(--color-text) 10%, transparent) 0deg
-      calc(360deg - var(--turn-arc)),
-    var(--turn-color) calc(360deg - var(--turn-arc)),
-    color-mix(in srgb, var(--turn-color) 35%, transparent) 360deg
+    color-mix(in srgb, var(--color-text) 10%, transparent) 0deg var(--turn-edge),
+    color-mix(in srgb, #fff 75%, var(--turn-color)) var(--turn-edge),
+    var(--turn-color) calc(var(--turn-edge) + 14deg),
+    color-mix(in srgb, var(--turn-color) 45%, transparent) 360deg
   );
   /* Keep only the ring: the content box is cut out. */
   mask:
@@ -148,42 +147,6 @@
 @keyframes turnFadeIn {
   from {
     opacity: 0;
-  }
-}
-
-/* Breathing halo round the badge during a turn, same colour as the timer.
-   Its opacity animates (cheap), the shadow itself is static. */
-.turnGlow {
-  --turn-color: var(--color-info);
-
-  position: absolute;
-  inset: calc(var(--frame-border) * -1);
-  z-index: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  /* Fades out with the timer when the turn ends (opacity here), while the
-     breathing runs on the pseudo-element so the two never fight. */
-  transition: opacity 0.25s ease-in;
-}
-
-.turnGlow::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: 0 0 14px 1px
-    color-mix(in srgb, var(--turn-color) 65%, transparent);
-  animation: turnBreath 2.2s ease-in-out infinite;
-}
-
-@keyframes turnBreath {
-  0%,
-  100% {
-    opacity: 0.2;
-  }
-
-  50% {
-    opacity: 0.85;
   }
 }
 

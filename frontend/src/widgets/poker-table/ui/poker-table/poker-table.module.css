@@ -14,7 +14,9 @@
   position: relative;
   container-type: size;
   width: min(96vw, 920px);
-  max-height: min(72dvh, 460px);
+  /* --table-reserve: room a host keeps for the seats that stick out past
+     the felt (the replay's control panel sits right under the table). */
+  max-height: min(72dvh, 460px, calc(100% - var(--table-reserve, 0px)));
   aspect-ratio: 2 / 1;
 }
 

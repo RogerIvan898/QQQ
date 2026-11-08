@@ -47,33 +47,24 @@ const TurnBorder = ({
     return () => window.clearTimeout(timer);
   }, [durationMs, final]);
 
-  const phase = cn(
-    bank && styles.turnBorderBank,
-    urgent && styles.turnBorderUrgent,
-    leaving && styles.turnBorderLeave
-  );
-
   return (
-    <>
-      {/* A soft halo in the timer's colour that breathes while it's your go. */}
-      <div className={cn(styles.turnGlow, phase)} aria-hidden />
-      <div
-        className={cn(
-          styles.turnBorder,
-          // The bank picks up where the turn left off: no second fade-in.
-          !bank && styles.turnBorderEnter,
-          bank && styles.turnBorderBank,
-          urgent && styles.turnBorderUrgent,
-          leaving && styles.turnBorderLeave
-        )}
-        style={{
-          animationDuration: bank
-            ? `${durationMs}ms`
-            : `${durationMs}ms, ${TURN_FADE_MS}ms`,
-        }}
-        aria-hidden
-      />
-    </>
+    <div
+      className={cn(
+        styles.turnBorder,
+        // The bank picks up where the turn left off: no second fade-in.
+        !bank && styles.turnBorderEnter,
+        bank && styles.turnBorderBank,
+        urgent && styles.turnBorderUrgent,
+        leaving && styles.turnBorderLeave
+      )}
+      style={{
+        // drain, (fade-in)
+        animationDuration: bank
+          ? `${durationMs}ms`
+          : `${durationMs}ms, ${TURN_FADE_MS}ms`,
+      }}
+      aria-hidden
+    />
   );
 };
 

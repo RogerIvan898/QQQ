@@ -1,12 +1,19 @@
 import { createEvent, createStore } from 'effector';
 
-/**
- * Viewport Y of the open raise panel's top edge, or null when it's closed.
- * The table uses it to lift the viewer's seat above the panel on phones.
- */
-export const setRaisePanelTop = createEvent<number | null>();
+export interface RaisePanelRect {
+  top: number;
+  left: number;
+  right: number;
+}
 
-export const $raisePanelTop = createStore<number | null>(null).on(
-  setRaisePanelTop,
-  (_, top) => top
+/**
+ * Viewport box of the open raise panel, or null when it's closed. The table
+ * lifts the viewer's seat above it, but only when the panel actually covers
+ * the seat (phones), not when it sits off to the side (desktop).
+ */
+export const setRaisePanelRect = createEvent<RaisePanelRect | null>();
+
+export const $raisePanelRect = createStore<RaisePanelRect | null>(null).on(
+  setRaisePanelRect,
+  (_, rect) => rect
 );

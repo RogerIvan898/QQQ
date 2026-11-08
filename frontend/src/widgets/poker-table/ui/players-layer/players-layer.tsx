@@ -5,7 +5,7 @@ import { useStoreMap, useUnit } from 'effector-react';
 
 import { gameModel } from 'entities/game';
 import { sessionModel } from 'entities/session';
-import { $raisePanelTop } from 'features/player-actions';
+import { $raisePanelRect } from 'features/player-actions';
 import { useElementSize } from 'shared/hooks/use-element-size';
 import { useChipFormatter } from 'shared/lib/display-settings';
 import { Logo } from 'shared/ui/logo';
@@ -70,10 +70,10 @@ const ChipFlight = ({
 };
 
 export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
-  const [viewerId, collecting, raisePanelTop] = useUnit([
+  const [viewerId, collecting, raisePanel] = useUnit([
     sessionModel.$currentUserId,
     gameModel.$collectingBets,
-    $raisePanelTop,
+    $raisePanelRect,
   ]);
   // Primitive selections: the layer re-renders only when seating changes,
   // per-player updates are handled inside <Seat>.
@@ -134,7 +134,18 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
     const element = viewerSeatRef.current;
     const parent = element?.offsetParent;
 
-    if (raisePanelTop === null || !element || !parent) {
+    if (raisePanel === null || !element || !parent) {
+      setViewerLift(0);
+      return;
+    }
+
+    // Only lift when the panel is actually under the seat: on desktop it
+    // sits off to the side and the seat should stay put.
+    const seatBox = element.getBoundingClientRect();
+    const overlapsHorizontally =
+      seatBox.right > raisePanel.left && seatBox.left < raisePanel.right;
+
+    if (!overlapsHorizontally) {
       setViewerLift(0);
       return;
     }
@@ -145,8 +156,8 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
       element.offsetTop +
       element.offsetHeight / 2;
 
-    setViewerLift(Math.max(0, Math.round(restingBottom - raisePanelTop + 8)));
-  }, [raisePanelTop, seats]);
+    setViewerLift(Math.max(0, Math.round(restingBottom - raisePanel.top + 8)));
+  }, [raisePanel, seats]);
 
   if (!tableElement || !tableSize || !seats.length) {
     return null;

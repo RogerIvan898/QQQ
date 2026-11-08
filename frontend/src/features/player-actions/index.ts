@@ -1,2 +1,2 @@
 export { PlayerActions } from './ui';
-export { $raisePanelTop } from './model';
+export { $raisePanelRect } from './model';

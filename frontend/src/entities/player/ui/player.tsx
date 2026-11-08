@@ -97,15 +97,22 @@ const PlayerView = ({
 
   // Winner: lit up (badge + gold frame) before the pot flies to them.
   const winning = useWinFlash(winId, winAmount);
-  // Once a seat has won this hand, its old action badge (ALL IN, CALL…) must
+  // The hand each win belongs to, recorded when that win arrives (winId).
+  // Once a seat has won a hand, its old action badge (ALL IN, CALL…) must
   // not come back when the gold Winner badge fades; the next hand resets it.
-  const [wonHand, setWonHand] = React.useState<number | null>(null);
+  const [winHand, setWinHand] = React.useState<{
+    winId: number;
+    hand: number;
+  } | null>(null);
 
-  if (winning && wonHand !== handNumber) {
-    setWonHand(handNumber);
+  if (winId && winAmount && winHand?.winId !== winId) {
+    setWinHand({ winId, hand: handNumber });
   }
 
-  const wonThisHand = wonHand === handNumber;
+  const wonThisHand = winHand !== null && winHand.hand === handNumber;
+  // Badge and gold frame go together, and both stop as soon as the next
+  // hand starts (the flash may outlast the pause between hands).
+  const showWinner = winning && wonThisHand;
 
   const { showTimer, usingBank, phaseDurationMs } = useTurnTimer({
     isTurn: turn,
@@ -166,7 +173,7 @@ const PlayerView = ({
         </div>
 
         <div className={styles.stackArea}>
-          {winning ? (
+          {showWinner ? (
             <ActionBadge action={SeatBadgeKind.WIN} />
           ) : seatActionBadge && !collecting && !wonThisHand ? (
             <ActionBadge
@@ -190,7 +197,7 @@ const PlayerView = ({
             hasTimeBank={timeBankSec > 0}
             winAmount={winAmount}
             winId={winId}
-            winning={winning}
+            winning={showWinner}
             hero={currentPlayer}
           />
 

@@ -2,8 +2,8 @@ import React from 'react';
 
 import { HAND_END_MS } from 'shared/config/table-timing';
 
-/** Lingers a moment after the stack has counted up. */
-const WIN_FLASH_MS = HAND_END_MS + 400;
+/** Until the stack has counted up, i.e. as long as the hand-end pause. */
+const WIN_FLASH_MS = HAND_END_MS;
 
 /**
  * True while a seat is being shown as the winner: from the moment the hand

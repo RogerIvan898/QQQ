@@ -6,7 +6,7 @@ import { gameModel } from 'entities/game';
 import { findPlayerById, PlayerStatus } from 'entities/player';
 import { sessionModel } from 'entities/session';
 
-import { canPreAct, setRaisePanelTop } from '../model';
+import { canPreAct, setRaisePanelRect } from '../model';
 
 import { ActionPanel } from './action-panel';
 import { BetManager } from './bet-manager';
@@ -34,17 +34,21 @@ export const PlayerActions = () => {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const isRaisePanelOpen = isMyTurn && isChangingAmount;
 
-  // Report the open raise panel's top edge so the table can keep the
+  // Report the open raise panel's box so the table can keep the
   // viewer's cards visible above it.
   React.useLayoutEffect(() => {
     const element = containerRef.current;
 
     if (!isRaisePanelOpen || !element) {
-      setRaisePanelTop(null);
+      setRaisePanelRect(null);
       return;
     }
 
-    const update = () => setRaisePanelTop(element.getBoundingClientRect().top);
+    const update = () => {
+      const { top, left, right } = element.getBoundingClientRect();
+
+      setRaisePanelRect({ top, left, right });
+    };
 
     update();
 
@@ -55,7 +59,7 @@ export const PlayerActions = () => {
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', update);
-      setRaisePanelTop(null);
+      setRaisePanelRect(null);
     };
   }, [isRaisePanelOpen]);
 

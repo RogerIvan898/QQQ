@@ -220,9 +220,11 @@ export const HandReplay = ({ hand, onClose }: Props) => {
         <span className={styles.title}>{t`Hand at ${time}`}</span>
       </header>
 
-      <Provider value={scope}>
-        <PokerBoard />
-      </Provider>
+      <div className={styles.stage}>
+        <Provider value={scope}>
+          <PokerBoard />
+        </Provider>
+      </div>
 
       <div className={styles.panel}>
         <p className={styles.caption} aria-live="polite">
