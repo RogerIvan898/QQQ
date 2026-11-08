@@ -34,35 +34,48 @@
   }
 }
 
-/* Passive */
+/* Every kind is the same recipe from its theme token: a dark tinted fill,
+   a thin outline and the colour as text. */
+.check,
+.call,
+.bet,
+.raise,
+.allIn,
+.fold,
+.blind {
+  background: color-mix(
+    in srgb,
+    var(--action-color) 18%,
+    var(--color-bg-elevated)
+  );
+  border-color: color-mix(in srgb, var(--action-color) 38%, transparent);
+  color: var(--action-color);
+}
+
+.fold {
+  --action-color: var(--action-fold);
+}
+
 .check {
-  background: var(--color-success);
-  color: #06281b;
+  --action-color: var(--action-check);
 }
 
 .call {
-  background: var(--color-primary);
-  color: var(--color-text-on-primary);
+  --action-color: var(--action-call);
 }
 
-/* Aggressive */
 .bet {
-  background: #f5a524;
-  color: #2a1a00;
+  --action-color: var(--action-bet);
 }
 
 .raise {
-  background: #f97316;
-  color: #ffffff;
+  --action-color: var(--action-raise);
 }
 
-/* Everything in: red, with a slow pulse so it reads from across the table. */
+/* Everything in: a slow pulse on top so it reads from across the table. */
 .allIn {
-  background: var(--color-danger);
-  color: #ffffff;
-  box-shadow:
-    0 3px 10px var(--color-shadow),
-    0 0 0 0 color-mix(in srgb, var(--color-danger) 60%, transparent);
+  --action-color: var(--action-allin);
+
   animation:
     badgeIn 0.24s var(--ease-spring),
     allInPulse 1.8s ease-out 0.3s infinite;
@@ -72,29 +85,19 @@
   0% {
     box-shadow:
       0 3px 10px var(--color-shadow),
-      0 0 0 0 color-mix(in srgb, var(--color-danger) 55%, transparent);
+      0 0 0 0 color-mix(in srgb, var(--action-color) 45%, transparent);
   }
 
   70%,
   100% {
     box-shadow:
       0 3px 10px var(--color-shadow),
-      0 0 0 7px color-mix(in srgb, var(--color-danger) 0%, transparent);
+      0 0 0 6px color-mix(in srgb, var(--action-color) 0%, transparent);
   }
 }
 
-/* Out of the hand: quiet, so live players stand out. */
-.fold {
-  background: color-mix(in srgb, var(--color-bg-elevated) 85%, #000);
-  border-color: var(--color-border);
-  color: var(--color-text-muted);
-}
-
-/* Blinds are information, not an action: dark chip with an outline. */
 .blind {
-  background: var(--color-bg-elevated);
-  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
-  color: var(--color-primary-light);
+  --action-color: var(--action-blind);
 }
 
 @media (prefers-reduced-motion: reduce) {

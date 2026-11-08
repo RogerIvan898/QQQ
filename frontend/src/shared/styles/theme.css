@@ -45,6 +45,16 @@
 
   --focus-ring: var(--color-primary-light);
 
+  /* Player actions at the table (seat badges). Each badge derives its tinted
+     fill, outline and text from one of these. */
+  --action-fold: #94a3b8;
+  --action-check: #4fb3ff;
+  --action-call: #2dd4e0;
+  --action-bet: #34d399;
+  --action-raise: #f5b942;
+  --action-allin: #ff5c7a;
+  --action-blind: var(--color-primary-light);
+
   /* Motion: one vocabulary for the UI chrome. Enter decelerates (ease-out),
      exit accelerates (ease-in) and is shorter, so closing never lags. */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

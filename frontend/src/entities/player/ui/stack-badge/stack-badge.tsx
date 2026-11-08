@@ -8,6 +8,44 @@ import { cn } from 'shared/utils/cn';
 import styles from './stack-badge.module.css';
 
 const WIN_MS = 750;
+/** The outline turns red for the last seconds of the turn. */
+const URGENT_MS = 5000;
+
+/** The badge outline as a draining timer; re-keyed when turn → time bank. */
+const TurnBorder = ({
+  durationMs,
+  bank,
+}: {
+  durationMs: number;
+  bank: boolean;
+}) => {
+  const [urgent, setUrgent] = React.useState(durationMs <= URGENT_MS);
+
+  React.useEffect(() => {
+    if (durationMs <= URGENT_MS) {
+      return;
+    }
+
+    const timer = window.setTimeout(
+      () => setUrgent(true),
+      durationMs - URGENT_MS
+    );
+
+    return () => window.clearTimeout(timer);
+  }, [durationMs]);
+
+  return (
+    <div
+      className={cn(
+        styles.turnBorder,
+        bank && styles.turnBorderBank,
+        urgent && styles.turnBorderUrgent
+      )}
+      style={{ animationDuration: `${durationMs}ms` }}
+      aria-hidden
+    />
+  );
+};
 /** Winner glow: covers the pot landing and the stack counting up. */
 const WIN_GLOW_MS = 1900;
 
@@ -81,11 +119,10 @@ export const StackBadge = ({
         )}
       >
         {turnActive && (
-          <div
+          <TurnBorder
             key={usingBank ? 'bank' : 'turn'}
-            className={cn(styles.timerFill, usingBank && styles.timerFillBank)}
-            style={{ animationDuration: `${turnDurationMs}ms` }}
-            aria-hidden
+            durationMs={turnDurationMs}
+            bank={usingBank}
           />
         )}
 
