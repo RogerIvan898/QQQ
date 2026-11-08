@@ -68,7 +68,7 @@ export const isStatusBadge = (badge: SeatActionBadge) =>
 export const isBlindBadge = (badge: SeatActionBadge) =>
   badge === SeatBadgeKind.SB || badge === SeatBadgeKind.BB;
 
-const DEALER_OFFSET_RAD = (25 * Math.PI) / 180;
+const DEALER_OFFSET_RAD = (12 * Math.PI) / 180;
 const DEALER_OFFSET_COS = Math.cos(DEALER_OFFSET_RAD);
 const DEALER_OFFSET_SIN = Math.sin(DEALER_OFFSET_RAD);
 

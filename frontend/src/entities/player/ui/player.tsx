@@ -131,12 +131,48 @@ const PlayerView = ({
     '--dealer-y': dealerDirection.y,
   } as React.CSSProperties;
 
+  const plateRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useLayoutEffect(() => {
+    const plate = plateRef.current;
+
+    if (!dealer || !plate) {
+      return;
+    }
+
+    const ax = Math.abs(dealerDirection.x);
+    const ay = Math.abs(dealerDirection.y);
+    const measure = () => {
+      const reach = (ax * plate.offsetWidth + ay * plate.offsetHeight) / 2;
+
+      plate.style.setProperty('--plate-reach', `${Math.round(reach)}px`);
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+
+    observer.observe(plate);
+
+    return () => observer.disconnect();
+  }, [dealer, dealerDirection.x, dealerDirection.y]);
+
   const cardsKey = `${handNumber}:${getHandKey(hand) ?? 'hidden'}`;
   const cardsPresence = usePresence(showCards, MUCK_MS);
 
   return (
     <section className={cn(styles.player, isSitOut && styles.sitOut)}>
-      <div className={styles.mainContainer} style={directionVars}>
+      <div
+        ref={plateRef}
+        className={styles.mainContainer}
+        style={directionVars}
+      >
+        {dealer && (
+          <div className={styles.dealerWrap}>
+            <DealerButton compact />
+          </div>
+        )}
+
         <div className={styles.avatarWrap}>
           {cardsPresence.mounted && (
             <PlayerCards
@@ -156,12 +192,6 @@ const PlayerView = ({
           />
 
           {!isFolded && equitySlot}
-
-          {dealer && (
-            <div className={styles.dealerWrap}>
-              <DealerButton compact />
-            </div>
-          )}
         </div>
 
         <div className={styles.stackArea}>
