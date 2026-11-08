@@ -1,6 +1,8 @@
-import { Trans, useLingui } from '@lingui/react/macro';
+import { useState } from 'react';
 
-import { Alert } from 'shared/ui/alert';
+import { useLingui } from '@lingui/react/macro';
+import { ChevronDown, QrCode } from 'lucide-react';
+
 import { CopyField } from 'shared/ui/copy-field';
 
 import { QrBlock } from '../qr-block';
@@ -23,6 +25,7 @@ export const ExchangePanel = ({
   const { t } = useLingui();
 
   const requiredLabel = t`Required`;
+  const [showQr, setShowQr] = useState(false);
 
   return (
     <div
@@ -32,18 +35,6 @@ export const ExchangePanel = ({
       tabIndex={0}
       className={styles.panel}
     >
-      <Alert variant="warning" title={t`Memo`}>
-        <Trans>
-          When withdrawing from an exchange (Bybit, OKX, Binance), you must
-          include the Memo. Without it the deposit will not be credited.
-        </Trans>
-      </Alert>
-
-      <QrBlock
-        value={depositAddress}
-        hint={t`Address only — easy for exchange scanners to read.`}
-      />
-
       <div className={styles.copyFields}>
         <CopyField
           label={t`Wallet address`}
@@ -56,6 +47,7 @@ export const ExchangePanel = ({
             label={t`Memo`}
             value={memo}
             badgeText={requiredLabel}
+            hint={t`Without the memo an exchange deposit will not be credited.`}
             onCopy={() => onCopyText?.(memo, 'memo')}
           />
         )}
@@ -66,6 +58,29 @@ export const ExchangePanel = ({
           onCopy={() => onCopyText?.(amountText, 'amount')}
         />
       </div>
+
+      <button
+        type="button"
+        className={styles.qrToggle}
+        aria-expanded={showQr}
+        onClick={() => setShowQr(open => !open)}
+      >
+        <QrCode size={16} />
+        {showQr ? t`Hide QR code` : t`Show QR code`}
+        <ChevronDown
+          size={16}
+          className={showQr ? styles.chevronOpen : styles.chevron}
+        />
+      </button>
+
+      {showQr ? (
+        <div className={styles.qrWrap}>
+          <QrBlock
+            value={depositAddress}
+            hint={t`Address only — easy for exchange scanners to read.`}
+          />
+        </div>
+      ) : null}
     </div>
   );
 };

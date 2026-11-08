@@ -298,6 +298,9 @@ msgstr "Раздач сыграно"
 msgid "Heads-Up"
 msgstr "Хедз-ап"
 
+msgid "Hide QR code"
+msgstr "Скрыть QR-код"
+
 msgid "High card"
 msgstr "Старшая карта"
 
@@ -497,6 +500,9 @@ msgstr "Подготавливаем стол..."
 msgid "Settings"
 msgstr "Настройки"
 
+msgid "Show QR code"
+msgstr "Показать QR-код"
+
 msgid "Showdown"
 msgstr "Вскрытие"
 
@@ -633,9 +639,6 @@ msgstr "Кошелёк не подключён"
 msgid "Web3 wallet"
 msgstr "Web3-кошелёк"
 
-msgid "When withdrawing from an exchange (Bybit, OKX, Binance), you must include the Memo. Without it the deposit will not be credited."
-msgstr "При выводе с биржи (Bybit, OKX, Binance) обязательно укажите Memo. Без него пополнение не будет зачислено."
-
 msgid "Winner"
 msgstr "Победа"
 
@@ -664,6 +667,9 @@ msgstr "Выводы необратимы. Отправляйте только �
 
 msgid "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
 msgstr "Вывод обрабатывается в течение нескольких минут. Сумма уже зарезервирована на балансе."
+
+msgid "Without the memo an exchange deposit will not be credited."
+msgstr "Без Memo пополнение с биржи не зачислится."
 
 msgid "Yesterday"
 msgstr "Вчера"

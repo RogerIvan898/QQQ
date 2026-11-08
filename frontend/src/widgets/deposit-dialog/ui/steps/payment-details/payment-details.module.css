@@ -17,7 +17,7 @@
   border: none;
   border-radius: calc(var(--radius-md) - 2px);
   background: transparent;
-  color: var(--option-off-text);
+  color: var(--color-text-secondary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -30,7 +30,7 @@
 
 .tabActive,
 .tabActive:hover {
-  color: var(--option-on-text);
+  color: var(--color-text);
 }
 .tabs::before {
   content: '';
@@ -40,9 +40,7 @@
   left: 4px;
   width: calc((100% - 14px) / 2);
   border-radius: calc(var(--radius-md) - 2px);
-  box-sizing: border-box;
-  border: 1.5px solid var(--option-on-border);
-  background: var(--option-on-bg);
+  background: var(--color-bg-muted);
   transition: transform var(--dur-slow) var(--ease-spring);
   pointer-events: none;
 }

@@ -62,3 +62,10 @@
     height: 56px;
   }
 }
+
+.hint {
+  margin: 6px 0 0;
+  color: var(--color-warning);
+  font-size: 12px;
+  line-height: 1.35;
+}

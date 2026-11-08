@@ -10,10 +10,11 @@ interface Props {
   label: string;
   value: string;
   badgeText?: string;
+  hint?: string;
   onCopy?: (value: string) => void;
 }
 
-export const CopyField = ({ label, value, badgeText, onCopy }: Props) => {
+export const CopyField = ({ label, value, badgeText, hint, onCopy }: Props) => {
   const { copied, copy } = useCopyToClipboard(COPIED_RESET_MS);
 
   const handleCopy = async () => {
@@ -43,6 +44,7 @@ export const CopyField = ({ label, value, badgeText, onCopy }: Props) => {
           {copied ? <Check size={16} /> : <Copy size={16} />}
         </button>
       </div>
+      {hint ? <p className={styles.hint}>{hint}</p> : null}
     </div>
   );
 };

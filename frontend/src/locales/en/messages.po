@@ -297,6 +297,9 @@ msgstr "Hands Played"
 msgid "Heads-Up"
 msgstr "Heads-Up"
 
+msgid "Hide QR code"
+msgstr "Hide QR code"
+
 msgid "High card"
 msgstr "High card"
 
@@ -496,6 +499,9 @@ msgstr "Setting up the table..."
 msgid "Settings"
 msgstr "Settings"
 
+msgid "Show QR code"
+msgstr "Show QR code"
+
 msgid "Showdown"
 msgstr "Showdown"
 
@@ -632,9 +638,6 @@ msgstr "Wallet not connected"
 msgid "Web3 wallet"
 msgstr "Web3 wallet"
 
-msgid "When withdrawing from an exchange (Bybit, OKX, Binance), you must include the Memo. Without it the deposit will not be credited."
-msgstr "When withdrawing from an exchange (Bybit, OKX, Binance), you must include the Memo. Without it the deposit will not be credited."
-
 msgid "Winner"
 msgstr "Winner"
 
@@ -663,6 +666,9 @@ msgstr "Withdrawals are irreversible. Send only to a TON address — a wrong net
 
 msgid "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
 msgstr "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
+
+msgid "Without the memo an exchange deposit will not be credited."
+msgstr "Without the memo an exchange deposit will not be credited."
 
 msgid "Yesterday"
 msgstr "Yesterday"
