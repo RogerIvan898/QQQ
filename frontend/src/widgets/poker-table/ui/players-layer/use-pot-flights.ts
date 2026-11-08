@@ -1,13 +1,12 @@
 import React from 'react';
 
 import { SERVER_EVENTS, gameModel, type ServerGameEvent } from 'entities/game';
+import { POT_FLIGHT_MS, WINNER_REVEAL_MS } from 'shared/config/table-timing';
 import { afterNextPaint } from 'shared/utils/after-next-paint';
 
 import { getPotCenter } from './get-pot-center';
 import type { SeatLayout } from './seating';
 import type { PotFlight } from './types';
-
-const POT_MOVE_MS = 750;
 
 export const usePotFlights = (
   tableElement: HTMLDivElement | null,
@@ -20,11 +19,20 @@ export const usePotFlights = (
   const [flights, setFlights] = React.useState<PotFlight[] | null>(null);
   const [flightId, setFlightId] = React.useState(0);
   const [atWinner, setAtWinner] = React.useState(false);
+  const revealTimer = React.useRef<number | null>(null);
+
+  const clearReveal = () => {
+    if (revealTimer.current !== null) {
+      window.clearTimeout(revealTimer.current);
+      revealTimer.current = null;
+    }
+  };
 
   // An effect event sees the latest seats, table and callback, so the
   // subscription is made once instead of on every layout change.
   const onTableEvent = React.useEffectEvent((event: ServerGameEvent) => {
     if (event.type === SERVER_EVENTS.HAND_STARTED) {
+      clearReveal();
       setFlights(null);
       setAtWinner(false);
       onHidePot(false);
@@ -73,11 +81,20 @@ export const usePotFlights = (
 
       return updated;
     });
-    setFlights(next);
-    setAtWinner(false);
-    setFlightId(id => id + 1);
-    onHidePot(true);
+
+    // The winner lights up first (seats react to `wins`); the pot only
+    // leaves the middle once everyone has seen who took it.
+    clearReveal();
+    revealTimer.current = window.setTimeout(() => {
+      revealTimer.current = null;
+      setFlights(next);
+      setAtWinner(false);
+      setFlightId(id => id + 1);
+      onHidePot(true);
+    }, WINNER_REVEAL_MS);
   });
+
+  React.useEffect(() => clearReveal, []);
 
   React.useEffect(() => gameModel.incomingEvent.watch(onTableEvent), []);
 
@@ -87,7 +104,7 @@ export const usePotFlights = (
     }
 
     const cancelStart = afterNextPaint(() => setAtWinner(true));
-    const done = window.setTimeout(() => setFlights(null), POT_MOVE_MS);
+    const done = window.setTimeout(() => setFlights(null), POT_FLIGHT_MS);
 
     return () => {
       cancelStart();

@@ -37,27 +37,34 @@
   color: var(--color-primary-light);
 }
 
-/* Winner: a warm gold glow while the pot lands and the stack counts up. */
+/* Winner: a gold frame and fill that light up before the pot flies over,
+   breathe while it lands and the stack counts up, then the seat calms down. */
 .frameWin {
-  border-color: var(--color-warning);
-  animation: winGlow 1.9s var(--ease-out) forwards;
+  border: 2px solid var(--color-warning);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-warning) 26%, var(--color-bg-elevated)) 0%,
+    var(--color-bg-elevated) 100%
+  );
+  animation: winGlow 1.1s ease-in-out infinite;
+}
+
+.frameWin .name {
+  color: #ffd96a;
 }
 
 @keyframes winGlow {
-  0% {
-    box-shadow: 0 4px 14px var(--color-shadow);
-  }
-
-  25% {
-    box-shadow:
-      0 4px 14px var(--color-shadow),
-      0 0 22px color-mix(in srgb, var(--color-warning) 70%, transparent);
-  }
-
+  0%,
   100% {
     box-shadow:
       0 4px 14px var(--color-shadow),
-      0 0 0 color-mix(in srgb, var(--color-warning) 0%, transparent);
+      0 0 10px color-mix(in srgb, var(--color-warning) 40%, transparent);
+  }
+
+  50% {
+    box-shadow:
+      0 4px 14px var(--color-shadow),
+      0 0 24px color-mix(in srgb, var(--color-warning) 75%, transparent);
   }
 }
 

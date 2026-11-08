@@ -2,6 +2,7 @@ import { createEvent, createStore } from 'effector';
 
 import { gameModel, SERVER_EVENTS } from 'entities/game';
 import { PlayerStatus } from 'entities/player';
+import { HAND_END_MS } from 'shared/config/table-timing';
 
 import { cardToInt as toInt } from '../lib/card-int';
 import { computeEquity } from '../lib/equity';
@@ -31,7 +32,7 @@ let active = false;
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** Keep the final 100% / 0% up until the winner animation has played. */
-const HIDE_AFTER_WIN_MS = 1800;
+const HIDE_AFTER_WIN_MS = HAND_END_MS + 300;
 /** Board card deal animation (card.module.css `.play`): new numbers appear
  *  only once the card has landed face-up. */
 const CARD_DEAL_MS = 750;

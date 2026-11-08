@@ -14,6 +14,7 @@ declare module '@lingui/core' {
       | '1co9d3'
       | '1z9QsH'
       | '2G9osW'
+      | '2ZSUoj'
       | '2fn_Pp'
       | '2sPVSU'
       | '3Aerm-'

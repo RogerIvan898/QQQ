@@ -589,6 +589,9 @@ msgstr "Web3-кошелёк"
 msgid "When withdrawing from an exchange (Bybit, OKX, Binance), you must include the Memo. Without it the deposit will not be credited."
 msgstr "При выводе с биржи (Bybit, OKX, Binance) обязательно укажите Memo. Без него пополнение не будет зачислено."
 
+msgid "Winner"
+msgstr "Победа"
+
 msgid "Withdraw"
 msgstr "Вывести"
 

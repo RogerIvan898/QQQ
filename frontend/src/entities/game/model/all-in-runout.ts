@@ -1,3 +1,4 @@
+import { HAND_END_MS } from 'shared/config/table-timing';
 import { delay } from 'shared/utils/delay';
 
 import type { GameStreet } from './types';
@@ -13,7 +14,8 @@ const STREET_MS = 1800;
 const CARD_GAP_MS = 280;
 /** River on the table before the winner is announced. */
 const RIVER_HOLD_MS = 1500;
-const WIN_MS = 1000;
+/** Winner reveal, pot flight and stack count (shared/config/table-timing). */
+const WIN_MS = HAND_END_MS;
 
 export interface RunoutStreet {
   street: GameStreet;

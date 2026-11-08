@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { POT_FLIGHT_MS, WINNER_REVEAL_MS } from 'shared/config/table-timing';
 import { useAnimatedNumber } from 'shared/hooks/use-animated-number';
 import { useChipFormatter } from 'shared/lib/display-settings';
 import { Logo } from 'shared/ui/logo';
@@ -7,7 +8,8 @@ import { cn } from 'shared/utils/cn';
 
 import styles from './stack-badge.module.css';
 
-const WIN_MS = 750;
+/** The stack holds its old value until the pot has landed. */
+const WIN_MS = WINNER_REVEAL_MS + POT_FLIGHT_MS;
 /** The outline turns red for the last seconds of the turn. */
 const URGENT_MS = 5000;
 
@@ -49,8 +51,6 @@ const TurnBorder = ({
     />
   );
 };
-/** Winner glow: covers the pot landing and the stack counting up. */
-const WIN_GLOW_MS = 1900;
 
 interface Props {
   amount: number;
@@ -64,6 +64,8 @@ interface Props {
   hasTimeBank?: boolean;
   winAmount?: number;
   winId?: number;
+  /** Shown as the hand's winner right now (see useWinFlash). */
+  winning?: boolean;
   /** The viewer's own seat: highlighted so it stands out at a full table. */
   hero?: boolean;
 }
@@ -79,23 +81,12 @@ export const StackBadge = ({
   hasTimeBank = true,
   winAmount,
   winId,
+  winning = false,
   hero = false,
 }: Props) => {
   const formatChips = useChipFormatter();
   const [settledWinId, setSettledWinId] = React.useState<number | null>(null);
   const isHoldingWin = Boolean(winId && winAmount && winId !== settledWinId);
-  const [glowDoneId, setGlowDoneId] = React.useState<number | null>(null);
-  const isWinning = Boolean(winId && winAmount && winId !== glowDoneId);
-
-  React.useEffect(() => {
-    if (!isWinning || !winId) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => setGlowDoneId(winId), WIN_GLOW_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [isWinning, winId]);
   const displayAmount =
     isHoldingWin && winAmount ? Math.max(0, amount - winAmount) : amount;
   const counted = useAnimatedNumber(displayAmount);
@@ -119,7 +110,7 @@ export const StackBadge = ({
           styles.frame,
           hero && styles.frameHero,
           turnActive && styles.frameTurn,
-          isWinning && styles.frameWin,
+          winning && styles.frameWin,
           folded && styles.frameFolded,
           sitOut && styles.frameSitOut
         )}

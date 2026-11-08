@@ -588,6 +588,9 @@ msgstr "Web3 wallet"
 msgid "When withdrawing from an exchange (Bybit, OKX, Binance), you must include the Memo. Without it the deposit will not be credited."
 msgstr "When withdrawing from an exchange (Bybit, OKX, Binance), you must include the Memo. Without it the deposit will not be credited."
 
+msgid "Winner"
+msgstr "Winner"
+
 msgid "Withdraw"
 msgstr "Withdraw"
 

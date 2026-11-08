@@ -3,7 +3,7 @@ import React from 'react';
 import { usePresence } from 'shared/hooks/use-presence';
 import { cn } from 'shared/utils/cn';
 
-import { useTurnTimer } from '../hooks';
+import { useTurnTimer, useWinFlash } from '../hooks';
 import {
   getDealerDirection,
   getHandKey,
@@ -13,6 +13,7 @@ import {
 } from '../lib';
 import {
   PlayerStatus,
+  SeatBadgeKind,
   type BlindRole,
   type Player as PlayerType,
   type SeatDirection,
@@ -94,6 +95,9 @@ const PlayerView = ({
     blindRole
   );
 
+  // Winner: lit up (badge + gold frame) before the pot flies to them.
+  const winning = useWinFlash(winId, winAmount);
+
   const { showTimer, usingBank, phaseDurationMs } = useTurnTimer({
     isTurn: turn,
     turnDurationSec,
@@ -153,7 +157,9 @@ const PlayerView = ({
         </div>
 
         <div className={styles.stackArea}>
-          {seatActionBadge && !collecting && (
+          {winning ? (
+            <ActionBadge action={SeatBadgeKind.WIN} />
+          ) : seatActionBadge && !collecting ? (
             <ActionBadge
               action={seatActionBadge}
               amount={
@@ -162,7 +168,7 @@ const PlayerView = ({
                   : (player.lastActionAmount ?? undefined)
               }
             />
-          )}
+          ) : null}
 
           <StackBadge
             amount={stack}
@@ -175,6 +181,7 @@ const PlayerView = ({
             hasTimeBank={timeBankSec > 0}
             winAmount={winAmount}
             winId={winId}
+            winning={winning}
             hero={currentPlayer}
           />
 

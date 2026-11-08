@@ -1,6 +1,7 @@
 import { createEvent } from 'effector';
 
 import { Sound } from 'shared/assets/sounds';
+import { HAND_END_MS } from 'shared/config/table-timing';
 import { playBuffered } from 'shared/lib/audio';
 import { delay } from 'shared/utils/delay';
 
@@ -84,7 +85,8 @@ const waitForBurst = async () => {
 };
 
 const SHOWDOWN_PAUSE_MS = 500;
-const WIN_ANIMATION_MS = 1000;
+/** Winner reveal, pot flight and stack count (shared/config/table-timing). */
+const WIN_ANIMATION_MS = HAND_END_MS;
 
 // Animations are paced with timers, which a hidden WebView throttles to one
 // per second (one per minute after a while). Without this the queue would keep

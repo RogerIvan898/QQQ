@@ -100,7 +100,26 @@
   --action-color: var(--action-blind);
 }
 
+/* Winner: solid gold so it outranks every action badge. */
+.win {
+  background: linear-gradient(180deg, #ffd96a, var(--color-warning));
+  border-color: color-mix(in srgb, #fff 45%, var(--color-warning));
+  color: #3a2600;
+  box-shadow:
+    0 3px 10px var(--color-shadow),
+    0 0 14px color-mix(in srgb, var(--color-warning) 60%, transparent);
+  animation: winIn 0.4s var(--ease-spring);
+}
+
+@keyframes winIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.6);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .win,
   .badge,
   .allIn {
     animation: none;
