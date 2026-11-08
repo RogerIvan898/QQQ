@@ -41,6 +41,15 @@ export const HandHistorySheet = ({ open, onClose, onSelect }: Props) => {
   const isSheet = useMediaQuery(SHEET_QUERY);
   // Phones: swipe the sheet down by its handle or header to hide it.
   const swipe = useSwipeToClose(onClose, isSheet);
+  const resetSwipe = React.useEffectEvent(() => swipe.reset());
+
+  // The sheet stays mounted while closed, so a swipe-close would leave its
+  // drag offset behind and the next open would start pushed down.
+  React.useEffect(() => {
+    if (!open) {
+      resetSwipe();
+    }
+  }, [open]);
   const time = new Intl.DateTimeFormat(i18n.locale, {
     hour: '2-digit',
     minute: '2-digit',
