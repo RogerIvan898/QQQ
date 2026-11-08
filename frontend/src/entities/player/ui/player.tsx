@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { usePresence } from 'shared/hooks/use-presence';
 import { cn } from 'shared/utils/cn';
 
 import { useTurnTimer } from '../hooks';
@@ -50,7 +51,16 @@ interface Props {
   equitySlot?: React.ReactNode;
   /** Made-hand label under the stack ("Two pair"); hidden when folded. */
   combinationSlot?: React.ReactNode;
+  /** Changes every hand, so hole cards are dealt again. */
+  handNumber?: number;
+  /** Place in the deal from the dealer's left: staggers the cards around the table. */
+  dealOrder?: number;
 }
+
+/** Gap between seats as the hole cards go round the table. */
+const DEAL_STEP_MS = 70;
+/** Matches the muck transition in player-cards.module.css. */
+const MUCK_MS = 320;
 
 const PlayerView = ({
   player,
@@ -69,6 +79,8 @@ const PlayerView = ({
   collecting = false,
   equitySlot = null,
   combinationSlot = null,
+  handNumber = 0,
+  dealOrder = 0,
 }: Props) => {
   const { status, stack, name } = player;
   const hand = handOverride === undefined ? player.hand : handOverride;
@@ -106,18 +118,22 @@ const PlayerView = ({
     '--dealer-y': dealerDirection.y,
   } as React.CSSProperties;
 
-  const cardsKey = getHandKey(hand) ?? 'hidden';
+  const cardsKey = `${handNumber}:${getHandKey(hand) ?? 'hidden'}`;
+  // Keep the cards a moment after a fold so they can slide into the muck.
+  const cardsPresence = usePresence(showCards, MUCK_MS);
 
   return (
     <section className={cn(styles.player, isSitOut && styles.sitOut)}>
       <div className={styles.mainContainer} style={directionVars}>
         <div className={styles.avatarWrap}>
-          {showCards && (
+          {cardsPresence.mounted && (
             <PlayerCards
               key={cardsKey}
               cards={hand}
               needSound={currentPlayer && Boolean(hand)}
               large={currentPlayer}
+              dealDelayMs={dealOrder * DEAL_STEP_MS}
+              mucking={cardsPresence.closing}
             />
           )}
 

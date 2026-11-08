@@ -8,6 +8,8 @@ import { cn } from 'shared/utils/cn';
 import styles from './stack-badge.module.css';
 
 const WIN_MS = 750;
+/** Winner glow: covers the pot landing and the stack counting up. */
+const WIN_GLOW_MS = 1900;
 
 interface Props {
   amount: number;
@@ -38,6 +40,18 @@ export const StackBadge = ({
   const formatChips = useChipFormatter();
   const [settledWinId, setSettledWinId] = React.useState<number | null>(null);
   const isHoldingWin = Boolean(winId && winAmount && winId !== settledWinId);
+  const [glowDoneId, setGlowDoneId] = React.useState<number | null>(null);
+  const isWinning = Boolean(winId && winAmount && winId !== glowDoneId);
+
+  React.useEffect(() => {
+    if (!isWinning || !winId) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => setGlowDoneId(winId), WIN_GLOW_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [isWinning, winId]);
   const displayAmount =
     isHoldingWin && winAmount ? Math.max(0, amount - winAmount) : amount;
   const counted = useAnimatedNumber(displayAmount);
@@ -60,6 +74,8 @@ export const StackBadge = ({
         className={cn(
           styles.frame,
           hero && styles.frameHero,
+          turnActive && styles.frameTurn,
+          isWinning && styles.frameWin,
           folded && styles.frameFolded,
           sitOut && styles.frameSitOut
         )}

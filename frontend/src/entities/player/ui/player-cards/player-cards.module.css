@@ -12,19 +12,62 @@
   pointer-events: none;
 }
 
+/* Dealt from the table centre: a hidden card waits toward the centre
+   (--to-center-* come from the seat) and flies out to the seat. */
 .cardSlot {
+  --deal-from: 80px;
+
   flex-shrink: 0;
   opacity: 0;
-  transform: translateY(28px) rotate(-10deg) scale(0.7);
+  transform: translate(
+      calc(var(--to-center-x, 0) * var(--deal-from)),
+      calc(var(--to-center-y, 0) * var(--deal-from))
+    )
+    rotate(-14deg) scale(0.6);
   transition:
-    opacity 0.2s ease-out,
-    transform 0.42s cubic-bezier(0.22, 1.2, 0.36, 1);
+    opacity 0.18s ease-out,
+    transform 0.42s var(--ease-spring);
 }
 
 /* Fan the second hole card in slightly after the first. */
 .cardSlot + .cardSlot {
-  transform: translateY(28px) rotate(10deg) scale(0.7);
+  transform: translate(
+      calc(var(--to-center-x, 0) * var(--deal-from)),
+      calc(var(--to-center-y, 0) * var(--deal-from))
+    )
+    rotate(14deg) scale(0.6);
   transition-delay: 90ms;
+}
+
+/* Showdown: an opponent's cards turn over in place. */
+.flip {
+  perspective: 600px;
+}
+
+.flip .cardSlot {
+  transform: rotateY(90deg) rotate(-4deg);
+  transition:
+    opacity 0.12s ease-out,
+    transform 0.32s var(--ease-out);
+}
+
+.flip .cardSlot + .cardSlot {
+  transform: rotateY(90deg) rotate(4deg);
+  transition-delay: 0ms;
+}
+
+/* Fold: the cards slide toward the centre and fade into the muck. */
+.mucking .cardSlot.visible.visible,
+.mucking .cardSlot.visible + .cardSlot.visible {
+  opacity: 0;
+  transform: translate(
+      calc(var(--to-center-x, 0) * 60px),
+      calc(var(--to-center-y, 0) * 60px)
+    )
+    rotate(24deg) scale(0.55);
+  transition:
+    opacity 0.26s ease-in 0.06s,
+    transform 0.32s var(--ease-in);
 }
 
 .cardSlot.visible + .cardSlot.visible {
@@ -32,7 +75,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cardSlot {
+  .cardSlot,
+  .flip .cardSlot,
+  .mucking .cardSlot.visible.visible,
+  .mucking .cardSlot.visible + .cardSlot.visible {
     transition: opacity 0.2s ease-out;
   }
 }

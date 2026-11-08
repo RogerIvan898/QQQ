@@ -37,6 +37,67 @@
   color: var(--color-primary-light);
 }
 
+/* Whose turn it is: the frame breathes. An overlay's opacity animates
+   (cheap), not the box-shadow itself. */
+.frameTurn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1.5px var(--color-info),
+    inset 0 0 14px color-mix(in srgb, var(--color-info) 45%, transparent);
+  pointer-events: none;
+  animation: turnBreath 1.4s ease-in-out infinite;
+}
+
+@keyframes turnBreath {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Winner: a warm gold glow while the pot lands and the stack counts up. */
+.frameWin {
+  border-color: var(--color-warning);
+  animation: winGlow 1.9s var(--ease-out) forwards;
+}
+
+@keyframes winGlow {
+  0% {
+    box-shadow: 0 4px 14px var(--color-shadow);
+  }
+
+  25% {
+    box-shadow:
+      0 4px 14px var(--color-shadow),
+      0 0 22px color-mix(in srgb, var(--color-warning) 70%, transparent);
+  }
+
+  100% {
+    box-shadow:
+      0 4px 14px var(--color-shadow),
+      0 0 0 color-mix(in srgb, var(--color-warning) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frameTurn::after {
+    animation: none;
+    opacity: 1;
+  }
+
+  .frameWin {
+    animation: none;
+  }
+}
+
 .content {
   position: relative;
   z-index: 1;

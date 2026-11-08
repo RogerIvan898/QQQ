@@ -26,6 +26,17 @@ interface Props {
  * One seat subscribes only to its own slice of the game state, so an event
  * that touches one player re-renders one seat instead of the whole layer.
  */
+/** Seat's place in the deal, starting left of the dealer (0, 1, 2…). */
+const dealOrderFrom = (
+  seat: number,
+  dealerSeat: number | null,
+  seatCount: number
+) => {
+  const span = Math.max(seatCount, seat + 1, (dealerSeat ?? 0) + 1);
+
+  return dealerSeat == null ? seat : (seat - dealerSeat - 1 + span) % span;
+};
+
 const SeatView = ({
   seat,
   x,
@@ -68,7 +79,16 @@ const SeatView = ({
     keys: [seat],
     fn: (holes, [index]) => holes[index] ?? null,
   });
-  const [round, myCards] = useUnit([gameModel.$round, gameModel.$myCards]);
+  const [round, myCards, handNumber, dealerSeat] = useUnit([
+    gameModel.$round,
+    gameModel.$myCards,
+    gameModel.$handNumber,
+    gameModel.$dealerSeat,
+  ]);
+  const seatCount = useStoreMap(
+    gameModel.$players,
+    players => Object.keys(players).length
+  );
   const equitySlot = React.useMemo(() => <SeatEquity seat={seat} />, [seat]);
 
   if (!player) return null;
@@ -106,6 +126,8 @@ const SeatView = ({
         winId={winId}
         collecting={collecting}
         equitySlot={equitySlot}
+        handNumber={handNumber}
+        dealOrder={dealOrderFrom(seat, dealerSeat, seatCount)}
         combinationSlot={<SeatCombination hand={hand} />}
       />
     </div>

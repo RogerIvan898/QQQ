@@ -11,7 +11,7 @@ import {
   openGameSocket,
   sendToGameSocket,
 } from './connection';
-import { INITIAL_GAME_STATE } from './constants';
+import { INITIAL_GAME_STATE, SERVER_EVENTS } from './constants';
 import {
   bindGameQueue,
   clearActiveSeat,
@@ -62,6 +62,13 @@ export const $connectionLost = createStore(false)
 export const $gameState = createStore(INITIAL_GAME_STATE)
   .on(incomingEvent, reduceGameEvent)
   .on(clearActiveSeat, state => ({ ...state, activeSeat: null }))
+  .reset(disconnectGame);
+
+/** Increments on every new hand: a key that re-deals per-hand animations. */
+export const $handNumber = createStore(0)
+  .on(incomingEvent, (count, event) =>
+    event.type === SERVER_EVENTS.HAND_STARTED ? count + 1 : count
+  )
   .reset(disconnectGame);
 
 export const $collectingBets = createStore(false)
