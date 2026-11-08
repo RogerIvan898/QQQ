@@ -74,7 +74,7 @@
   }
 }
 
-/* Turn timer: the badge's own outline drains clockwise from 12 o'clock.
+/* Turn timer: the badge's own outline drains round from 12 o'clock.
    While it runs, the static border hides and this ring takes its place. */
 @property --turn-left {
   syntax: '<number>';
@@ -95,12 +95,14 @@
   z-index: 3;
   padding: 2.5px;
   border-radius: inherit;
-  /* The remaining time brightens toward its leading edge, the spent part is
-     a faint track: you can see which way it drains. */
+  /* Drains clockwise: the remaining arc ends at 12 o'clock and its moving
+     edge (brightest) travels round to meet it; the spent part is a faint
+     track. */
   background: conic-gradient(
-    color-mix(in srgb, var(--turn-color) 35%, transparent) 0deg,
-    var(--turn-color) var(--turn-arc),
-    color-mix(in srgb, var(--color-text) 10%, transparent) var(--turn-arc)
+    color-mix(in srgb, var(--color-text) 10%, transparent) 0deg
+      calc(360deg - var(--turn-arc)),
+    var(--turn-color) calc(360deg - var(--turn-arc)),
+    color-mix(in srgb, var(--turn-color) 35%, transparent) 360deg
   );
   /* Keep only the ring: the content box is cut out. */
   mask:
