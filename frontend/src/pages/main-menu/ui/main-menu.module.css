@@ -152,7 +152,7 @@
    a table with one shared column grid (--room-cols, read by RoomCard too). */
 @media (min-width: 1024px) {
   .contentArea {
-    --lobby-width: 1040px;
+    --lobby-width: 1560px;
     --lobby-gutter: max(32px, calc((100% - var(--lobby-width)) / 2));
   }
 
