@@ -54,8 +54,17 @@
   animation: winGlow 1.1s ease-in-out infinite;
 }
 
-.frameWin .name {
+.frameWin .name,
+.frameWin .stackAmount {
   color: #ffd96a;
+}
+
+.frameWin .stackLogo {
+  color: #ffd96a;
+}
+
+.stackAmount {
+  transition: color var(--dur-slow) var(--ease-out);
 }
 
 @keyframes winGlow {
