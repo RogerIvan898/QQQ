@@ -6,6 +6,8 @@ import { ChevronRight, Spade, X } from 'lucide-react';
 
 import { MiniCard } from 'entities/card';
 import { useDismiss } from 'shared/hooks/use-dismiss';
+import { useMediaQuery } from 'shared/hooks/use-media-query';
+import { useSwipeToClose } from 'shared/hooks/use-swipe-to-close';
 import { cn } from 'shared/utils/cn';
 
 import { formatNet } from '../lib/format-net';
@@ -20,6 +22,10 @@ interface Props {
   onSelect: (hand: HandRecord) => void;
 }
 
+/** Same breakpoint as the bottom-sheet layout in the CSS module. */
+const SHEET_QUERY =
+  '(max-width: 768px), (orientation: portrait) and (max-width: 1100px)';
+
 /** Clicks on the button that toggles the panel must not count as "outside". */
 export const HAND_HISTORY_TOGGLE_ATTR = 'data-hand-history-toggle';
 
@@ -32,6 +38,9 @@ export const HandHistorySheet = ({ open, onClose, onSelect }: Props) => {
   const { i18n, t } = useLingui();
   const hands = useUnit($hands);
   const panelRef = React.useRef<HTMLElement | null>(null);
+  const isSheet = useMediaQuery(SHEET_QUERY);
+  // Phones: swipe the sheet down by its handle or header to hide it.
+  const swipe = useSwipeToClose(onClose, isSheet);
   const time = new Intl.DateTimeFormat(i18n.locale, {
     hour: '2-digit',
     minute: '2-digit',
@@ -51,15 +60,24 @@ export const HandHistorySheet = ({ open, onClose, onSelect }: Props) => {
   return (
     <section
       ref={panelRef}
-      className={styles.panel}
+      className={cn(styles.panel, swipe.dragging && styles.dragging)}
+      style={
+        swipe.dragging
+          ? { transform: `translateY(${swipe.offset}px)` }
+          : undefined
+      }
       aria-label={t`Hand history`}
     >
-      <header className={styles.header}>
+      <div className={styles.grabber} aria-hidden="true" {...swipe.handlers}>
+        <span className={styles.grabberBar} />
+      </div>
+      <header className={styles.header} {...swipe.handlers}>
         <span className={styles.heading}>{t`Hand history`}</span>
         <button
           type="button"
           className={styles.close}
           onClick={onClose}
+          onPointerDown={event => event.stopPropagation()}
           aria-label={t`Close`}
         >
           <X size={16} />

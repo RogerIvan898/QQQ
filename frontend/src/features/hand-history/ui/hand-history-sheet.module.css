@@ -77,6 +77,42 @@
   }
 }
 
+/* Grab handle: only on the phone sheet, where it can be swiped down. */
+.grabber {
+  display: none;
+}
+
+.grabberBar {
+  width: 40px;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text) 22%, transparent);
+}
+
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
+  .grabber {
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 8px 0 2px;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .header {
+    touch-action: none;
+  }
+
+  .panel {
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Follow the finger 1:1; ease back only on release. */
+  .dragging {
+    transition: none;
+  }
+}
+
 @keyframes sheetIn {
   from {
     transform: translateY(100%);

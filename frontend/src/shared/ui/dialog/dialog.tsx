@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { useLingui } from '@lingui/react/macro';
 import { X } from 'lucide-react';
 
+import { useSwipeToClose } from 'shared/hooks/use-swipe-to-close';
 import { cn } from 'shared/utils/cn';
 
 import styles from './dialog.module.css';
@@ -19,8 +20,6 @@ interface Props {
 
 /** Must match the exit animations in dialog.module.css. */
 const EXIT_MS = 200;
-/** Dragging a bottom sheet down this far (px) dismisses it on release. */
-const SWIPE_CLOSE_PX = 90;
 
 export const Dialog = ({
   open,
@@ -36,8 +35,12 @@ export const Dialog = ({
   // Stay mounted while the exit animation plays after `open` turns false.
   const [rendered, setRendered] = React.useState(open);
   const [closing, setClosing] = React.useState(false);
-  const [dragY, setDragY] = React.useState(0);
-  const dragStart = React.useRef<number | null>(null);
+  // Swipe-down to dismiss, from the grab handle or the header only, so
+  // scrolling the body never drags the sheet.
+  const swipe = useSwipeToClose(onClose, variant === 'bottom');
+  const dragY = swipe.offset;
+  const dragHandlers = swipe.handlers;
+  const resetSwipe = React.useEffectEvent(() => swipe.reset());
 
   if (open && !rendered) {
     setRendered(true);
@@ -56,7 +59,7 @@ export const Dialog = ({
     const timer = window.setTimeout(() => {
       setRendered(false);
       setClosing(false);
-      setDragY(0);
+      resetSwipe();
     }, EXIT_MS);
 
     return () => window.clearTimeout(timer);
@@ -85,52 +88,6 @@ export const Dialog = ({
   if (!rendered) {
     return null;
   }
-
-  // Swipe-down to dismiss, from the grab handle or the header only, so
-  // scrolling the body never drags the sheet.
-  const onDragStart = (event: React.PointerEvent) => {
-    if (variant !== 'bottom') {
-      return;
-    }
-
-    // Capture lazily (in move), so a plain tap on a header button still clicks.
-    dragStart.current = event.clientY;
-  };
-
-  const onDragMove = (event: React.PointerEvent) => {
-    if (dragStart.current === null) {
-      return;
-    }
-
-    const delta = event.clientY - dragStart.current;
-
-    if (delta > 4 && !event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.setPointerCapture(event.pointerId);
-    }
-
-    setDragY(Math.max(0, delta));
-  };
-
-  const onDragEnd = () => {
-    if (dragStart.current === null) {
-      return;
-    }
-
-    dragStart.current = null;
-
-    if (dragY > SWIPE_CLOSE_PX) {
-      onClose();
-    } else {
-      setDragY(0);
-    }
-  };
-
-  const dragHandlers = {
-    onPointerDown: onDragStart,
-    onPointerMove: onDragMove,
-    onPointerUp: onDragEnd,
-    onPointerCancel: onDragEnd,
-  };
 
   return createPortal(
     <div
