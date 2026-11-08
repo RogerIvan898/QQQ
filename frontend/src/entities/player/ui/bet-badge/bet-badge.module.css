@@ -9,7 +9,8 @@
      cards: drop them below the board. 1 for a purely horizontal seat, 0 once
      the seat is more than ~30° above or below the centre line. */
   /* Half a board card (cards are ~25cqw tall, capped at 121px) + the badge. */
-  --bet-side-drop: calc(min(76px, 16cqw) + 22px);
+  /* Desktop: the board is narrow next to the side seats, nothing to avoid. */
+  --bet-side-drop: 0px;
   --bet-side: max(0, 1 - var(--to-center-abs-y) * 2);
   --bet-drop: calc(var(--bet-side) * var(--bet-side-drop));
 
@@ -129,6 +130,12 @@
 
 /* Phones and portrait tablets share the compact, vertical table layout. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
+  /* Compact layout: side seats sit level with the board, so their chips
+     would land on the cards. Drop them below it. */
+  .betArea {
+    --bet-side-drop: calc(min(76px, 16cqw) + 22px);
+  }
+
   .amountBadge {
     min-width: 0;
     height: 26px;

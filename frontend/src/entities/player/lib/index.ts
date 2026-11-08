@@ -65,7 +65,8 @@ export const resolveSeatActionBadge = (
 export const isBlindBadge = (badge: SeatActionBadge) =>
   badge === SeatBadgeKind.SB || badge === SeatBadgeKind.BB;
 
-const DEALER_OFFSET_RAD = (55 * Math.PI) / 180;
+// Off the seat-to-centre line (where the bet sits), but leaning to the centre.
+const DEALER_OFFSET_RAD = (35 * Math.PI) / 180;
 const DEALER_OFFSET_COS = Math.cos(DEALER_OFFSET_RAD);
 const DEALER_OFFSET_SIN = Math.sin(DEALER_OFFSET_RAD);
 

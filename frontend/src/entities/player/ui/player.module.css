@@ -45,7 +45,7 @@
 }
 
 .dealerWrap {
-  --dealer-distance: 84px;
+  --dealer-distance: 112px;
 
   position: absolute;
   top: 50%;
@@ -74,7 +74,7 @@ vertical table layout. */
   }
 
   .dealerWrap {
-    --dealer-distance: 48px;
+    --dealer-distance: 66px;
   }
 
   .avatarWrap {
@@ -97,7 +97,7 @@ so seat elements step up ~1.3x. */
   }
 
   .dealerWrap {
-    --dealer-distance: 62px;
+    --dealer-distance: 86px;
   }
 
   .avatarWrap {
