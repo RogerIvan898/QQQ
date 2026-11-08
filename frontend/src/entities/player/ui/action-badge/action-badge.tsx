@@ -1,22 +1,22 @@
 import { useLingui } from '@lingui/react/macro';
 
 import { useChipFormatter } from 'shared/lib/display-settings';
-import { Badge, type BadgeVariant } from 'shared/ui/badge';
 import { cn } from 'shared/utils/cn';
 
 import { PlayerAction, SeatBadgeKind, type SeatActionBadge } from '../../model';
 
 import styles from './action-badge.module.css';
 
-const BADGE_VARIANTS: Record<SeatActionBadge, BadgeVariant> = {
-  [PlayerAction.FOLD]: 'neutral',
-  [PlayerAction.CHECK]: 'warning',
-  [PlayerAction.CALL]: 'primary',
-  [PlayerAction.BET]: 'primary',
-  [PlayerAction.RAISE]: 'active',
-  [SeatBadgeKind.ALL_IN]: 'primary',
-  [SeatBadgeKind.SB]: 'primary',
-  [SeatBadgeKind.BB]: 'primary',
+/** Colour by meaning: passive green/blue, aggressive amber/orange, all-in red. */
+const KIND_CLASS: Record<SeatActionBadge, string> = {
+  [PlayerAction.FOLD]: styles.fold,
+  [PlayerAction.CHECK]: styles.check,
+  [PlayerAction.CALL]: styles.call,
+  [PlayerAction.BET]: styles.bet,
+  [PlayerAction.RAISE]: styles.raise,
+  [SeatBadgeKind.ALL_IN]: styles.allIn,
+  [SeatBadgeKind.SB]: styles.blind,
+  [SeatBadgeKind.BB]: styles.blind,
 };
 
 interface Props {
@@ -44,16 +44,11 @@ export const ActionBadge = ({ action, amount }: Props) => {
 
   return (
     <div className={styles.root}>
-      <Badge
-        variant={BADGE_VARIANTS[action]}
-        className={cn(
-          styles.compact,
-          action === SeatBadgeKind.ALL_IN && styles.allInBorder
-        )}
-      >
+      {/* Re-keyed per action so each new action pops in. */}
+      <span key={action} className={cn(styles.badge, KIND_CLASS[action])}>
         {labels[action]}
         {showAmount ? ` ${formatChips(amount)}` : null}
-      </Badge>
+      </span>
     </div>
   );
 };

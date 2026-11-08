@@ -59,8 +59,8 @@ interface Props {
 
 /** Gap between seats as the hole cards go round the table. */
 const DEAL_STEP_MS = 70;
-/** Matches the muck transition in player-cards.module.css. */
-const MUCK_MS = 320;
+/** Matches the muck animation in player-cards.module.css. */
+const MUCK_MS = 450;
 
 const PlayerView = ({
   player,

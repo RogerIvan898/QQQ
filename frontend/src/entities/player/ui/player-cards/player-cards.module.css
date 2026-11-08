@@ -56,18 +56,62 @@
   transition-delay: 0ms;
 }
 
-/* Fold: the cards slide toward the centre and fade into the muck. */
-.mucking .cardSlot.visible.visible,
+/* Fold: the cards lift and dim for a beat, then fly to the centre of the
+   table and vanish into the muck, so a fold reads at a glance. */
+.mucking .cardSlot.visible.visible {
+  animation: muckLeft 0.45s var(--ease-in) forwards;
+}
+
 .mucking .cardSlot.visible + .cardSlot.visible {
-  opacity: 0;
-  transform: translate(
-      calc(var(--to-center-x, 0) * 60px),
-      calc(var(--to-center-y, 0) * 60px)
-    )
-    rotate(24deg) scale(0.55);
-  transition:
-    opacity 0.26s ease-in 0.06s,
-    transform 0.32s var(--ease-in);
+  animation: muckRight 0.45s var(--ease-in) forwards;
+}
+
+@keyframes muckLeft {
+  0% {
+    opacity: 1;
+    filter: brightness(1);
+    transform: translateY(0) rotate(-4deg) scale(1);
+  }
+
+  25% {
+    opacity: 1;
+    filter: brightness(0.55);
+    transform: translateY(-8px) rotate(-10deg) scale(1.02);
+  }
+
+  100% {
+    opacity: 0;
+    filter: brightness(0.4);
+    transform: translate(
+        calc(var(--to-center-x, 0) * 120px),
+        calc(var(--to-center-y, 0) * 120px - 8px)
+      )
+      rotate(-30deg) scale(0.45);
+  }
+}
+
+@keyframes muckRight {
+  0% {
+    opacity: 1;
+    filter: brightness(1);
+    transform: translateY(0) rotate(4deg) scale(1);
+  }
+
+  25% {
+    opacity: 1;
+    filter: brightness(0.55);
+    transform: translateY(-8px) rotate(12deg) scale(1.02);
+  }
+
+  100% {
+    opacity: 0;
+    filter: brightness(0.4);
+    transform: translate(
+        calc(var(--to-center-x, 0) * 120px),
+        calc(var(--to-center-y, 0) * 120px - 8px)
+      )
+      rotate(30deg) scale(0.45);
+  }
 }
 
 .cardSlot.visible + .cardSlot.visible {
@@ -76,10 +120,20 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cardSlot,
-  .flip .cardSlot,
+  .flip .cardSlot {
+    transition: opacity 0.2s ease-out;
+  }
+
+  /* Fold: just fade out, no flight. */
   .mucking .cardSlot.visible.visible,
   .mucking .cardSlot.visible + .cardSlot.visible {
-    transition: opacity 0.2s ease-out;
+    animation: muckFade 0.25s ease-out forwards;
+  }
+}
+
+@keyframes muckFade {
+  to {
+    opacity: 0;
   }
 }
 

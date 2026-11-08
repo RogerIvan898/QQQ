@@ -7,28 +7,106 @@
   pointer-events: none;
 }
 
-.compact {
-  min-width: 0;
-  width: max-content;
-  max-width: none;
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 22px;
   padding: 0 8px;
+  border: 1px solid transparent;
   border-radius: 6px;
+  font-family: var(--font-family);
   font-size: 10px;
-  letter-spacing: 0.03em;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   box-shadow: 0 3px 10px var(--color-shadow);
+  animation: badgeIn 0.24s var(--ease-spring);
 }
 
-.allInBorder {
+@keyframes badgeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.85);
+  }
+}
+
+/* Passive */
+.check {
+  background: var(--color-success);
+  color: #06281b;
+}
+
+.call {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+/* Aggressive */
+.bet {
+  background: #f5a524;
+  color: #2a1a00;
+}
+
+.raise {
+  background: #f97316;
+  color: #ffffff;
+}
+
+/* Everything in: red, with a slow pulse so it reads from across the table. */
+.allIn {
+  background: var(--color-danger);
+  color: #ffffff;
   box-shadow:
     0 3px 10px var(--color-shadow),
-    0 0 12px color-mix(in srgb, var(--color-bg-elevated) 40%, transparent),
-    inset 0 0 0 1.5px var(--color-bg-elevated);
+    0 0 0 0 color-mix(in srgb, var(--color-danger) 60%, transparent);
+  animation:
+    badgeIn 0.24s var(--ease-spring),
+    allInPulse 1.8s ease-out 0.3s infinite;
+}
+
+@keyframes allInPulse {
+  0% {
+    box-shadow:
+      0 3px 10px var(--color-shadow),
+      0 0 0 0 color-mix(in srgb, var(--color-danger) 55%, transparent);
+  }
+
+  70%,
+  100% {
+    box-shadow:
+      0 3px 10px var(--color-shadow),
+      0 0 0 7px color-mix(in srgb, var(--color-danger) 0%, transparent);
+  }
+}
+
+/* Out of the hand: quiet, so live players stand out. */
+.fold {
+  background: color-mix(in srgb, var(--color-bg-elevated) 85%, #000);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+/* Blinds are information, not an action: dark chip with an outline. */
+.blind {
+  background: var(--color-bg-elevated);
+  border-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+  color: var(--color-primary-light);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge,
+  .allIn {
+    animation: none;
+  }
 }
 
 /* Phones and portrait tablets share the compact, vertical table layout. */
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
-  .compact {
+  .badge {
     height: 20px;
     padding: 0 6px;
     font-size: 9px;
@@ -38,7 +116,7 @@
 /* Portrait tablets: same compact layout as phones, but the table is much
    bigger there, so seat elements step up ~1.3x. */
 @media (orientation: portrait) and (min-width: 769px) and (max-width: 1100px) {
-  .compact {
+  .badge {
     height: 26px;
     padding: 0 9px;
     font-size: 12px;
