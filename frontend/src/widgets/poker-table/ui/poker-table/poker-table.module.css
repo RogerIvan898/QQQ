@@ -88,9 +88,14 @@
 }
 
 .mainPotArea {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + clamp(6px, 2cqh, 14px));
   display: flex;
+  align-items: flex-end;
   justify-content: center;
   min-height: 44px;
+  transform: translateX(-50%);
   pointer-events: none;
 }
 
