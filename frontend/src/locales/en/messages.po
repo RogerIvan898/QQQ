@@ -146,8 +146,9 @@ msgstr "Connect a wallet to withdraw in one tap"
 msgid "Connect wallet"
 msgstr "Connect wallet"
 
-msgid "Connect wallet to pay"
-msgstr "Connect wallet to pay"
+#. js-lingui-explicit-id
+msgid "Connect wallet and pay {amount, number} TON"
+msgstr "Connect wallet and pay {amount, number} TON"
 
 msgid "Connect wallet to withdraw"
 msgstr "Connect wallet to withdraw"

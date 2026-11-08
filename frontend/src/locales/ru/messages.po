@@ -147,8 +147,9 @@ msgstr "Подключите кошелёк, чтобы выводить в од
 msgid "Connect wallet"
 msgstr "Подключить кошелёк"
 
-msgid "Connect wallet to pay"
-msgstr "Подключить кошелёк для оплаты"
+#. js-lingui-explicit-id
+msgid "Connect wallet and pay {amount, number} TON"
+msgstr "Подключить кошелёк и оплатить {amount, number} TON"
 
 msgid "Connect wallet to withdraw"
 msgstr "Подключить кошелёк для вывода"
