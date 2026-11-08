@@ -576,9 +576,6 @@ msgstr "По"
 msgid "To end"
 msgstr "В конец"
 
-msgid "To pay"
-msgstr "К оплате"
-
 msgid "To start"
 msgstr "В начало"
 

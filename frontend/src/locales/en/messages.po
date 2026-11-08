@@ -575,9 +575,6 @@ msgstr "To"
 msgid "To end"
 msgstr "To end"
 
-msgid "To pay"
-msgstr "To pay"
-
 msgid "To start"
 msgstr "To start"
 
