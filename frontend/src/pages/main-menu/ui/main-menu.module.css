@@ -178,17 +178,22 @@
   }
 
   .roomGrid {
-    --room-cols: minmax(200px, 1.6fr) 1fr 1.2fr 1fr 150px;
+    --room-cols: minmax(170px, 1.3fr) 1fr 1fr 1.2fr 128px;
 
     grid-template-columns: 1fr;
     gap: 6px;
   }
 
+  .devTable > :last-child {
+    width: 128px;
+    flex: 0 0 auto;
+  }
+
   .roomHead {
     display: grid;
     grid-template-columns: var(--room-cols);
-    column-gap: 16px;
-    padding: 0 14px 4px 18px;
+    column-gap: 20px;
+    padding: 0 10px 2px 18px;
     color: var(--color-text-muted);
     font-size: 12px;
     font-weight: 600;
