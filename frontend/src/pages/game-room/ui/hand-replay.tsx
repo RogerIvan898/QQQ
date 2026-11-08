@@ -231,7 +231,7 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
       <header className={styles.header}>
         <button type="button" className={styles.backBtn} onClick={onClose}>
           <ArrowLeft size={14} strokeWidth={2.25} />
-          {t`Hands`}
+          {t`Back`}
         </button>
         <span className={styles.title}>{t`Hand at ${time}`}</span>
       </header>
