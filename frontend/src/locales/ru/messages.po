@@ -455,6 +455,9 @@ msgstr "Ривер"
 msgid "Save"
 msgstr "Сохранить"
 
+msgid "Save {shortAddress} for next withdrawals?"
+msgstr "Сохранить {shortAddress} для следующих выводов?"
+
 msgid "SB"
 msgstr "МБ"
 

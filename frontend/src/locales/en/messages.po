@@ -454,6 +454,9 @@ msgstr "River"
 msgid "Save"
 msgstr "Save"
 
+msgid "Save {shortAddress} for next withdrawals?"
+msgstr "Save {shortAddress} for next withdrawals?"
+
 msgid "SB"
 msgstr "SB"
 

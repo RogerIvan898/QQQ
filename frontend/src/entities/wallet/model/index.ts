@@ -18,4 +18,5 @@ export {
   walletRefreshRequested,
   withdrawFx,
 } from './wallet';
+export { $savedWithdrawAddress, withdrawAddressSaved } from './saved-address';
 export type * from './types';

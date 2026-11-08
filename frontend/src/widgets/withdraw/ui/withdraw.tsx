@@ -4,6 +4,7 @@ import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
 import { useUnit } from 'effector-react';
 
+import { walletModel } from 'entities/wallet';
 import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 import { Dialog } from 'shared/ui/dialog';
 
@@ -26,6 +27,7 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
   const { t } = useLingui();
   const wallet = useUnit($tonWallet);
   const connectedAddress = wallet?.friendlyAddress ?? '';
+  const savedAddress = useUnit(walletModel.$savedWithdrawAddress);
 
   const [amount, setAmount] = useState(0);
   const [draft, setDraft] = useState('');
@@ -36,9 +38,10 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
 
   useEffect(() => {
     if (open) {
-      setDestination('wallet');
+      setDestination(savedAddress ? 'address' : 'wallet');
+      setCustomAddress(savedAddress ?? '');
     }
-  }, [open]);
+  }, [open, savedAddress]);
 
   const targetAddress =
     destination === 'wallet' ? connectedAddress : customAddress.trim();

@@ -3,7 +3,7 @@ import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { useRouter } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
-import { Coins, Swords, Wallet } from 'lucide-react';
+import { BookmarkPlus, Coins, Swords, Wallet } from 'lucide-react';
 
 import { $rooms, $roomsStatus, RoomCard, roomsRequested } from 'entities/room';
 import { sessionModel } from 'entities/session';
@@ -13,7 +13,7 @@ import { getTelegramUser } from 'shared/lib/telegram';
 import { Preloader } from 'shared/ui/preloader';
 import { Snackbar } from 'shared/ui/snackbar';
 import { cn } from 'shared/utils/cn';
-import { formatBalance } from 'shared/utils/format';
+import { formatBalance, truncateMiddle } from 'shared/utils/format';
 import { WalletPanel } from 'widgets/wallet-panel';
 
 import {
@@ -99,6 +99,13 @@ export const MenuPage = () => {
   const { t, i18n } = useLingui();
   const [snackOpen, setSnackOpen] = React.useState(false);
   const [snackMissing, setSnackMissing] = React.useState(0);
+  const [saveOpen, setSaveOpen] = React.useState(false);
+  const [saveCandidate, setSaveCandidate] = React.useState('');
+  const [saveId, setSaveId] = React.useState(0);
+  const [savedAddress, saveAddress] = useUnit([
+    walletModel.$savedWithdrawAddress,
+    walletModel.withdrawAddressSaved,
+  ]);
   const [snackId, setSnackId] = React.useState(0);
   const [roomFilter, setRoomFilter] = React.useState<RoomFilter>('all');
   const [isDepositOpen, setIsDepositOpen] = React.useState(false);
@@ -136,6 +143,18 @@ export const MenuPage = () => {
     setSnackOpen(false);
     setIsDepositOpen(true);
   };
+
+  const offerSaveAddress = (address: string) => {
+    if (address === savedAddress) {
+      return;
+    }
+
+    setSaveCandidate(address);
+    setSaveId(id => id + 1);
+    setSaveOpen(true);
+  };
+
+  const shortAddress = truncateMiddle(saveCandidate, 4);
 
   const missingLabel = `${formatBalance(snackMissing, i18n.locale)} TON`;
   const router = useRouter();
@@ -292,12 +311,27 @@ export const MenuPage = () => {
           onAction={openTopUp}
         />
 
+        <Snackbar
+          open={saveOpen}
+          onClose={() => setSaveOpen(false)}
+          showId={saveId}
+          durationMs={8000}
+          icon={<BookmarkPlus size={18} />}
+          message={t`Save ${shortAddress} for next withdrawals?`}
+          actionLabel={t`Save`}
+          onAction={() => {
+            saveAddress(saveCandidate);
+            setSaveOpen(false);
+          }}
+        />
+
         <React.Suspense fallback={null}>
           {isDepositOpen && (
             <DepositEntry
               onClose={() => setIsDepositOpen(false)}
               onSuccess={() => {
                 setIsDepositOpen(false);
+                setIsWalletOpen(false);
                 refreshWallet();
               }}
             />
@@ -308,9 +342,14 @@ export const MenuPage = () => {
               open
               onClose={() => setIsWithdrawOpen(false)}
               balance={balance ?? 0}
-              onSubmit={({ address, amount }) =>
-                walletModel.withdrawFx({ address, amount })
-              }
+              onSubmit={async ({ address, amount, destination }) => {
+                await walletModel.withdrawFx({ address, amount });
+                setIsWalletOpen(false);
+
+                if (destination === 'address') {
+                  offerSaveAddress(address);
+                }
+              }}
             />
           )}
         </React.Suspense>
