@@ -321,8 +321,8 @@ msgstr "Joining…"
 msgid "Language"
 msgstr "Language"
 
-msgid "Leave table"
-msgstr "Leave table"
+msgid "Leave"
+msgstr "Leave"
 
 msgid "Leave table?"
 msgstr "Leave table?"

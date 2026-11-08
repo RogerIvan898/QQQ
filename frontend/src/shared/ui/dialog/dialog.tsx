@@ -19,8 +19,6 @@ interface Props {
   titleAddon?: React.ReactNode;
   variant?: 'center' | 'bottom';
   skipEnter?: boolean;
-  hideHeader?: boolean;
-  className?: string;
 }
 
 export const Dialog = ({
@@ -31,8 +29,6 @@ export const Dialog = ({
   titleAddon,
   variant = 'center',
   skipEnter = false,
-  hideHeader = false,
-  className,
   children,
 }: React.PropsWithChildren<Props>) => {
   const { t } = useLingui();
@@ -93,7 +89,6 @@ export const Dialog = ({
           styles.panel,
           styles[variant],
           skipEnter && styles.noEnter,
-          className,
           closing && styles.panelClosing,
           dragY > 0 && styles.dragging
         )}
@@ -110,31 +105,29 @@ export const Dialog = ({
           </div>
         )}
 
-        {!hideHeader && (
-          <header
-            className={styles.header}
-            {...(isSheet ? dragHandlers : undefined)}
-          >
-            {leading ?? <div className={styles.headerSide} />}
+        <header
+          className={styles.header}
+          {...(isSheet ? dragHandlers : undefined)}
+        >
+          {leading ?? <div className={styles.headerSide} />}
 
-            <div className={styles.titleGroup}>
-              {title != null && <h2 className={styles.title}>{title}</h2>}
-              {titleAddon}
-            </div>
+          <div className={styles.titleGroup}>
+            {title != null && <h2 className={styles.title}>{title}</h2>}
+            {titleAddon}
+          </div>
 
-            <div className={styles.headerSide}>
-              <button
-                type="button"
-                className={styles.iconBtn}
-                onClick={onClose}
-                onPointerDown={e => e.stopPropagation()}
-                aria-label={t`Close`}
-              >
-                <X size={18} />
-              </button>
-            </div>
-          </header>
-        )}
+          <div className={styles.headerSide}>
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={onClose}
+              onPointerDown={e => e.stopPropagation()}
+              aria-label={t`Close`}
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </header>
 
         <div className={styles.body}>{children}</div>
       </div>
