@@ -6,6 +6,7 @@ import { useUnit } from 'effector-react';
 import { Coins, Swords } from 'lucide-react';
 
 import { RoomCard } from 'entities/room';
+import { sessionModel } from 'entities/session';
 import { walletModel } from 'entities/wallet';
 import { JoinRoomButton } from 'features/join-room';
 import { getTelegramUser } from 'shared/lib/telegram';
@@ -110,6 +111,8 @@ export const MenuPage = () => {
   ]);
   const closeWallet = React.useCallback(() => setIsWalletOpen(false), []);
   const [telegramUser] = React.useState(getTelegramUser);
+  // The nickname set in Settings wins over the Telegram name.
+  const nickname = useUnit(sessionModel.$nickname);
   const visibleRooms = filterRooms(ROOMS, roomFilter);
   const router = useRouter();
 
@@ -143,7 +146,7 @@ export const MenuPage = () => {
       <div className={styles.appLayout}>
         <div className={styles.mainContainer}>
           <Header
-            userName={telegramUser?.name ?? 'User'}
+            userName={nickname ?? telegramUser?.name ?? 'User'}
             avatarUrl={telegramUser?.photoUrl}
             balance={balance}
             isWalletOpen={isWalletOpen}

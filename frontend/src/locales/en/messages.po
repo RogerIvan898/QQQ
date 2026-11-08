@@ -44,6 +44,12 @@ msgstr "Amount"
 msgid "Amount (TON)"
 msgstr "Amount (TON)"
 
+msgid "At least {NICKNAME_MIN} characters"
+msgstr "At least {NICKNAME_MIN} characters"
+
+msgid "At most {NICKNAME_MAX} characters"
+msgstr "At most {NICKNAME_MAX} characters"
+
 msgid "Available balance"
 msgstr "Available balance"
 
@@ -167,6 +173,9 @@ msgstr "Couldn't load the page"
 
 msgid "Couldn't load transactions"
 msgstr "Couldn't load transactions"
+
+msgid "Couldn't save the nickname. Try again."
+msgstr "Couldn't save the nickname. Try again."
 
 msgid "Custom"
 msgstr "Custom"
@@ -307,6 +316,9 @@ msgstr "Joining…"
 msgid "Language"
 msgstr "Language"
 
+msgid "Letters, digits, space, dot, dash and underscore only"
+msgstr "Letters, digits, space, dot, dash and underscore only"
+
 msgid "Loading"
 msgstr "Loading"
 
@@ -351,6 +363,9 @@ msgstr "Net Profit"
 
 msgid "Next step"
 msgstr "Next step"
+
+msgid "Nickname"
+msgstr "Nickname"
 
 msgid "NL Hold'em"
 msgstr "NL Hold'em"
@@ -443,6 +458,12 @@ msgstr "Retry"
 msgid "River"
 msgstr "River"
 
+msgid "Save"
+msgstr "Save"
+
+msgid "Saved"
+msgstr "Saved"
+
 msgid "SB"
 msgstr "SB"
 
@@ -475,6 +496,9 @@ msgstr "Settings"
 
 msgid "Showdown"
 msgstr "Showdown"
+
+msgid "Shown to other players at the table"
+msgstr "Shown to other players at the table"
 
 msgid "Small blind"
 msgstr "Small blind"

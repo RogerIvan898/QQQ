@@ -23,11 +23,13 @@ import {
   supportedLocales,
   $currentLocale,
 } from 'shared/lib/i18n';
+import { getTelegramUser } from 'shared/lib/telegram';
 import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 import { Dialog } from 'shared/ui/dialog';
 import { cn } from 'shared/utils/cn';
 import { truncateMiddle } from 'shared/utils/format';
 
+import { NicknameSetting } from './nickname-setting';
 import { Setting } from './setting';
 import styles from './settings-dialog.module.css';
 
@@ -105,6 +107,13 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
   return (
     <Dialog open={open} title={t`Settings`} onClose={onClose}>
       <div className={styles.sections}>
+        <Setting label={t`Nickname`}>
+          <NicknameSetting
+            open={open}
+            fallbackName={getTelegramUser()?.name ?? 'User'}
+          />
+        </Setting>
+
         <Setting label={t`Language`}>
           <div className={styles.langRow} role="group" aria-label={t`Language`}>
             {supportedLocales.map(locale => (

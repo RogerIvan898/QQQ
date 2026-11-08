@@ -6,6 +6,7 @@ import type { PlayerActionType, PlayerStatusType } from 'entities/player';
 import { VIEWER_ID } from 'entities/session/model';
 import { clamp } from 'shared/utils/math';
 
+import { getMockNickname } from '../profile';
 import type { MockRoomConfig } from '../rooms';
 
 import { chooseBotAction } from './bot-policy';
@@ -92,7 +93,7 @@ export class PokerTable {
     const bots = BOT_NAMES.slice(0, room.botCount);
 
     this.seats = [
-      this.createSeat(VIEWER_ID, 'You', 0, stack),
+      this.createSeat(VIEWER_ID, getMockNickname(), 0, stack),
       ...bots.map((name, index) =>
         this.createSeat(`bot-${index + 1}`, name, index + 1, stack)
       ),

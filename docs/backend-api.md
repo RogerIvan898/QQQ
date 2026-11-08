@@ -105,3 +105,29 @@ and the real timeout always agree. `EV_TURN_CHANGED` carries them:
   check when nothing is owed).
 - Both are optional for now: without them the client falls back to 15 s +
   10 s, which can disagree with the real timeout.
+
+## Profile: nickname
+
+The player's in-game name. It is shown in the menu and at the table (the
+`name` the game socket sends for each seat), and set in Settings.
+
+### `GET /auth/me`
+
+```json
+{ "id": "100", "nickname": "Ace King" }
+```
+
+### `POST /profile/nickname`
+
+Request `{ "nickname": "Ace King" }` → `200 { "nickname": "Ace King" }`
+(the stored, normalised value).
+
+Validation, the same rules the client checks before sending:
+
+- trim, collapse runs of spaces to one;
+- 3–16 characters;
+- letters and digits in any script, space, `.`, `-`, `_`.
+
+Rejected input → `400 { "error": "short" | "long" | "chars" }`. The server
+may add `"taken"` if nicknames must be unique. A new nickname applies from the
+player's next seat at a table.

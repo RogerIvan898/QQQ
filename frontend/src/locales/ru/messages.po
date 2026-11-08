@@ -45,6 +45,12 @@ msgstr "Сумма"
 msgid "Amount (TON)"
 msgstr "Сумма (TON)"
 
+msgid "At least {NICKNAME_MIN} characters"
+msgstr "Минимум {NICKNAME_MIN} символа"
+
+msgid "At most {NICKNAME_MAX} characters"
+msgstr "Максимум {NICKNAME_MAX} символов"
+
 msgid "Available balance"
 msgstr "Доступный баланс"
 
@@ -168,6 +174,9 @@ msgstr "Не удалось загрузить страницу"
 
 msgid "Couldn't load transactions"
 msgstr "Не удалось загрузить транзакции"
+
+msgid "Couldn't save the nickname. Try again."
+msgstr "Не удалось сохранить ник. Попробуйте ещё раз."
 
 msgid "Custom"
 msgstr "Период"
@@ -308,6 +317,9 @@ msgstr "Подключение к столу…"
 msgid "Language"
 msgstr "Язык"
 
+msgid "Letters, digits, space, dot, dash and underscore only"
+msgstr "Только буквы, цифры, пробел, точка, дефис и подчёркивание"
+
 msgid "Loading"
 msgstr "Загрузка"
 
@@ -352,6 +364,9 @@ msgstr "Чистая прибыль"
 
 msgid "Next step"
 msgstr "Следующий шаг"
+
+msgid "Nickname"
+msgstr "Ник"
 
 msgid "NL Hold'em"
 msgstr "NL Холдем"
@@ -444,6 +459,12 @@ msgstr "Повторить"
 msgid "River"
 msgstr "Ривер"
 
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Saved"
+msgstr "Сохранено"
+
 msgid "SB"
 msgstr "МБ"
 
@@ -476,6 +497,9 @@ msgstr "Настройки"
 
 msgid "Showdown"
 msgstr "Вскрытие"
+
+msgid "Shown to other players at the table"
+msgstr "Его видят другие игроки за столом"
 
 msgid "Small blind"
 msgstr "Малый блайнд"
