@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useLingui } from '@lingui/react/macro';
 import { useUnit } from 'effector-react';
@@ -18,6 +18,7 @@ import { useCopyToClipboard } from 'shared/lib/clipboard';
 import { $amountsInBb, setAmountsInBb } from 'shared/lib/display-settings';
 import {
   changeLocale,
+  preloadOtherLocales,
   LOCALES,
   supportedLocales,
   $currentLocale,
@@ -43,6 +44,14 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
   const { t } = useLingui();
   const walletAddress = useUnit($tonWallet)?.friendlyAddress ?? '';
   const [currentLocale, setLocale] = useUnit([$currentLocale, changeLocale]);
+
+  // Other languages download only once Settings is opened, so the switch
+  // below is instant and the startup bundle stays one language.
+  useEffect(() => {
+    if (open) {
+      preloadOtherLocales(currentLocale);
+    }
+  }, [open, currentLocale]);
   const [soundEnabled, toggleSound] = useUnit([$soundEnabled, setSoundEnabled]);
   const [amountsInBb, toggleAmountsInBb] = useUnit([
     $amountsInBb,

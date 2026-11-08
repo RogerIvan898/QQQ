@@ -15,3 +15,4 @@ export {
   waitForLocale,
 } from './model';
 export { getBootLoadingLabel } from './locale';
+export { preloadOtherLocales } from './catalogs';
