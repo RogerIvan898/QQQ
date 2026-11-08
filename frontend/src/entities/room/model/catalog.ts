@@ -25,3 +25,14 @@ export const roomFormat = (maxSeats: number) =>
 
 export const roomBigBlind = (room: RoomListItem) =>
   Number(room.blinds.split('/')[1]) || 0;
+
+export type RoomTier = 'micro' | 'low' | 'mid' | 'high';
+
+export const roomTier = (bigBlind: number): RoomTier =>
+  bigBlind < 0.1
+    ? 'micro'
+    : bigBlind < 0.5
+      ? 'low'
+      : bigBlind < 2
+        ? 'mid'
+        : 'high';

@@ -14,6 +14,11 @@ msgstr "— or scan with Tonkeeper —"
 msgid "{0, plural, one {# hand} other {# hands}}"
 msgstr "{0, plural, one {# hand} other {# hands}}"
 
+#. placeholder {0}: room.players
+#. placeholder {1}: room.max
+msgid "{0} of {1} seats taken"
+msgstr "{0} of {1} seats taken"
+
 msgid "30 Days"
 msgstr "30 Days"
 
@@ -340,9 +345,6 @@ msgstr "My wallet"
 msgid "My Wallet"
 msgstr "My Wallet"
 
-msgid "Need {missing} more"
-msgstr "Need {missing} more"
-
 msgid "Net Profit"
 msgstr "Net Profit"
 
@@ -372,6 +374,9 @@ msgstr "No transactions yet"
 
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Not enough balance to cover the amount and the network fee."
+
+msgid "Not enough balance."
+msgstr "Not enough balance."
 
 msgid "Pair"
 msgstr "Pair"
@@ -572,6 +577,9 @@ msgstr "Tonkeeper / Telegram Wallet"
 
 msgid "Top up"
 msgstr "Top up"
+
+msgid "Top up {missingLabel}"
+msgstr "Top up {missingLabel}"
 
 msgid "Total Buy-in"
 msgstr "Total Buy-in"

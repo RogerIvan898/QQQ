@@ -3,7 +3,7 @@ import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { useRouter } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
-import { Coins, Swords } from 'lucide-react';
+import { Coins, Swords, Wallet } from 'lucide-react';
 
 import { $rooms, $roomsStatus, RoomCard, roomsRequested } from 'entities/room';
 import { sessionModel } from 'entities/session';
@@ -11,7 +11,9 @@ import { walletModel } from 'entities/wallet';
 import { JoinRoomButton } from 'features/join-room';
 import { getTelegramUser } from 'shared/lib/telegram';
 import { Preloader } from 'shared/ui/preloader';
+import { Snackbar } from 'shared/ui/snackbar';
 import { cn } from 'shared/utils/cn';
+import { formatBalance } from 'shared/utils/format';
 import { WalletPanel } from 'widgets/wallet-panel';
 
 import {
@@ -94,7 +96,10 @@ const Filters = ({ active, onChange }: FiltersProps) => {
 };
 
 export const MenuPage = () => {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
+  const [snackOpen, setSnackOpen] = React.useState(false);
+  const [snackMissing, setSnackMissing] = React.useState(0);
+  const [snackId, setSnackId] = React.useState(0);
   const [roomFilter, setRoomFilter] = React.useState<RoomFilter>('all');
   const [isDepositOpen, setIsDepositOpen] = React.useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false);
@@ -120,6 +125,19 @@ export const MenuPage = () => {
   }, [requestRooms]);
 
   const visibleRooms = filterRooms(rooms, roomFilter);
+
+  const showShortfall = (missing: number) => {
+    setSnackMissing(missing);
+    setSnackId(id => id + 1);
+    setSnackOpen(true);
+  };
+
+  const openTopUp = () => {
+    setSnackOpen(false);
+    setIsDepositOpen(true);
+  };
+
+  const missingLabel = `${formatBalance(snackMissing, i18n.locale)} TON`;
   const router = useRouter();
 
   React.useEffect(() => {
@@ -171,10 +189,6 @@ export const MenuPage = () => {
           />
 
           <main className={styles.contentArea}>
-            <div className={styles.stickyHeader}>
-              <Filters active={roomFilter} onChange={setRoomFilter} />
-            </div>
-
             <div className={styles.roomScroll}>
               {DevServerSwitch ? (
                 <React.Suspense fallback={null}>
@@ -187,8 +201,16 @@ export const MenuPage = () => {
                   <JoinRoomButton roomId="allin" isFull={false} />
                 </div>
               ) : null}
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>{t`Available tables`}</h2>
+              <div className={styles.listBar}>
+                <div className={styles.sectionHeader}>
+                  <h2 className={styles.sectionTitle}>{t`Available tables`}</h2>
+                  {visibleRooms.length > 0 ? (
+                    <span className={styles.sectionCount}>
+                      {visibleRooms.length}
+                    </span>
+                  ) : null}
+                </div>
+                <Filters active={roomFilter} onChange={setRoomFilter} />
               </div>
               {roomsStatus === 'failed' ? (
                 <div className={styles.roomsState} role="alert">
@@ -216,14 +238,14 @@ export const MenuPage = () => {
                   <span>{t`Players`}</span>
                   <span />
                 </div>
-                {visibleRooms.map(room => {
+                {visibleRooms.map((room, index) => {
                   const shortfall =
                     balance === null ? 0 : Math.max(0, room.minBuy - balance);
 
                   return (
                     <RoomCard
                       key={room.id}
-                      shortfall={shortfall}
+                      index={index}
                       room={{
                         name: room.name,
                         game: room.game,
@@ -238,9 +260,9 @@ export const MenuPage = () => {
                         <JoinRoomButton
                           roomId={String(room.id)}
                           isFull={room.players >= room.max}
-                          onTopUp={
+                          onBlocked={
                             shortfall > 0
-                              ? () => setIsDepositOpen(true)
+                              ? () => showShortfall(shortfall)
                               : undefined
                           }
                         />
@@ -254,6 +276,21 @@ export const MenuPage = () => {
             </div>
           </main>
         </div>
+
+        <Snackbar
+          open={snackOpen}
+          onClose={() => setSnackOpen(false)}
+          tone="warning"
+          showId={snackId}
+          icon={<Wallet size={18} />}
+          message={
+            <>
+              {t`Not enough balance.`} <b>{t`Top up ${missingLabel}`}</b>
+            </>
+          }
+          actionLabel={t`Top up`}
+          onAction={openTopUp}
+        />
 
         <React.Suspense fallback={null}>
           {isDepositOpen && (

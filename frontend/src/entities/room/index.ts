@@ -4,6 +4,7 @@ export type {
   RoomCardInfo,
   RoomListItem,
   RoomMode,
+  RoomTier,
 } from './model';
 export {
   $rooms,
@@ -12,5 +13,6 @@ export {
   roomBigBlind,
   roomFormat,
   roomsRequested,
+  roomTier,
 } from './model';
 export { RoomCard } from './ui';

@@ -15,6 +15,11 @@ msgstr "— или отсканируйте в Tonkeeper —"
 msgid "{0, plural, one {# hand} other {# hands}}"
 msgstr "{0, plural, one {# раздача} few {# раздачи} many {# раздач} other {# раздачи}}"
 
+#. placeholder {0}: room.players
+#. placeholder {1}: room.max
+msgid "{0} of {1} seats taken"
+msgstr "Занято мест: {0} из {1}"
+
 msgid "30 Days"
 msgstr "30 дней"
 
@@ -341,9 +346,6 @@ msgstr "Мой кошелёк"
 msgid "My Wallet"
 msgstr "Мой кошелёк"
 
-msgid "Need {missing} more"
-msgstr "Не хватает {missing}"
-
 msgid "Net Profit"
 msgstr "Чистая прибыль"
 
@@ -373,6 +375,9 @@ msgstr "Операций пока нет"
 
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Недостаточно средств на сумму и комиссию сети."
+
+msgid "Not enough balance."
+msgstr "Недостаточно средств."
 
 msgid "Pair"
 msgstr "Пара"
@@ -573,6 +578,9 @@ msgstr "Tonkeeper / Telegram Wallet"
 
 msgid "Top up"
 msgstr "Пополнить"
+
+msgid "Top up {missingLabel}"
+msgstr "Пополните на {missingLabel}"
 
 msgid "Total Buy-in"
 msgstr "Всего бай-инов"

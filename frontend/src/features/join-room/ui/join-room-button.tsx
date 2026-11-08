@@ -1,31 +1,26 @@
 import { useEffect, useState } from 'react';
 
 import { useLingui } from '@lingui/react/macro';
-import { useNavigate } from '@tanstack/react-router';
-import { useUnit } from 'effector-react';
-import { Loader2, Plus, Users } from 'lucide-react';
+import { Loader2, Play, Users } from 'lucide-react';
 
 import { cn } from 'shared/utils/cn';
 
-import { $joiningRoomId, joinRoomFx } from '../model';
-
 import styles from './join-room-button.module.css';
+import { useJoinRoom } from './use-join-room';
 
 interface Props {
   roomId: string;
   isFull: boolean;
 
-  onTopUp?: () => void;
+  onBlocked?: () => void;
 }
 
-export const JoinRoomButton = ({ roomId, isFull, onTopUp }: Props) => {
+export const JoinRoomButton = ({ roomId, isFull, onBlocked }: Props) => {
   const { t } = useLingui();
-  const navigate = useNavigate();
-  const [join, joiningRoomId] = useUnit([joinRoomFx, $joiningRoomId]);
+  const { joinRoom, joiningRoomId } = useJoinRoom();
 
   const isJoiningRoom = joiningRoomId === roomId;
-  const isJoiningAny = Boolean(joiningRoomId);
-  const isDisabled = isFull || isJoiningAny;
+  const isDisabled = isFull || Boolean(joiningRoomId);
   const [showJoining, setShowJoining] = useState(false);
 
   useEffect(() => {
@@ -39,43 +34,25 @@ export const JoinRoomButton = ({ roomId, isFull, onTopUp }: Props) => {
     return () => window.clearTimeout(timer);
   }, [isJoiningRoom]);
 
-  const handleJoin = async () => {
+  const handleClick = () => {
     if (isDisabled) {
       return;
     }
 
-    try {
-      const { roomId: joinedRoomId, wsUrl } = await join(roomId);
-
-      void navigate({
-        to: '/game/$roomId',
-        params: { roomId: joinedRoomId },
-        state: { wsUrl },
-      });
-    } catch (error) {
-      console.error('Failed to join room', error);
+    if (onBlocked) {
+      onBlocked();
+      return;
     }
-  };
 
-  if (onTopUp && !isFull) {
-    return (
-      <button
-        type="button"
-        className={cn(styles.button, styles.topUp)}
-        onClick={onTopUp}
-      >
-        <Plus size={16} strokeWidth={2.5} />
-        {t`Top up`}
-      </button>
-    );
-  }
+    void joinRoom(roomId);
+  };
 
   return (
     <button
       type="button"
       className={cn(styles.button, (isFull || showJoining) && styles.disabled)}
       disabled={isDisabled}
-      onClick={() => void handleJoin()}
+      onClick={handleClick}
     >
       {isFull ? (
         <>
@@ -88,7 +65,10 @@ export const JoinRoomButton = ({ roomId, isFull, onTopUp }: Props) => {
           {t`Joining…`}
         </>
       ) : (
-        t`Play`
+        <>
+          <Play size={14} strokeWidth={2.75} className={styles.playIcon} />
+          {t`Play`}
+        </>
       )}
     </button>
   );

@@ -1,20 +1,14 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 import { msg } from '@lingui/core/macro';
 import { useLingui } from '@lingui/react/macro';
-import { Coins, Swords, Users } from 'lucide-react';
 
 import { cn } from 'shared/utils/cn';
 import { formatBalance } from 'shared/utils/format';
 
-import type { RoomCardInfo, RoomGame, RoomMode } from '../../model';
+import { roomTier, type RoomCardInfo, type RoomGame } from '../../model';
 
 import styles from './room-card.module.css';
-
-const MODE_LABELS = {
-  cash: msg`Cash`,
-  'heads-up': msg`Heads-Up`,
-} as const satisfies Record<RoomMode, ReturnType<typeof msg>>;
 
 const GAME_LABELS = {
   nlh: msg`NL Hold'em`,
@@ -26,83 +20,72 @@ interface Props {
   room: RoomCardInfo;
   action: ReactNode;
 
-  shortfall?: number;
+  index?: number;
 }
 
-export const RoomCard = ({ room, action, shortfall = 0 }: Props) => {
+const bigBlindOf = (blinds: string) => Number(blinds.split('/')[1]) || 0;
+
+export const RoomCard = ({ room, action, index = 0 }: Props) => {
   const { i18n, t } = useLingui();
   const isFull = room.players >= room.max;
-  const isLocked = !isFull && shortfall > 0;
-  const isHeadsUp = room.mode === 'heads-up';
-  const occupancy = Math.min(100, (room.players / room.max) * 100);
-  const missing = `${formatBalance(shortfall, i18n.locale)} ${CURRENCY}`;
+  const tier = roomTier(bigBlindOf(room.blinds));
+  const format = room.mode === 'heads-up' ? t`Heads-Up` : `${room.max}-max`;
 
   return (
     <article
-      className={cn(
-        styles.card,
-        isFull && styles.cardFull,
-        isLocked && styles.cardLocked
-      )}
+      className={cn(styles.card, styles[tier], isFull && styles.cardFull)}
+      style={{ '--i': Math.min(index, 12) } as CSSProperties}
     >
       <div className={styles.info}>
         <div className={styles.heading}>
-          <div className={styles.titleRow}>
+          <div className={styles.titleBlock}>
             <h3 className={styles.name}>{room.name}</h3>
-            <span
-              className={cn(
-                styles.badge,
-                isHeadsUp ? styles.badgeHeadsUp : styles.badgeCash
-              )}
-            >
-              {isHeadsUp ? (
-                <Swords size={11} strokeWidth={2.5} />
-              ) : (
-                <Coins size={11} strokeWidth={2.5} />
-              )}
-              {i18n._(MODE_LABELS[room.mode])}
+            <span className={styles.game}>
+              {i18n._(GAME_LABELS[room.game ?? 'nlh'])}
+              <span className={styles.dot} aria-hidden="true" />
+              {format}
             </span>
           </div>
-          <span className={styles.game}>
-            {i18n._(GAME_LABELS[room.game ?? 'nlh'])}
-          </span>
         </div>
 
         <dl className={styles.meta}>
           <div className={styles.metaItem}>
             <dt>{t`Blinds`}</dt>
             <dd>
-              {room.blinds} {CURRENCY}
+              {room.blinds}
+              <span className={styles.currency}>{CURRENCY}</span>
             </dd>
           </div>
           <div className={styles.metaItem}>
             <dt>{t`Buy-in`}</dt>
             <dd>
               {formatBalance(room.minBuy, i18n.locale)}–
-              {formatBalance(room.maxBuy, i18n.locale)} {CURRENCY}
+              {formatBalance(room.maxBuy, i18n.locale)}
+              <span className={styles.currency}>{CURRENCY}</span>
             </dd>
           </div>
         </dl>
 
         <div className={styles.statusRow}>
+          <span
+            className={styles.seats}
+            role="img"
+            aria-label={t`${room.players} of ${room.max} seats taken`}
+          >
+            {Array.from({ length: room.max }, (_, seat) => (
+              <span
+                key={seat}
+                className={cn(
+                  styles.seat,
+                  seat < room.players && styles.seatTaken
+                )}
+              />
+            ))}
+          </span>
           <span className={styles.players}>
-            <Users size={14} />
             {room.players}/{room.max}
           </span>
-          <div className={styles.occupancy}>
-            <div
-              className={cn(
-                styles.occupancyFill,
-                isFull && styles.occupancyFull
-              )}
-              style={{ width: `${occupancy}%` }}
-            />
-          </div>
         </div>
-
-        {isLocked ? (
-          <span className={styles.shortfall}>{t`Need ${missing} more`}</span>
-        ) : null}
       </div>
 
       <div className={styles.action}>{action}</div>

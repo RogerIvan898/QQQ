@@ -1,1 +1,1 @@
-export { JoinRoomButton } from './ui';
+export { JoinRoomButton, useJoinRoom } from './ui';
