@@ -41,11 +41,13 @@ export const formatBigBlinds = (amount: number, bigBlind: number) => {
   return `${Number.isInteger(value) ? value : value.toFixed(1)} BB`;
 };
 
-export const useChipFormatter = () => {
+export const useChipFormatter = (withUnit = true) => {
   const [inBb, bigBlind] = useUnit([$amountsInBb, $displayBigBlind]);
 
   return (amount: number) =>
     inBb && bigBlind > 0
       ? formatBigBlinds(amount, bigBlind)
-      : formatCompactNumber(amount);
+      : withUnit
+        ? `${formatCompactNumber(amount)} TON`
+        : formatCompactNumber(amount);
 };

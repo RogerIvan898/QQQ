@@ -11,7 +11,7 @@ interface Props {
 }
 
 export const BetBadge = ({ amount, seat, collecting }: Props) => {
-  const formatChips = useChipFormatter();
+  const formatChips = useChipFormatter(false);
   if (amount <= 0) return null;
 
   return (

@@ -27,7 +27,7 @@ export const PokerTable = ({
   ref,
 }: Props) => {
   const showPot = showPotOverride ?? pot > 0;
-  const formatChips = useChipFormatter();
+  const formatChips = useChipFormatter(false);
   const { play: playDeal } = useSound(Sound.CARD_DEAL);
 
   return (

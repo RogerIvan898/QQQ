@@ -93,7 +93,7 @@ export const StackBadge = ({
   winning = false,
   hero = false,
 }: Props) => {
-  const formatChips = useChipFormatter();
+  const formatChips = useChipFormatter(false);
   const turnPresence = usePresence(turnActive, TURN_LEAVE_MS);
   const [settledWinId, setSettledWinId] = React.useState<number | null>(null);
   const isHoldingWin = Boolean(winId && winAmount && winId !== settledWinId);

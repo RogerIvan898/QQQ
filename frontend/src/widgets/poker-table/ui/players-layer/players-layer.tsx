@@ -41,7 +41,7 @@ const ChipFlight = ({
   arrived,
   className,
 }: FlightProps) => {
-  const formatChips = useChipFormatter();
+  const formatChips = useChipFormatter(false);
 
   return (
     <div
