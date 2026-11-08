@@ -100,6 +100,7 @@
 
 .tabs {
   display: grid;
+  position: relative;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   padding: 4px;
@@ -110,6 +111,8 @@
 }
 
 .tab {
+  position: relative;
+  z-index: 1;
   height: 40px;
   border: 1.5px solid transparent;
   border-radius: calc(var(--radius-md) - 2px);
@@ -118,19 +121,40 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition:
-    background 0.2s,
-    color 0.2s;
+  transition: color var(--dur-base) var(--ease-out);
 }
 
 .tab:hover {
   color: var(--color-text);
 }
 
-.tabActive {
-  border-color: var(--option-on-border);
-  background: var(--option-on-bg);
+.tabActive,
+.tabActive:hover {
   color: var(--option-on-text);
+}
+.tabs::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 14px) / 2);
+  border-radius: calc(var(--radius-md) - 2px);
+  box-sizing: border-box;
+  border: 1.5px solid var(--option-on-border);
+  background: var(--option-on-bg);
+  transition: transform var(--dur-slow) var(--ease-spring);
+  pointer-events: none;
+}
+
+.tabs:has(> .tab:nth-child(2).tabActive)::before {
+  transform: translateX(calc(100% + 6px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabs::before {
+    transition: none;
+  }
 }
 
 .walletCard {
