@@ -1,4 +1,3 @@
-
 .overlay {
   position: fixed;
   inset: 0;
@@ -39,7 +38,6 @@
 }
 
 .backBtn {
-
   composes: backBtn from './game-room.module.css';
   font-family: inherit;
   cursor: pointer;

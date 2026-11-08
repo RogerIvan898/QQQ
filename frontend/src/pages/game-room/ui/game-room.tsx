@@ -25,6 +25,7 @@ import { GamePageGate } from '../model';
 import { GameLoader } from './game-loader';
 import styles from './game-room.module.css';
 import { HandReplay } from './hand-replay';
+import { LeaveConfirm } from './leave-confirm';
 
 const RevealCardsButton = import.meta.env.DEV
   ? React.lazy(() =>
@@ -53,6 +54,7 @@ export const GameRoomPage = () => {
     gameModel.$connectionLost,
   ]);
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+  const [isLeaveOpen, setIsLeaveOpen] = React.useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
   const [replayHand, setReplayHand] = React.useState<HandRecord | null>(null);
 
@@ -72,7 +74,7 @@ export const GameRoomPage = () => {
     setReplayMinimized(false);
     setReplayHand(null);
   };
-  useTelegramBackButton(() => void navigate({ to: '/' }));
+  useTelegramBackButton(() => setIsLeaveOpen(true));
 
   useTelegramClosingConfirmation();
 
@@ -92,7 +94,7 @@ export const GameRoomPage = () => {
         type="button"
         dir="auto"
         className={styles.backBtn}
-        onClick={() => void navigate({ to: '/' })}
+        onClick={() => setIsLeaveOpen(true)}
       >
         <ArrowLeft size={14} strokeWidth={2.25} />
         {t`Tables`}
@@ -125,6 +127,15 @@ export const GameRoomPage = () => {
       >
         <History size={18} />
       </button>
+
+      <LeaveConfirm
+        open={isLeaveOpen}
+        onStay={() => setIsLeaveOpen(false)}
+        onLeave={() => {
+          setIsLeaveOpen(false);
+          void navigate({ to: '/' });
+        }}
+      />
 
       <HandHistorySheet
         open={isHistoryOpen && !replayHand}

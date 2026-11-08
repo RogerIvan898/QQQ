@@ -309,6 +309,9 @@ msgstr "High card"
 msgid "History"
 msgstr "History"
 
+msgid "If you are in a hand, your cards will be folded."
+msgstr "If you are in a hand, your cards will be folded."
+
 msgid "Invalid amount"
 msgstr "Invalid amount"
 
@@ -317,6 +320,12 @@ msgstr "Joining…"
 
 msgid "Language"
 msgstr "Language"
+
+msgid "Leave"
+msgstr "Leave"
+
+msgid "Leave table?"
+msgstr "Leave table?"
 
 msgid "Letters, digits, space, dot, dash and underscore only"
 msgstr "Letters, digits, space, dot, dash and underscore only"
@@ -507,6 +516,9 @@ msgstr "Sound on"
 
 msgid "Stakes"
 msgstr "Stakes"
+
+msgid "Stay"
+msgstr "Stay"
 
 msgid "Straight"
 msgstr "Straight"

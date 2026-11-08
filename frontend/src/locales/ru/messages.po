@@ -310,6 +310,9 @@ msgstr "Старшая карта"
 msgid "History"
 msgstr "История"
 
+msgid "If you are in a hand, your cards will be folded."
+msgstr "Если вы в раздаче, ваши карты будут сброшены."
+
 msgid "Invalid amount"
 msgstr "Некорректная сумма"
 
@@ -318,6 +321,12 @@ msgstr "Подключение к столу…"
 
 msgid "Language"
 msgstr "Язык"
+
+msgid "Leave"
+msgstr "Покинуть"
+
+msgid "Leave table?"
+msgstr "Покинуть стол?"
 
 msgid "Letters, digits, space, dot, dash and underscore only"
 msgstr "Только буквы, цифры, пробел, точка, дефис и подчёркивание"
@@ -508,6 +517,9 @@ msgstr "Звук включён"
 
 msgid "Stakes"
 msgstr "Ставки"
+
+msgid "Stay"
+msgstr "Остаться"
 
 msgid "Straight"
 msgstr "Стрит"
