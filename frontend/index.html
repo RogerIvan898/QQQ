@@ -112,21 +112,8 @@
         </div>
       </div>
     </div>
-    <script>
-      // Same order as detectLocale(): saved choice, then browser language.
-      // (Telegram's language isn't available yet: its script loads below.)
-      (function () {
-        var locale = '';
-        try {
-          locale = localStorage.getItem('poker:locale') || '';
-        } catch (e) {}
-        if (!locale) locale = (navigator.language || '').slice(0, 2);
-        if (locale === 'ru') {
-          document.getElementById('boot-label').textContent = 'Загрузка…';
-          document.documentElement.lang = 'ru';
-        }
-      })();
-    </script>
+    <!-- Boot label language; a file so the CSP needs no inline scripts. -->
+    <script src="/boot-locale.js"></script>
     <!-- Kept synchronous (the app reads window.Telegram on start) but placed
        after the boot screen so a slow telegram.org doesn't block first paint. -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
