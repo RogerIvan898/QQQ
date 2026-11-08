@@ -3,7 +3,7 @@ import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useGate, useUnit } from 'effector-react';
-import { ArrowLeft, History, Settings } from 'lucide-react';
+import { ArrowLeft, History, Play, Settings, X } from 'lucide-react';
 
 import { gameModel } from 'entities/game';
 import { findRoom } from 'entities/room';
@@ -48,6 +48,24 @@ export const GameRoomPage = () => {
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
   const [replayHand, setReplayHand] = React.useState<HandRecord | null>(null);
+  // The live game always wins: when it's the player's turn the replay pauses
+  // and steps aside; it then stays minimised until they choose to resume.
+  const isMyTurn = useUnit(gameModel.$myAllowedActions) !== null;
+  const [replayMinimized, setReplayMinimized] = React.useState(false);
+
+  if (isMyTurn && replayHand && !replayMinimized) {
+    setReplayMinimized(true);
+  }
+
+  const replayShown = Boolean(replayHand) && !replayMinimized;
+  const openReplay = (hand: HandRecord) => {
+    setReplayMinimized(false);
+    setReplayHand(hand);
+  };
+  const closeReplay = () => {
+    setReplayMinimized(false);
+    setReplayHand(null);
+  };
   useTelegramBackButton(() => void navigate({ to: '/' }));
   // A stray swipe-down would otherwise drop the player out of a hand.
   useTelegramClosingConfirmation();
@@ -105,15 +123,38 @@ export const GameRoomPage = () => {
       <HandHistorySheet
         open={isHistoryOpen && !replayHand}
         onClose={() => setIsHistoryOpen(false)}
-        onSelect={setReplayHand}
+        onSelect={openReplay}
       />
 
       {replayHand ? (
         <HandReplay
           key={replayHand.id}
           hand={replayHand}
-          onClose={() => setReplayHand(null)}
+          onClose={closeReplay}
+          suspended={!replayShown}
         />
+      ) : null}
+
+      {/* Paused for the player's turn: bring it back from the same frame. */}
+      {replayHand && replayMinimized && !isMyTurn ? (
+        <div className={styles.resumeReplay} role="status">
+          <button
+            type="button"
+            className={styles.resumeReplayBtn}
+            onClick={() => setReplayMinimized(false)}
+          >
+            <Play size={14} strokeWidth={2.5} />
+            {t`Resume replay`}
+          </button>
+          <button
+            type="button"
+            className={styles.resumeReplayClose}
+            onClick={closeReplay}
+            aria-label={t`Close replay`}
+          >
+            <X size={14} strokeWidth={2.5} />
+          </button>
+        </div>
       ) : null}
 
       <SettingsDialog
@@ -128,7 +169,7 @@ export const GameRoomPage = () => {
       ) : null}
       {/* The replay covers the screen: hide the live table under it so it
           stops animating and playing sounds, but keeps its state. */}
-      <React.Activity mode={replayHand ? 'hidden' : 'visible'}>
+      <React.Activity mode={replayShown ? 'hidden' : 'visible'}>
         <PokerBoard />
         <PlayerActions />
       </React.Activity>

@@ -117,6 +117,9 @@ msgstr "Checking that the dealer is ready..."
 msgid "Close"
 msgstr "Close"
 
+msgid "Close replay"
+msgstr "Close replay"
+
 msgid "Completed"
 msgstr "Completed"
 
@@ -424,6 +427,9 @@ msgstr "Recipient address"
 
 msgid "Required"
 msgstr "Required"
+
+msgid "Resume replay"
+msgstr "Resume replay"
 
 msgid "Retry"
 msgstr "Retry"

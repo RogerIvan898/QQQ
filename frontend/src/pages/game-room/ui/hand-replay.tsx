@@ -66,13 +66,18 @@ const STREET_LABELS: Partial<Record<GameStreet, MessageDescriptor>> = {
 interface Props {
   hand: HandRecord;
   onClose: () => void;
+  /**
+   * The live game needs the player (their turn): pause and step aside,
+   * keeping the current frame so watching can resume from there.
+   */
+  suspended?: boolean;
 }
 
 /**
  * Step-by-step replay drawn with the real table widget: each step is fed into
  * an isolated effector scope, so the live game state is never touched.
  */
-export const HandReplay = ({ hand, onClose }: Props) => {
+export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
   const { i18n, t } = useLingui();
   const [viewerId, amountsInBb] = useUnit([
     sessionModel.$currentUserId,
@@ -87,6 +92,11 @@ export const HandReplay = ({ hand, onClose }: Props) => {
   const lastStep = timeline.length - 1;
   const [step, setStep] = React.useState(0);
   const [playing, setPlaying] = React.useState(false);
+
+  // Your turn at the real table: stop autoplay right away.
+  if (suspended && playing) {
+    setPlaying(false);
+  }
   const replay = replayState(hand, timeline, step);
 
   const scope = React.useMemo(() => {
@@ -211,7 +221,13 @@ export const HandReplay = ({ hand, onClose }: Props) => {
   }).format(new Date(hand.startedAt));
 
   return createPortal(
-    <div className={styles.overlay} role="dialog" aria-modal="true">
+    <div
+      className={styles.overlay}
+      role="dialog"
+      aria-modal="true"
+      // Stays mounted (frame and position kept) but out of the way.
+      hidden={suspended}
+    >
       <header className={styles.header}>
         <button type="button" className={styles.backBtn} onClick={onClose}>
           <ArrowLeft size={14} strokeWidth={2.25} />

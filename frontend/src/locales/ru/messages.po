@@ -118,6 +118,9 @@ msgstr "Проверяем готовность дилера..."
 msgid "Close"
 msgstr "Закрыть"
 
+msgid "Close replay"
+msgstr "Закрыть повтор"
+
 msgid "Completed"
 msgstr "Выполнено"
 
@@ -425,6 +428,9 @@ msgstr "Адрес получателя"
 
 msgid "Required"
 msgstr "Обязательно"
+
+msgid "Resume replay"
+msgstr "Продолжить повтор"
 
 msgid "Retry"
 msgstr "Повторить"

@@ -23,6 +23,11 @@
     );
 }
 
+/* Paused for the player's turn at the live table. */
+.overlay[hidden] {
+  display: none;
+}
+
 .header {
   position: relative;
   display: flex;
