@@ -352,6 +352,9 @@ msgstr "Net Profit"
 msgid "Next step"
 msgstr "Next step"
 
+msgid "NL Hold'em"
+msgstr "NL Hold'em"
+
 msgid "No game sessions yet. Sit at a table to start one."
 msgstr "No game sessions yet. Sit at a table to start one."
 

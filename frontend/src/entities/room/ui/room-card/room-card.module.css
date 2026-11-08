@@ -40,7 +40,7 @@
 
 .cardFull .info,
 .cardLocked .meta,
-.cardLocked .titleRow {
+.cardLocked .heading {
   opacity: 0.6;
 }
 
@@ -61,6 +61,21 @@
   gap: 6px;
   flex: 1;
   min-width: 0;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* "NL Hold'em": the game, quietly, under the table name. */
+.game {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
 .titleRow {
@@ -219,7 +234,7 @@
     display: contents;
   }
 
-  .titleRow {
+  .heading {
     grid-column: 1;
   }
 
@@ -267,7 +282,7 @@
   }
 
   /* .info no longer draws, so fade its parts directly. */
-  .cardFull .titleRow,
+  .cardFull .heading,
   .cardFull .metaItem,
   .cardFull .statusRow {
     opacity: 0.6;

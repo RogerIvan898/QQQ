@@ -7,7 +7,7 @@ import { Coins, Swords, Users } from 'lucide-react';
 import { cn } from 'shared/utils/cn';
 import { formatBalance } from 'shared/utils/format';
 
-import type { RoomCardInfo, RoomMode } from '../../model';
+import type { RoomCardInfo, RoomGame, RoomMode } from '../../model';
 
 import styles from './room-card.module.css';
 
@@ -15,6 +15,10 @@ const MODE_LABELS = {
   cash: msg`Cash`,
   'heads-up': msg`Heads-Up`,
 } as const satisfies Record<RoomMode, ReturnType<typeof msg>>;
+
+const GAME_LABELS = {
+  nlh: msg`NL Hold'em`,
+} as const satisfies Record<RoomGame, ReturnType<typeof msg>>;
 
 const CURRENCY = 'TON';
 
@@ -42,20 +46,25 @@ export const RoomCard = ({ room, action, shortfall = 0 }: Props) => {
       )}
     >
       <div className={styles.info}>
-        <div className={styles.titleRow}>
-          <h3 className={styles.name}>{room.name}</h3>
-          <span
-            className={cn(
-              styles.badge,
-              isHeadsUp ? styles.badgeHeadsUp : styles.badgeCash
-            )}
-          >
-            {isHeadsUp ? (
-              <Swords size={11} strokeWidth={2.5} />
-            ) : (
-              <Coins size={11} strokeWidth={2.5} />
-            )}
-            {i18n._(MODE_LABELS[room.mode])}
+        <div className={styles.heading}>
+          <div className={styles.titleRow}>
+            <h3 className={styles.name}>{room.name}</h3>
+            <span
+              className={cn(
+                styles.badge,
+                isHeadsUp ? styles.badgeHeadsUp : styles.badgeCash
+              )}
+            >
+              {isHeadsUp ? (
+                <Swords size={11} strokeWidth={2.5} />
+              ) : (
+                <Coins size={11} strokeWidth={2.5} />
+              )}
+              {i18n._(MODE_LABELS[room.mode])}
+            </span>
+          </div>
+          <span className={styles.game}>
+            {i18n._(GAME_LABELS[room.game ?? 'nlh'])}
           </span>
         </div>
 

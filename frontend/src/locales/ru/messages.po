@@ -353,6 +353,9 @@ msgstr "Чистая прибыль"
 msgid "Next step"
 msgstr "Следующий шаг"
 
+msgid "NL Hold'em"
+msgstr "NL Холдем"
+
 msgid "No game sessions yet. Sit at a table to start one."
 msgstr "Игровых сессий пока нет. Сядьте за стол, чтобы начать."
 

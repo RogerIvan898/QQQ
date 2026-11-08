@@ -112,6 +112,7 @@ declare module '@lingui/core' {
       | 'Tz0i8g'
       | 'UOPW5c'
       | 'UbRKMZ'
+      | 'UyHZcP'
       | 'VHOVEJ'
       | 'VKsdB5'
       | 'VWEid6'
