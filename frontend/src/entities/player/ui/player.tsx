@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { HAND_INTRO_MS, MUCK_MS } from 'shared/config/table-timing';
 import { usePresence } from 'shared/hooks/use-presence';
 import { cn } from 'shared/utils/cn';
 
@@ -58,8 +59,6 @@ interface Props {
 
 const DEAL_STEP_MS = 70;
 
-const MUCK_MS = 450;
-
 const PlayerView = ({
   player,
   hand: handOverride,
@@ -115,12 +114,31 @@ const PlayerView = ({
     playSound: currentPlayer,
   });
 
-  const showCards = shouldShowHoleCards({
-    hand,
-    status,
-    currentPlayer,
-    reveal,
-  });
+  const [readyHand, setReadyHand] = React.useState(handNumber);
+
+  React.useEffect(() => {
+    if (readyHand === handNumber) {
+      return;
+    }
+
+    const timer = window.setTimeout(
+      () => setReadyHand(handNumber),
+      HAND_INTRO_MS
+    );
+
+    return () => window.clearTimeout(timer);
+  }, [handNumber, readyHand]);
+
+  const dealReady = readyHand === handNumber;
+
+  const showCards =
+    dealReady &&
+    shouldShowHoleCards({
+      hand,
+      status,
+      currentPlayer,
+      reveal,
+    });
 
   const dealerDirection = getDealerDirection(towardCenter);
   const directionVars = {

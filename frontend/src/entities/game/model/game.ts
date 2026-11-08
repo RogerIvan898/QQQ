@@ -2,6 +2,7 @@ import { createEffect, createEvent, createStore, sample } from 'effector';
 
 import type { CardType as Card } from 'entities/card';
 import type { PlayerType as Player } from 'entities/player';
+import { DEALER_START_MS } from 'shared/config/table-timing';
 import { displayBigBlindChanged } from 'shared/lib/display-settings';
 
 import { watchPlayerActionSounds } from './action-sounds';
@@ -101,7 +102,26 @@ export const $myAllowedActions = createStore<
   .on(incomingEvent, reduceAllowedActions)
   .reset(disconnectGame);
 
-export const $dealerSeat = $gameState.map(state => state.dealerSeat);
+const $actualDealerSeat = $gameState.map(state => state.dealerSeat);
+
+const moveDealerFx = createEffect(
+  (seat: number | null) =>
+    new Promise<number | null>(resolve =>
+      window.setTimeout(() => resolve(seat), DEALER_START_MS)
+    )
+);
+
+export const $dealerSeat = createStore<number | null>(null)
+  .on(moveDealerFx.doneData, (_, seat) => seat)
+  .reset(disconnectGame);
+
+sample({
+  clock: $actualDealerSeat,
+  source: $dealerSeat,
+  filter: (shown, actual) => shown !== actual,
+  fn: (_, actual) => actual,
+  target: moveDealerFx,
+});
 export const $players = $gameState.map(state => state.players);
 export const $activeSeat = $gameState.map(state => state.activeSeat);
 export const $smallBlindSeat = $gameState.map(state => state.smallBlindSeat);

@@ -1,7 +1,11 @@
 import { createEvent } from 'effector';
 
 import { Sound } from 'shared/assets/sounds';
-import { HAND_END_MS } from 'shared/config/table-timing';
+import {
+  HAND_END_MS,
+  HAND_INTRO_MS,
+  WINNER_PAUSE_MS,
+} from 'shared/config/table-timing';
 import { playBuffered } from 'shared/lib/audio';
 import { delay } from 'shared/utils/delay';
 
@@ -180,7 +184,25 @@ const run = async (gen: number) => {
       continue;
     }
 
+    if (queue[0]?.type === SERVER_EVENTS.HAND_STARTED) {
+      const started = queue.shift();
+
+      if (started) {
+        emit(started);
+      }
+
+      if (!shouldFastForward()) {
+        await delay(HAND_INTRO_MS);
+      }
+
+      continue;
+    }
+
     if (queue[0]?.type === SERVER_EVENTS.HAND_COMPLETED) {
+      if (!shouldFastForward()) {
+        await delay(WINNER_PAUSE_MS);
+      }
+
       const completed = queue.shift();
 
       if (completed) {

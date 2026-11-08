@@ -4,6 +4,7 @@ import { useStoreMap, useUnit } from 'effector-react';
 
 import { gameModel } from 'entities/game';
 import { Player, type SeatDirection } from 'entities/player';
+import { BB_POST_MS, SB_POST_MS } from 'shared/config/table-timing';
 
 import styles from './players-layer.module.css';
 import { SeatCombination } from './seat-combination';
@@ -87,10 +88,35 @@ const SeatView = ({
   );
   const equitySlot = React.useMemo(() => <SeatEquity seat={seat} />, [seat]);
 
+  const postAt = blindSeat ? SB_POST_MS : bigBlindSeat ? BB_POST_MS : null;
+  const [postedHand, setPostedHand] = React.useState(handNumber);
+
+  React.useEffect(() => {
+    if (postedHand === handNumber) {
+      return;
+    }
+
+    const timer = window.setTimeout(
+      () => setPostedHand(handNumber),
+      postAt ?? 0
+    );
+
+    return () => window.clearTimeout(timer);
+  }, [handNumber, postedHand, postAt]);
+
   if (!player) return null;
 
   const hand = isViewer && myCards ? myCards : (revealed ?? player.hand);
-  const blindPosted = round === 'PREFLOP' && player.committed > 0;
+  const blindHidden =
+    postAt !== null &&
+    postedHand !== handNumber &&
+    round === 'PREFLOP' &&
+    player.committed > 0;
+  const shownPlayer = blindHidden
+    ? { ...player, committed: 0, stack: player.stack + player.committed }
+    : player;
+  const blindPosted =
+    !blindHidden && round === 'PREFLOP' && player.committed > 0;
   const blindRole = !blindPosted
     ? null
     : blindSeat
@@ -110,7 +136,7 @@ const SeatView = ({
       }}
     >
       <Player
-        player={player}
+        player={shownPlayer}
         hand={hand}
         dealer={dealer}
         blindRole={blindRole}
