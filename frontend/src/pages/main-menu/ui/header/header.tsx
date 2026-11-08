@@ -62,30 +62,26 @@ export const Header = ({
 
         <div className={styles.userInfo}>
           <span className={styles.userName}>{userName}</span>
-
-          <div className={styles.walletAnchor}>
-            <button
-              ref={walletButtonRef}
-              type="button"
-              className={cn(
-                styles.walletBtn,
-                isWalletOpen && styles.walletOpen
-              )}
-              onClick={onWalletClick}
-              aria-haspopup="dialog"
-              aria-expanded={isWalletOpen}
-              aria-label={t`My Wallet`}
-            >
-              <Logo className={styles.tonIcon} />
-              <span className={styles.balanceValue}>{formattedBalance}</span>
-              <ChevronDown size={16} className={styles.walletChevron} />
-            </button>
-            {walletPanel}
-          </div>
         </div>
       </div>
 
       <div className={styles.headerRight}>
+        <div className={styles.walletAnchor}>
+          <button
+            ref={walletButtonRef}
+            type="button"
+            className={cn(styles.walletBtn, isWalletOpen && styles.walletOpen)}
+            onClick={onWalletClick}
+            aria-haspopup="dialog"
+            aria-expanded={isWalletOpen}
+            aria-label={t`My Wallet`}
+          >
+            <Logo className={styles.tonIcon} />
+            <span className={styles.balanceValue}>{formattedBalance}</span>
+            <ChevronDown size={16} className={styles.walletChevron} />
+          </button>
+          {walletPanel}
+        </div>
         <Link
           to="/history"
           className={styles.historyBtn}
