@@ -228,3 +228,7 @@ and the real timeout always agree. `EV_TURN_CHANGED` carries them:
   check when nothing is owed).
 - Both are optional for now: without them the client falls back to 15 s +
   10 s, which can disagree with the real timeout.
+
+### Pause between hands
+
+After `EV_HAND_COMPLETED`, wait at least **3.5 s** before `EV_HAND_STARTED` of the next hand. The client spends about 3.3 s on the hand end: winner reveal 0.9 s, pot flight 0.75 s, stack count 0.45 s, winner hold 1.2 s (`frontend/src/shared/config/table-timing.ts`). Events that arrive earlier are queued and shown late, so the next player's turn clock would start before they can see the table.

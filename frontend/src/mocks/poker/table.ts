@@ -31,7 +31,7 @@ const TIME_BANK_MS = 10_000;
 const HERO_TURN_MS = TURN_MS + TIME_BANK_MS;
 const BOT_ACTION_MS = 1_600;
 const STREET_PAUSE_MS = 900;
-const BETWEEN_HANDS_MS = 1_600;
+const BETWEEN_HANDS_MS = 3_500;
 
 interface Seat {
   id: string;
