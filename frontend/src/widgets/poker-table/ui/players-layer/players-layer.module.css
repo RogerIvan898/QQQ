@@ -125,7 +125,21 @@
   line-height: 1.4;
   white-space: nowrap;
   box-shadow: 0 2px 6px var(--color-shadow);
+  transition:
+    color var(--dur-slow) var(--ease-out),
+    background var(--dur-slow) var(--ease-out),
+    border-color var(--dur-slow) var(--ease-out);
   animation: combinationIn 0.25s ease-out;
+}
+
+[data-winning] .combination {
+  border-color: color-mix(in srgb, var(--color-warning) 60%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--color-warning) 18%,
+    var(--color-bg-elevated)
+  );
+  color: #ffd96a;
 }
 
 @keyframes combinationIn {

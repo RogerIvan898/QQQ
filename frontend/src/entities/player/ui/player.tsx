@@ -196,7 +196,12 @@ const PlayerView = ({
           />
 
           {!isFolded && combinationSlot && (
-            <div className={styles.combinationWrap}>{combinationSlot}</div>
+            <div
+              className={styles.combinationWrap}
+              data-winning={showWinner || undefined}
+            >
+              {combinationSlot}
+            </div>
           )}
         </div>
 

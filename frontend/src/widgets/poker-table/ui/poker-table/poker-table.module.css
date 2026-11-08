@@ -106,7 +106,6 @@
 
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .crowded {
-
     --card-width: min(
       84px,
       calc((76cqw - 4 * var(--board-gap)) / 5),
