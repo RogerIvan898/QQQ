@@ -542,6 +542,9 @@ msgstr "Table ID"
 msgid "Tables"
 msgstr "Tables"
 
+msgid "Tap Fold again to fold anyway"
+msgstr "Tap Fold again to fold anyway"
+
 msgid "The dealer is counting the cards..."
 msgstr "The dealer is counting the cards..."
 
@@ -669,6 +672,9 @@ msgstr "Yesterday"
 
 msgid "You"
 msgstr "You"
+
+msgid "You can check for free"
+msgstr "You can check for free"
 
 msgid "You folded"
 msgstr "You folded"

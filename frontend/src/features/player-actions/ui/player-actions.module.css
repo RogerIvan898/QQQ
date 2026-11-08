@@ -1,5 +1,4 @@
 .actionContainer {
-
   position: fixed;
   right: calc(16px + var(--tg-safe-area-right));
   bottom: calc(16px + var(--tg-safe-area-bottom));

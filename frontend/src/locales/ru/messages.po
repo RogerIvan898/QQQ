@@ -543,6 +543,9 @@ msgstr "ID стола"
 msgid "Tables"
 msgstr "Столы"
 
+msgid "Tap Fold again to fold anyway"
+msgstr "Нажмите «Фолд» ещё раз, чтобы сбросить"
+
 msgid "The dealer is counting the cards..."
 msgstr "Дилер пересчитывает карты..."
 
@@ -670,6 +673,9 @@ msgstr "Вчера"
 
 msgid "You"
 msgstr "Вы"
+
+msgid "You can check for free"
+msgstr "Можно прочекать бесплатно"
 
 msgid "You folded"
 msgstr "Вы сбросили карты"
