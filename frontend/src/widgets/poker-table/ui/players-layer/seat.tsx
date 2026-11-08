@@ -5,7 +5,7 @@ import { useStoreMap, useUnit } from 'effector-react';
 import { gameModel } from 'entities/game';
 import { Player, type SeatDirection } from 'entities/player';
 import { BB_POST_MS, SB_POST_MS } from 'shared/config/table-timing';
-import { useSettled } from 'shared/hooks/use-settled';
+import { useElapsed } from 'shared/hooks/use-elapsed';
 
 import styles from './players-layer.module.css';
 import { SeatCombination } from './seat-combination';
@@ -76,13 +76,15 @@ const SeatView = ({
     keys: [seat],
     fn: (holes, [index]) => holes[index] ?? null,
   });
-  const [round, myCards, handNumber, dealerSeat, turnTiming] = useUnit([
-    gameModel.$round,
-    gameModel.$myCards,
-    gameModel.$handNumber,
-    gameModel.$dealerSeat,
-    gameModel.$turnTiming,
-  ]);
+  const [round, myCards, handNumber, handStartedAt, dealerSeat, turnTiming] =
+    useUnit([
+      gameModel.$round,
+      gameModel.$myCards,
+      gameModel.$handNumber,
+      gameModel.$handStartedAt,
+      gameModel.$dealerSeat,
+      gameModel.$turnTiming,
+    ]);
   const seatCount = useStoreMap(
     gameModel.$players,
     players => Object.keys(players).length
@@ -90,7 +92,7 @@ const SeatView = ({
   const equitySlot = React.useMemo(() => <SeatEquity seat={seat} />, [seat]);
 
   const postAt = blindSeat ? SB_POST_MS : bigBlindSeat ? BB_POST_MS : null;
-  const blindShown = useSettled(handNumber, postAt ?? 0);
+  const blindShown = useElapsed(handStartedAt, postAt ?? 0);
 
   if (!player) return null;
 
@@ -137,6 +139,7 @@ const SeatView = ({
         collecting={collecting}
         equitySlot={equitySlot}
         handNumber={handNumber}
+        handStartedAt={handStartedAt}
         {...(turnTiming && {
           turnDurationSec: turnTiming.turnMs / 1000,
           timeBankSec: turnTiming.timeBankMs / 1000,

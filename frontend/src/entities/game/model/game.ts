@@ -2,7 +2,7 @@ import { createEffect, createEvent, createStore, sample } from 'effector';
 
 import type { CardType as Card } from 'entities/card';
 import type { PlayerType as Player } from 'entities/player';
-import { DEALER_START_MS } from 'shared/config/table-timing';
+import { DEAL_START_MS, DEALER_START_MS } from 'shared/config/table-timing';
 import { displayBigBlindChanged } from 'shared/lib/display-settings';
 
 import { watchPlayerActionSounds } from './action-sounds';
@@ -82,6 +82,20 @@ export const $handNumber = createStore(0)
   .on(incomingEvent, (count, event) =>
     event.type === SERVER_EVENTS.HAND_STARTED ? count + 1 : count
   )
+  .reset(disconnectGame);
+
+const FIRST_DEAL_DELAY_MS = 250;
+
+export const $handStartedAt = createStore(0)
+  .on(incomingEvent, (at, event) => {
+    if (event.type !== SERVER_EVENTS.HAND_STARTED) {
+      return at;
+    }
+
+    const now = performance.now();
+
+    return at === 0 ? now - DEAL_START_MS + FIRST_DEAL_DELAY_MS : now;
+  })
   .reset(disconnectGame);
 
 export const $collectingBets = createStore(false)

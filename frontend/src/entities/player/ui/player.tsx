@@ -1,8 +1,8 @@
 import React from 'react';
 
 import { DEAL_START_MS, MUCK_MS } from 'shared/config/table-timing';
+import { useElapsed } from 'shared/hooks/use-elapsed';
 import { usePresence } from 'shared/hooks/use-presence';
-import { useSettled } from 'shared/hooks/use-settled';
 import { cn } from 'shared/utils/cn';
 
 import {
@@ -60,6 +60,8 @@ interface Props {
 
   handNumber?: number;
 
+  handStartedAt?: number;
+
   dealOrder?: number;
 }
 
@@ -83,6 +85,7 @@ const PlayerView = ({
   equitySlot = null,
   combinationSlot = null,
   handNumber = 0,
+  handStartedAt = 0,
   dealOrder = 0,
 }: Props) => {
   const { status, stack, name } = player;
@@ -120,7 +123,7 @@ const PlayerView = ({
     playSound: currentPlayer,
   });
 
-  const dealReady = useSettled(handNumber, DEAL_START_MS);
+  const dealReady = useElapsed(handStartedAt, DEAL_START_MS);
 
   const showCards =
     dealReady &&

@@ -16,6 +16,7 @@ export {
   $pot,
   $round,
   $handNumber,
+  $handStartedAt,
   $turnTiming,
   $smallBlindSeat,
   connectGame,
