@@ -74,27 +74,6 @@
   --action-color: var(--action-allin);
 }
 
-.raise,
-.allIn {
-  animation:
-    badgeIn 0.24s var(--ease-spring),
-    actionPulse 1.8s ease-out 0.3s infinite;
-}
-
-@keyframes actionPulse {
-  0% {
-    box-shadow:
-      0 3px 10px var(--color-shadow),
-      0 0 0 0 color-mix(in srgb, var(--action-color) 45%, transparent);
-  }
-
-  70%,
-  100% {
-    box-shadow:
-      0 3px 10px var(--color-shadow),
-      0 0 0 6px color-mix(in srgb, var(--action-color) 0%, transparent);
-  }
-}
 
 .blind {
   --action-color: var(--action-blind);
@@ -119,9 +98,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .win,
-  .badge,
-  .raise,
-  .allIn {
+  .badge {
     animation: none;
   }
 }
