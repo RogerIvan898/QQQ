@@ -82,7 +82,6 @@ export const BaseActions = ({
                 <b>{t`You can check for free`}</b>
                 <span>{t`Tap Fold again to fold anyway`}</span>
               </span>
-              <span className={styles.hintTimer} aria-hidden="true" />
             </div>
           ) : null}
           <Button color="danger" text={foldLabel} onClick={handleFold} />
