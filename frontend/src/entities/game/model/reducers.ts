@@ -25,6 +25,25 @@ const reducePlayerSeated = (
   },
 });
 
+/** Statuses that only describe the hand that just ended. */
+const HAND_SCOPED_STATUSES = new Set<Player['status']>([
+  PlayerStatus.FOLDED,
+  PlayerStatus.ALL_IN,
+  PlayerStatus.RAISE,
+]);
+
+/**
+ * A fold, raise or all-in only lasts for its hand: anyone with chips (or a
+ * blind just posted) starts the next one in the game. Otherwise a player who
+ * survived an all-in kept the ALL IN badge and lost their pre-action buttons
+ * until they acted. Busted players keep their status for the server to update.
+ */
+const statusForNewHand = (player: Player, blindPosted: number) =>
+  HAND_SCOPED_STATUSES.has(player.status) &&
+  (player.stack > 0 || blindPosted > 0)
+    ? PlayerStatus.IN_GAME
+    : player.status;
+
 const reduceHandStarted = (
   state: T.GameState,
   payload: T.HandStartedEvent['payload']
@@ -35,11 +54,10 @@ const reduceHandStarted = (
     (acc, key) => {
       acc[key] = {
         ...state.players[key],
-        // A fold only lasts for its hand.
-        status:
-          state.players[key].status === PlayerStatus.FOLDED
-            ? PlayerStatus.IN_GAME
-            : state.players[key].status,
+        status: statusForNewHand(
+          state.players[key],
+          initialBets[Number(key)] || 0
+        ),
         committed: initialBets[Number(key)] || 0,
         hand: null,
         lastAction: null,

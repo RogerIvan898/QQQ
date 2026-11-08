@@ -223,15 +223,33 @@ const run = async (gen: number) => {
   }
 };
 
-const isAllInRunout = (events: ServerGameEvent[]) =>
-  events.some(event => event.type === SERVER_EVENTS.SHOWDOWN) &&
-  events.some(event => event.type === SERVER_EVENTS.BOARD_DEALT);
-
 const isRunoutEvent = (event: ServerGameEvent | undefined) =>
   event?.type === SERVER_EVENTS.STREET_CONCLUDED ||
   event?.type === SERVER_EVENTS.BOARD_DEALT ||
   event?.type === SERVER_EVENTS.SHOWDOWN ||
   event?.type === SERVER_EVENTS.HAND_COMPLETED;
+
+/**
+ * An all-in runout is one unbroken block of street/board/showdown/result
+ * events at the head of the queue. Only that block counts: while the queue
+ * lags, a later street's showdown (or the next hand) can already be queued,
+ * and scanning the whole queue made a plain flop play as a slow runout.
+ */
+const isAllInRunout = (events: ServerGameEvent[]) => {
+  let showdown = false;
+  let board = false;
+
+  for (const event of events) {
+    if (!isRunoutEvent(event)) {
+      break;
+    }
+
+    showdown ||= event.type === SERVER_EVENTS.SHOWDOWN;
+    board ||= event.type === SERVER_EVENTS.BOARD_DEALT;
+  }
+
+  return showdown && board;
+};
 
 const hasCommittedBets = () =>
   Object.values(readState().players).some(player => player.committed > 0);
