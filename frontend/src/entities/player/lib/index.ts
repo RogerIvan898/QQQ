@@ -62,6 +62,13 @@ export const resolveSeatActionBadge = (
   return null;
 };
 
+/**
+ * Badges that describe the player's state for the rest of the hand (all in,
+ * folded), not a bet on this street: they stay up while bets are collected.
+ */
+export const isStatusBadge = (badge: SeatActionBadge) =>
+  badge === SeatBadgeKind.ALL_IN || badge === PlayerAction.FOLD;
+
 export const isBlindBadge = (badge: SeatActionBadge) =>
   badge === SeatBadgeKind.SB || badge === SeatBadgeKind.BB;
 

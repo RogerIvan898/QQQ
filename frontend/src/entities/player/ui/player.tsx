@@ -8,6 +8,7 @@ import {
   getDealerDirection,
   getHandKey,
   isBlindBadge,
+  isStatusBadge,
   resolveSeatActionBadge,
   shouldShowHoleCards,
 } from '../lib';
@@ -175,7 +176,11 @@ const PlayerView = ({
         <div className={styles.stackArea}>
           {showWinner ? (
             <ActionBadge action={SeatBadgeKind.WIN} />
-          ) : seatActionBadge && !collecting && !wonThisHand ? (
+          ) : seatActionBadge &&
+            // Street bets fly to the pot while collecting; ALL IN / FOLD
+            // stay put instead of blinking out and back in.
+            (!collecting || isStatusBadge(seatActionBadge)) &&
+            !wonThisHand ? (
             <ActionBadge
               action={seatActionBadge}
               amount={
