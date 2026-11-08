@@ -1,9 +1,7 @@
 export {
   $currentUserId,
   $nickname,
-  $nicknameSaveStatus,
-  $nicknameSaving,
-  nicknameSaveReset,
+  NICKNAME_KEY,
   saveNickname,
   VIEWER_ID,
 } from './session';

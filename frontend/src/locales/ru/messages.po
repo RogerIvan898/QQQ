@@ -100,6 +100,9 @@ msgstr "Кеш"
 msgid "Cash out"
 msgstr "Кэш-аут"
 
+msgid "Change nickname"
+msgstr "Изменить ник"
+
 msgid "Change wallet"
 msgstr "Сменить кошелёк"
 
@@ -174,9 +177,6 @@ msgstr "Не удалось загрузить страницу"
 
 msgid "Couldn't load transactions"
 msgstr "Не удалось загрузить транзакции"
-
-msgid "Couldn't save the nickname. Try again."
-msgstr "Не удалось сохранить ник. Попробуйте ещё раз."
 
 msgid "Custom"
 msgstr "Период"
@@ -462,9 +462,6 @@ msgstr "Ривер"
 msgid "Save"
 msgstr "Сохранить"
 
-msgid "Saved"
-msgstr "Сохранено"
-
 msgid "SB"
 msgstr "МБ"
 
@@ -497,9 +494,6 @@ msgstr "Настройки"
 
 msgid "Showdown"
 msgstr "Вскрытие"
-
-msgid "Shown to other players at the table"
-msgstr "Его видят другие игроки за столом"
 
 msgid "Small blind"
 msgstr "Малый блайнд"

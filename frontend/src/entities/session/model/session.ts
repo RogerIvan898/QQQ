@@ -23,38 +23,34 @@ sample({
   target: authFx,
 });
 
-/** The player's profile (nickname); loaded after login. */
-const fetchProfileFx = createEffect(() => authApi.getMe());
+export const NICKNAME_KEY = 'poker:nickname';
 
+const readNickname = () => {
+  try {
+    return localStorage.getItem(NICKNAME_KEY);
+  } catch {
+    return null;
+  }
+};
+
+/** Set by the player next to their name in the menu. */
 export const saveNickname = createEvent<string>();
-export const nicknameSaveReset = createEvent();
 
-const saveNicknameFx = createEffect((nickname: string) =>
-  authApi.updateNickname(nickname)
+/**
+ * Local for now (no server yet): kept in this browser. Null until the player
+ * picks one, then the Telegram name is replaced everywhere.
+ */
+export const $nickname = createStore<string | null>(readNickname()).on(
+  saveNickname,
+  (_, nickname) => nickname
 );
 
-/** Null until the profile has loaded (fall back to the Telegram name). */
-export const $nickname = createStore<string | null>(null)
-  .on(fetchProfileFx.doneData, (_, profile) => profile?.nickname ?? null)
-  .on(saveNicknameFx.doneData, (_, result) => result.nickname);
-
-export const $nicknameSaving = saveNicknameFx.pending;
-
-/** Last save result, for the form: saved, rejected by the server, or idle. */
-export const $nicknameSaveStatus = createStore<'idle' | 'saved' | 'failed'>(
-  'idle'
-)
-  .on(saveNicknameFx.done, () => 'saved')
-  .on(saveNicknameFx.fail, () => 'failed')
-  .on(saveNicknameFx, () => 'idle')
-  .reset(nicknameSaveReset);
-
-sample({
-  clock: authFx.finally,
-  target: fetchProfileFx,
-});
-
-sample({
-  clock: saveNickname,
-  target: saveNicknameFx,
+$nickname.updates.watch(nickname => {
+  try {
+    if (nickname) {
+      localStorage.setItem(NICKNAME_KEY, nickname);
+    }
+  } catch {
+    // Private mode: keep it for this session only.
+  }
 });

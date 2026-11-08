@@ -60,6 +60,84 @@
   gap: 4px;
 }
 
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.nameEdit {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
+}
+
+/* Pencil (and the check while editing): small, quiet until hovered. */
+.editName {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.editName:hover:not(:disabled),
+.editName:focus-visible {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  outline: none;
+}
+
+.editName:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.nameInput {
+  width: 150px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-input);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  outline: none;
+}
+
+.nameInputError {
+  border-color: var(--color-danger);
+}
+
+/* Under the field, floating so the header doesn't jump. */
+.nameError {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  z-index: 2;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  box-shadow: 0 4px 12px var(--color-shadow);
+  color: var(--color-danger);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 .userName {
   font-size: 15px;
   font-weight: 600;

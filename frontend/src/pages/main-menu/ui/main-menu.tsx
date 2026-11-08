@@ -147,6 +147,7 @@ export const MenuPage = () => {
         <div className={styles.mainContainer}>
           <Header
             userName={nickname ?? telegramUser?.name ?? 'User'}
+            onRename={sessionModel.saveNickname}
             avatarUrl={telegramUser?.photoUrl}
             balance={balance}
             isWalletOpen={isWalletOpen}

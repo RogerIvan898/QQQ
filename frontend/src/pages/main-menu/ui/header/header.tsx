@@ -13,9 +13,12 @@ import { formatBalance, getInitialLetter } from 'shared/utils/format';
 import { SettingsDialog } from 'widgets/settings';
 
 import styles from './header.module.css';
+import { Nickname } from './nickname';
 
 interface Props {
   userName: string;
+  /** The player picked a new nickname next to their name. */
+  onRename: (nickname: string) => void;
   /** `null` while loading. */
   balance: number | null;
   avatarUrl?: string;
@@ -28,6 +31,7 @@ interface Props {
 
 export const Header = ({
   userName,
+  onRename,
   balance,
   avatarUrl,
   isWalletOpen,
@@ -61,7 +65,7 @@ export const Header = ({
         </button>
 
         <div className={styles.userInfo}>
-          <span className={styles.userName}>{userName}</span>
+          <Nickname name={userName} onSave={onRename} />
         </div>
       </div>
 

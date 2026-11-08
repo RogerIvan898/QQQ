@@ -99,6 +99,9 @@ msgstr "Cash Game"
 msgid "Cash out"
 msgstr "Cash out"
 
+msgid "Change nickname"
+msgstr "Change nickname"
+
 msgid "Change wallet"
 msgstr "Change wallet"
 
@@ -173,9 +176,6 @@ msgstr "Couldn't load the page"
 
 msgid "Couldn't load transactions"
 msgstr "Couldn't load transactions"
-
-msgid "Couldn't save the nickname. Try again."
-msgstr "Couldn't save the nickname. Try again."
 
 msgid "Custom"
 msgstr "Custom"
@@ -461,9 +461,6 @@ msgstr "River"
 msgid "Save"
 msgstr "Save"
 
-msgid "Saved"
-msgstr "Saved"
-
 msgid "SB"
 msgstr "SB"
 
@@ -496,9 +493,6 @@ msgstr "Settings"
 
 msgid "Showdown"
 msgstr "Showdown"
-
-msgid "Shown to other players at the table"
-msgstr "Shown to other players at the table"
 
 msgid "Small blind"
 msgstr "Small blind"
