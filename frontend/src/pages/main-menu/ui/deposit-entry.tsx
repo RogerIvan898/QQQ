@@ -2,12 +2,12 @@ import React from 'react';
 
 import { useLingui } from '@lingui/react/macro';
 import { useUnit } from 'effector-react';
+import { Loader2 } from 'lucide-react';
 
 import { walletModel } from 'entities/wallet';
 import { Dialog } from 'shared/ui/dialog';
-import { Preloader } from 'shared/ui/preloader';
 
-import styles from './main-menu.module.css';
+import styles from './deposit-entry.module.css';
 
 const DepositDialog = React.lazy(() =>
   import('widgets/deposit-dialog').then(module => ({
@@ -20,8 +20,35 @@ interface Props {
   onSuccess: () => void;
 }
 
-export const DepositEntry = ({ onClose, onSuccess }: Props) => {
+interface LoadingProps {
+  onClose: () => void;
+  failed?: boolean;
+  onRetry?: () => void;
+}
+
+const DepositLoading = ({ onClose, failed, onRetry }: LoadingProps) => {
   const { t } = useLingui();
+
+  return (
+    <Dialog open variant="bottom" title={t`Deposit TON`} onClose={onClose}>
+      {failed ? (
+        <div className={styles.state} role="alert">
+          <span>{t`Couldn't load your deposit address`}</span>
+          <button type="button" className={styles.retry} onClick={onRetry}>
+            {t`Retry`}
+          </button>
+        </div>
+      ) : (
+        <div className={styles.state} role="status">
+          <Loader2 size={24} className={styles.spin} />
+          <span>{t`Loading…`}</span>
+        </div>
+      )}
+    </Dialog>
+  );
+};
+
+export const DepositEntry = ({ onClose, onSuccess }: Props) => {
   const [address, status, request] = useUnit([
     walletModel.$depositAddress,
     walletModel.$depositAddressStatus,
@@ -32,38 +59,26 @@ export const DepositEntry = ({ onClose, onSuccess }: Props) => {
     request();
   }, [request]);
 
-  if (address) {
+  if (!address) {
     return (
-      <React.Suspense fallback={null}>
-        <DepositDialog
-          open
-          onClose={onClose}
-          onSuccess={onSuccess}
-          depositAddress={address.address}
-          memo={address.memo}
-        />
-      </React.Suspense>
+      <DepositLoading
+        onClose={onClose}
+        failed={status === 'failed'}
+        onRetry={() => request()}
+      />
     );
   }
 
   return (
-    <Dialog open variant="bottom" title={t`Deposit TON`} onClose={onClose}>
-      <div className={styles.roomsState}>
-        {status === 'failed' ? (
-          <>
-            <span>{t`Couldn't load your deposit address`}</span>
-            <button
-              type="button"
-              className={styles.roomsRetry}
-              onClick={() => request()}
-            >
-              {t`Retry`}
-            </button>
-          </>
-        ) : (
-          <Preloader label={t`Loading…`} />
-        )}
-      </div>
-    </Dialog>
+    <React.Suspense fallback={<DepositLoading onClose={onClose} />}>
+      <DepositDialog
+        open
+        skipEnter
+        onClose={onClose}
+        onSuccess={onSuccess}
+        depositAddress={address.address}
+        memo={address.memo}
+      />
+    </React.Suspense>
   );
 };

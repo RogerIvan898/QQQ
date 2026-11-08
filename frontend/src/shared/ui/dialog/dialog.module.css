@@ -179,6 +179,10 @@
   }
 }
 
+.noEnter.noEnter:not(.overlayClosing):not(.panelClosing) {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .overlay,
   .overlayClosing,

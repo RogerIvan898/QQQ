@@ -20,6 +20,7 @@ interface Props {
   memo?: string;
   onCopyText?: (text: string, type: 'address' | 'memo' | 'amount') => void;
   onSuccess?: () => void;
+  skipEnter?: boolean;
 }
 
 export const DepositDialog = ({
@@ -29,6 +30,7 @@ export const DepositDialog = ({
   memo,
   onCopyText,
   onSuccess,
+  skipEnter,
 }: Props) => {
   const { t } = useLingui();
 
@@ -52,6 +54,7 @@ export const DepositDialog = ({
       open={open}
       onClose={onClose}
       variant="bottom"
+      skipEnter={skipEnter}
       title={stepTitle}
       titleAddon={
         <span className={styles.stepper}>

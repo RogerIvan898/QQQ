@@ -17,6 +17,7 @@ interface Props {
   leading?: React.ReactNode;
   titleAddon?: React.ReactNode;
   variant?: 'center' | 'bottom';
+  skipEnter?: boolean;
 }
 
 export const Dialog = ({
@@ -26,6 +27,7 @@ export const Dialog = ({
   leading,
   titleAddon,
   variant = 'center',
+  skipEnter = false,
   children,
 }: React.PropsWithChildren<Props>) => {
   const { t } = useLingui();
@@ -70,7 +72,11 @@ export const Dialog = ({
 
   return createPortal(
     <div
-      className={cn(styles.overlay, closing && styles.overlayClosing)}
+      className={cn(
+        styles.overlay,
+        skipEnter && styles.noEnter,
+        closing && styles.overlayClosing
+      )}
       onClick={onClose}
       role="presentation"
     >
@@ -79,6 +85,7 @@ export const Dialog = ({
         className={cn(
           styles.panel,
           styles[variant],
+          skipEnter && styles.noEnter,
           closing && styles.panelClosing,
           dragY > 0 && styles.dragging
         )}
