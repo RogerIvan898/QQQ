@@ -72,6 +72,25 @@
 
 .allIn {
   --action-color: var(--action-allin);
+
+  animation:
+    badgeIn 0.24s var(--ease-spring),
+    allInPulse 1.8s ease-out 0.3s infinite;
+}
+
+@keyframes allInPulse {
+  0% {
+    box-shadow:
+      0 3px 10px var(--color-shadow),
+      0 0 0 0 color-mix(in srgb, var(--action-color) 45%, transparent);
+  }
+
+  70%,
+  100% {
+    box-shadow:
+      0 3px 10px var(--color-shadow),
+      0 0 0 6px color-mix(in srgb, var(--action-color) 0%, transparent);
+  }
 }
 
 
@@ -98,7 +117,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .win,
-  .badge {
+  .badge,
+  .allIn {
     animation: none;
   }
 }
