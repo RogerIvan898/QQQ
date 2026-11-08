@@ -3,9 +3,28 @@
   flex-direction: column;
 }
 
-.orDivider {
+.subtitle {
+  margin: 8px 0 0;
   text-align: center;
-  margin: 20px 0;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: 12px;
+}
+
+.orDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 14px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.orDivider::before,
+.orDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border-strong);
 }

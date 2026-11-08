@@ -201,8 +201,14 @@ export const MenuPage = () => {
                 onClose={closeWallet}
                 anchorRef={walletButtonRef}
                 suspended={isDepositOpen || isWithdrawOpen}
-                onDeposit={() => setIsDepositOpen(true)}
-                onWithdraw={() => setIsWithdrawOpen(true)}
+                onDeposit={() => {
+                  setIsWalletOpen(false);
+                  setIsDepositOpen(true);
+                }}
+                onWithdraw={() => {
+                  setIsWalletOpen(false);
+                  setIsWithdrawOpen(true);
+                }}
               />
             }
           />

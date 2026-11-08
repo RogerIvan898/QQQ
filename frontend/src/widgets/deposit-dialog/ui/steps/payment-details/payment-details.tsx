@@ -4,6 +4,7 @@ import { useLingui } from '@lingui/react/macro';
 
 import { formatTonAmount } from 'shared/lib/ton';
 import { Alert } from 'shared/ui/alert';
+import { Logo } from 'shared/ui/logo';
 import { cn } from 'shared/utils/cn';
 
 import type { PaymentMethod } from '../../../types';
@@ -39,6 +40,17 @@ export const PaymentDetailsStep = ({
 
   return (
     <div className={shared.content}>
+      <div className={styles.summary}>
+        <span className={styles.summaryCaption}>{t`To pay`}</span>
+        <span className={styles.summaryAmount}>
+          {formatTonAmount(amount)}
+          <span className={styles.summaryCurrency}>
+            <Logo size={18} />
+            TON
+          </span>
+        </span>
+      </div>
+
       <div
         className={styles.tabs}
         role="tablist"

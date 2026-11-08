@@ -8,9 +8,6 @@ msgstr ""
 "Language: ru\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-msgid "— or scan with Tonkeeper —"
-msgstr "— или отсканируйте в Tonkeeper —"
-
 #. placeholder {0}: session.hands
 msgid "{0, plural, one {# hand} other {# hands}}"
 msgstr "{0, plural, one {# раздача} few {# раздачи} many {# раздач} other {# раздачи}}"
@@ -385,6 +382,9 @@ msgstr "Недостаточно средств на сумму и комисс�
 msgid "Not enough balance."
 msgstr "Недостаточно средств."
 
+msgid "or scan the QR code"
+msgstr "или отсканируйте QR-код"
+
 msgid "Pair"
 msgstr "Пара"
 
@@ -397,9 +397,6 @@ msgstr "Пауза"
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
 msgstr "Оплатить {amount, number} TON кошельком"
-
-msgid "Pay in one tap via TON Connect, or scan the QR with another phone."
-msgstr "Оплатите в один клик через TON Connect или отсканируйте QR с другого телефона."
 
 msgid "Payment details"
 msgstr "Реквизиты оплаты"
@@ -579,6 +576,9 @@ msgstr "По"
 msgid "To end"
 msgstr "В конец"
 
+msgid "To pay"
+msgstr "К оплате"
+
 msgid "To start"
 msgstr "В начало"
 
@@ -591,8 +591,8 @@ msgstr "TON-адрес"
 msgid "TON wallet"
 msgstr "TON-кошелёк"
 
-msgid "Tonkeeper / Telegram Wallet"
-msgstr "Tonkeeper / Telegram Wallet"
+msgid "Tonkeeper, Telegram Wallet and other TON wallets"
+msgstr "Tonkeeper, Telegram Wallet и другие TON-кошельки"
 
 msgid "Top up"
 msgstr "Пополнить"

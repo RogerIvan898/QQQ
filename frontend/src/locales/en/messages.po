@@ -7,9 +7,6 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
-msgid "— or scan with Tonkeeper —"
-msgstr "— or scan with Tonkeeper —"
-
 #. placeholder {0}: session.hands
 msgid "{0, plural, one {# hand} other {# hands}}"
 msgstr "{0, plural, one {# hand} other {# hands}}"
@@ -384,6 +381,9 @@ msgstr "Not enough balance to cover the amount and the network fee."
 msgid "Not enough balance."
 msgstr "Not enough balance."
 
+msgid "or scan the QR code"
+msgstr "or scan the QR code"
+
 msgid "Pair"
 msgstr "Pair"
 
@@ -396,9 +396,6 @@ msgstr "Pause"
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
 msgstr "Pay {amount, number} TON with wallet"
-
-msgid "Pay in one tap via TON Connect, or scan the QR with another phone."
-msgstr "Pay in one tap via TON Connect, or scan the QR with another phone."
 
 msgid "Payment details"
 msgstr "Payment details"
@@ -578,6 +575,9 @@ msgstr "To"
 msgid "To end"
 msgstr "To end"
 
+msgid "To pay"
+msgstr "To pay"
+
 msgid "To start"
 msgstr "To start"
 
@@ -590,8 +590,8 @@ msgstr "TON address"
 msgid "TON wallet"
 msgstr "TON wallet"
 
-msgid "Tonkeeper / Telegram Wallet"
-msgstr "Tonkeeper / Telegram Wallet"
+msgid "Tonkeeper, Telegram Wallet and other TON wallets"
+msgstr "Tonkeeper, Telegram Wallet and other TON wallets"
 
 msgid "Top up"
 msgstr "Top up"
