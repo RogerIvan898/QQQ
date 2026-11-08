@@ -34,7 +34,7 @@ export const PokerTable = ({
     <div className={styles.tableContainer}>
       <div className={styles.pokerTable} ref={ref}>
         <div className={styles.tableRail} />
-        <div className={styles.tableSurface}>
+        <div className={styles.tableSurface} data-table-surface>
           <div className={styles.boardCenter}>
             <div className={styles.mainPotArea} data-pot>
               {showPot && (

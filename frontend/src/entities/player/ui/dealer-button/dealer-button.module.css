@@ -1,3 +1,7 @@
+.mover {
+  display: inline-flex;
+}
+
 .dealerButton {
   --size: clamp(44px, 8vw, 56px);
   --base-light: #ffffff;
