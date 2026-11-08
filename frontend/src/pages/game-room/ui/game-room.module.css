@@ -149,6 +149,29 @@
   pointer-events: none;
 }
 
+.replayPaused {
+  position: fixed;
+  top: calc(60px + var(--tg-safe-area-top));
+  left: 50%;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-header);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 18px var(--color-shadow);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: resumeIn var(--dur-base) var(--ease-out);
+}
+
 .resumeReplay {
   position: fixed;
   top: calc(60px + var(--tg-safe-area-top));

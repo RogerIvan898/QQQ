@@ -3,7 +3,7 @@ import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useGate, useUnit } from 'effector-react';
-import { ArrowLeft, History, Play, Settings, X } from 'lucide-react';
+import { ArrowLeft, History, Pause, Play, Settings, X } from 'lucide-react';
 
 import { gameModel } from 'entities/game';
 import { $rooms, findRoom, roomsRequested } from 'entities/room';
@@ -150,6 +150,13 @@ export const GameRoomPage = () => {
           onClose={closeReplay}
           suspended={!replayShown}
         />
+      ) : null}
+
+      {replayHand && replayMinimized && isMyTurn ? (
+        <div className={styles.replayPaused} role="status">
+          <Pause size={13} strokeWidth={2.5} />
+          {t`Replay paused, your turn`}
+        </div>
       ) : null}
 
       {replayHand && replayMinimized && !isMyTurn ? (

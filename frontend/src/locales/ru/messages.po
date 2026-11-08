@@ -449,6 +449,9 @@ msgstr "Рейз"
 msgid "Recipient address"
 msgstr "Адрес получателя"
 
+msgid "Replay paused, your turn"
+msgstr "Повтор на паузе — ваш ход"
+
 msgid "Required"
 msgstr "Обязательно"
 

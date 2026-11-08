@@ -448,6 +448,9 @@ msgstr "Raise"
 msgid "Recipient address"
 msgstr "Recipient address"
 
+msgid "Replay paused, your turn"
+msgstr "Replay paused, your turn"
+
 msgid "Required"
 msgstr "Required"
 
