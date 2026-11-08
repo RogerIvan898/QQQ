@@ -17,6 +17,14 @@
 
   max-height: min(64dvh, 580px, calc(100% - var(--table-reserve, 0px)));
   aspect-ratio: 2 / 1;
+  perspective: 1200px;
+  perspective-origin: 50% 30%;
+}
+
+.tableRail,
+.tableSurface {
+  transform: rotateX(var(--table-tilt, 16deg));
+  transform-origin: 50% 55%;
 }
 
 .tableRail {
