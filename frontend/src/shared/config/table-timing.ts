@@ -16,4 +16,4 @@ export const SB_POST_MS = DEALER_START_MS + DEALER_MOVE_MS + INTRO_PAUSE_MS;
 export const BB_POST_MS = SB_POST_MS + BLIND_STEP_MS;
 export const HAND_INTRO_MS = BB_POST_MS + BLIND_STEP_MS;
 
-export const WINNER_PAUSE_MS = 900;
+export const WINNER_PAUSE_MS = 500;

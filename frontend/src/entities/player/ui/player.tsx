@@ -175,8 +175,22 @@ const PlayerView = ({
     return () => observer.disconnect();
   }, [dealer, dealerDirection.x, dealerDirection.y]);
 
-  const cardsKey = `${handNumber}:${getHandKey(hand) ?? 'hidden'}`;
+  const liveCardsKey = `${handNumber}:${getHandKey(hand) ?? 'hidden'}`;
   const cardsPresence = usePresence(showCards, MUCK_MS);
+  const [shownCards, setShownCards] = React.useState({
+    key: liveCardsKey,
+    hand,
+  });
+
+  if (
+    showCards &&
+    (shownCards.key !== liveCardsKey || shownCards.hand !== hand)
+  ) {
+    setShownCards({ key: liveCardsKey, hand });
+  }
+
+  const cardsKey = showCards ? liveCardsKey : shownCards.key;
+  const cardsInView = showCards ? hand : shownCards.hand;
 
   return (
     <section className={cn(styles.player, isSitOut && styles.sitOut)}>
@@ -195,8 +209,8 @@ const PlayerView = ({
           {cardsPresence.mounted && (
             <PlayerCards
               key={cardsKey}
-              cards={hand}
-              needSound={currentPlayer && Boolean(hand)}
+              cards={cardsInView}
+              needSound={currentPlayer && Boolean(cardsInView)}
               large={currentPlayer}
               dealDelayMs={dealOrder * DEAL_STEP_MS}
               mucking={cardsPresence.closing}

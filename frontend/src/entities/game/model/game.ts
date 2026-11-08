@@ -111,17 +111,29 @@ const moveDealerFx = createEffect(
     )
 );
 
+const placeDealer = createEvent<number | null>();
+
 export const $dealerSeat = createStore<number | null>(null)
   .on(moveDealerFx.doneData, (_, seat) => seat)
+  .on(placeDealer, (_, seat) => seat)
   .reset(disconnectGame);
 
 sample({
   clock: $actualDealerSeat,
   source: $dealerSeat,
-  filter: (shown, actual) => shown !== actual,
+  filter: (shown, actual) => shown === null && actual !== null,
+  fn: (_, actual) => actual,
+  target: placeDealer,
+});
+
+sample({
+  clock: $actualDealerSeat,
+  source: $dealerSeat,
+  filter: (shown, actual) => shown !== null && shown !== actual,
   fn: (_, actual) => actual,
   target: moveDealerFx,
 });
+
 export const $players = $gameState.map(state => state.players);
 export const $activeSeat = $gameState.map(state => state.activeSeat);
 export const $smallBlindSeat = $gameState.map(state => state.smallBlindSeat);

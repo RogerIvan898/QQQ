@@ -191,8 +191,29 @@ const run = async (gen: number) => {
         emit(started);
       }
 
-      if (!shouldFastForward()) {
-        await delay(HAND_INTRO_MS);
+      const introEnds = performance.now() + HAND_INTRO_MS;
+
+      while (
+        performance.now() < introEnds &&
+        gen === generation &&
+        !shouldFastForward()
+      ) {
+        const nextHandAt = queue.findIndex(
+          event => event.type === SERVER_EVENTS.HAND_STARTED
+        );
+        const cardsAt = queue.findIndex(
+          event => event.type === SERVER_EVENTS.YOUR_CARDS
+        );
+
+        if (cardsAt !== -1 && (nextHandAt === -1 || cardsAt < nextHandAt)) {
+          const [cards] = queue.splice(cardsAt, 1);
+
+          if (cards) {
+            emit(cards);
+          }
+        }
+
+        await delay(40);
       }
 
       continue;
