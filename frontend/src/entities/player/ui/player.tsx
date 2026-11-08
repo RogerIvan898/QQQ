@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { HAND_INTRO_MS, MUCK_MS } from 'shared/config/table-timing';
+import { DEAL_START_MS, MUCK_MS } from 'shared/config/table-timing';
 import { usePresence } from 'shared/hooks/use-presence';
 import { useSettled } from 'shared/hooks/use-settled';
 import { cn } from 'shared/utils/cn';
@@ -120,7 +120,7 @@ const PlayerView = ({
     playSound: currentPlayer,
   });
 
-  const dealReady = useSettled(handNumber, HAND_INTRO_MS);
+  const dealReady = useSettled(handNumber, DEAL_START_MS);
 
   const showCards =
     dealReady &&
