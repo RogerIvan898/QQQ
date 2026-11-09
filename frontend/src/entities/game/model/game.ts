@@ -184,6 +184,7 @@ sample({
 bindGameQueue({
   emit: incomingEvent,
   readState: () => $gameState.getState(),
+  readHandStartedAt: () => $handStartedAt.getState(),
 });
 
 watchPlayerActionSounds(incomingEvent);

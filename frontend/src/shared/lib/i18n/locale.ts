@@ -11,8 +11,16 @@ import {
 const isLocale = (value: string | null): value is Locale =>
   Boolean(value && supportedLocales.includes(value as Locale));
 
+const readStoredLocale = () => {
+  try {
+    return localStorage.getItem(LOCALE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
 export const detectLocale = (): Locale => {
-  const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+  const stored = readStoredLocale();
 
   if (isLocale(stored)) {
     return stored;
@@ -46,7 +54,12 @@ export const activateLocale = async (locale: Locale) => {
 
   i18n.loadAndActivate({ locale, messages });
   document.documentElement.lang = locale;
-  localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+
+  try {
+    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  } catch {
+    void 0;
+  }
 
   return locale;
 };

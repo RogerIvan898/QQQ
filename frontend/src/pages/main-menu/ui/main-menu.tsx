@@ -3,12 +3,12 @@ import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { useRouter } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
-import { BookmarkPlus, Coins, Swords, Wallet } from 'lucide-react';
+import { BookmarkPlus, Coins, Swords, Wallet, WifiOff } from 'lucide-react';
 
 import { $rooms, $roomsStatus, RoomCard, roomsRequested } from 'entities/room';
 import { sessionModel } from 'entities/session';
 import { walletModel } from 'entities/wallet';
-import { JoinRoomButton } from 'features/join-room';
+import { $joinFailure, JoinRoomButton, useJoinRoom } from 'features/join-room';
 import { getTelegramUser } from 'shared/lib/telegram';
 import { Preloader } from 'shared/ui/preloader';
 import { Snackbar } from 'shared/ui/snackbar';
@@ -98,6 +98,15 @@ const Filters = ({ active, onChange }: FiltersProps) => {
 export const MenuPage = () => {
   const { t, i18n } = useLingui();
   const [snackOpen, setSnackOpen] = React.useState(false);
+  const joinFailure = useUnit($joinFailure);
+  const { joinRoom } = useJoinRoom();
+  const [seenFailure, setSeenFailure] = React.useState(joinFailure?.count ?? 0);
+  const [joinErrorOpen, setJoinErrorOpen] = React.useState(false);
+
+  if (joinFailure && joinFailure.count !== seenFailure) {
+    setSeenFailure(joinFailure.count);
+    setJoinErrorOpen(true);
+  }
   const [snackMissing, setSnackMissing] = React.useState(0);
   const [saveOpen, setSaveOpen] = React.useState(false);
   const [saveCandidate, setSaveCandidate] = React.useState('');
@@ -316,6 +325,23 @@ export const MenuPage = () => {
           }
           actionLabel={t`Top up`}
           onAction={openTopUp}
+        />
+
+        <Snackbar
+          open={joinErrorOpen}
+          onClose={() => setJoinErrorOpen(false)}
+          tone="warning"
+          showId={joinFailure?.count ?? 0}
+          icon={<WifiOff size={18} />}
+          message={t`Couldn't join the table`}
+          actionLabel={t`Retry`}
+          onAction={() => {
+            setJoinErrorOpen(false);
+
+            if (joinFailure) {
+              void joinRoom(joinFailure.roomId);
+            }
+          }}
         />
 
         <Snackbar

@@ -175,6 +175,9 @@ msgstr "Копировать"
 msgid "Copy address"
 msgstr "Скопировать адрес"
 
+msgid "Couldn't join the table"
+msgstr "Не удалось сесть за стол"
+
 msgid "Couldn't load more. Try again"
 msgstr "Не удалось загрузить. Повторить"
 
@@ -219,7 +222,7 @@ msgid "Display"
 msgstr "Отображение"
 
 msgid "Display amounts in BB"
-msgstr "Суммы в больших блайндах (BB)"
+msgstr "Суммы в больших блайндах"
 
 msgid "Double-check the TON address"
 msgstr "Проверьте TON-адрес"

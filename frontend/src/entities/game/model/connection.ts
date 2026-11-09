@@ -156,7 +156,7 @@ export const sendToGameSocket = (command: unknown) => {
   return true;
 };
 
-export const openGameSocket = async ({ wsUrl }: GameConnectParams) => {
+export const openGameSocket = ({ wsUrl }: GameConnectParams) => {
   connectionId += 1;
   const currentId = connectionId;
 
@@ -166,11 +166,7 @@ export const openGameSocket = async ({ wsUrl }: GameConnectParams) => {
   resetEventQueue();
   openSocket?.close();
   openSocket = null;
-  await initializeAudio();
-
-  if (currentId !== connectionId) {
-    return null;
-  }
+  void initializeAudio();
 
   const socket = createGameSocket(wsUrl, currentId);
   openSocket = socket;

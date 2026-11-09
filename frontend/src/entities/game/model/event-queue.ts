@@ -27,6 +27,7 @@ export const clearActiveSeat = createEvent();
 
 let emit: (event: ServerGameEvent) => void = () => undefined;
 let readState: () => Pick<GameState, 'players'> = () => ({ players: {} });
+let readHandStartedAt: () => number = () => performance.now();
 
 const queue: ServerGameEvent[] = [];
 let generation = 0;
@@ -36,9 +37,11 @@ let live = false;
 export const bindGameQueue = (api: {
   emit: (event: ServerGameEvent) => void;
   readState: () => Pick<GameState, 'players'>;
+  readHandStartedAt: () => number;
 }) => {
   emit = api.emit;
   readState = api.readState;
+  readHandStartedAt = api.readHandStartedAt;
 };
 
 export const resetEventQueue = () => {
@@ -191,7 +194,7 @@ const run = async (gen: number) => {
         emit(started);
       }
 
-      const introEnds = performance.now() + HAND_INTRO_MS;
+      const introEnds = readHandStartedAt() + HAND_INTRO_MS;
 
       while (
         performance.now() < introEnds &&

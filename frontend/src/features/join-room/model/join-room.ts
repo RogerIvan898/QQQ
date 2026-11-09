@@ -13,6 +13,14 @@ export const $joiningRoomId = createStore<string | null>(null)
   .on(joinRoomFx, (_, roomId) => roomId)
   .reset(joinRoomFx.finally);
 
+export const $joinFailure = createStore<{
+  roomId: string;
+  count: number;
+} | null>(null).on(joinRoomFx.fail, (last, { params }) => ({
+  roomId: params,
+  count: (last?.count ?? 0) + 1,
+}));
+
 sample({
   clock: joinRoomFx.doneData,
   fn: ({ wsUrl }) => ({ wsUrl }),
