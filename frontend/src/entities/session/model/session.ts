@@ -2,6 +2,7 @@ import { createEffect, createEvent, createStore, sample } from 'effector';
 
 import { tokenManager } from 'shared/api';
 import { appStarted } from 'shared/config/init';
+import { readStorage, writeStorage } from 'shared/lib/storage';
 
 import { authApi } from '../api';
 
@@ -52,27 +53,14 @@ tokenManager.onSessionExpired(() => {
 
 export const NICKNAME_KEY = 'poker:nickname';
 
-const readNickname = () => {
-  try {
-    return localStorage.getItem(NICKNAME_KEY);
-  } catch {
-    return null;
-  }
-};
-
 export const saveNickname = createEvent<string>();
 
-export const $nickname = createStore<string | null>(readNickname()).on(
-  saveNickname,
-  (_, nickname) => nickname
-);
+export const $nickname = createStore<string | null>(
+  readStorage(NICKNAME_KEY)
+).on(saveNickname, (_, nickname) => nickname);
 
 $nickname.updates.watch(nickname => {
-  try {
-    if (nickname) {
-      localStorage.setItem(NICKNAME_KEY, nickname);
-    }
-  } catch {
-    void 0;
+  if (nickname) {
+    writeStorage(NICKNAME_KEY, nickname);
   }
 });

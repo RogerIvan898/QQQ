@@ -4,6 +4,7 @@ import { gameModel, SERVER_EVENTS } from 'entities/game';
 import type { PlayerType as Player } from 'entities/player';
 import { $rooms, findRoom, roomBigBlind, roomFormat } from 'entities/room';
 import { sessionModel } from 'entities/session';
+import { readJson, writeJson } from 'shared/lib/storage';
 
 import type { GameSession } from './types';
 
@@ -25,42 +26,20 @@ interface Draft {
   inHand: boolean;
 }
 
-const read = <T>(key: string, fallback: T): T => {
-  try {
-    const raw = window.localStorage.getItem(key);
-
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-};
-
-const write = (key: string, value: unknown) => {
-  try {
-    if (value === null) {
-      window.localStorage.removeItem(key);
-    } else {
-      window.localStorage.setItem(key, JSON.stringify(value));
-    }
-  } catch {
-    void 0;
-  }
-};
-
 const sessionRecorded = createEvent<GameSession>();
 
 export const $sessions = createStore<GameSession[]>(
-  read<GameSession[]>(SESSIONS_KEY, [])
+  readJson<GameSession[]>(SESSIONS_KEY, [])
 ).on(sessionRecorded, (_, session) =>
   [
     session,
-    ...read<GameSession[]>(SESSIONS_KEY, []).filter(
+    ...readJson<GameSession[]>(SESSIONS_KEY, []).filter(
       saved => saved.id !== session.id
     ),
   ].slice(0, MAX_SESSIONS)
 );
 
-$sessions.updates.watch(sessions => write(SESSIONS_KEY, sessions));
+$sessions.updates.watch(sessions => writeJson(SESSIONS_KEY, sessions));
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
@@ -93,13 +72,13 @@ const finish = (draft: Draft) => {
 
 let draft: Draft | null = null;
 
-const save = () => write(DRAFT_KEY, draft);
+const save = () => writeJson(DRAFT_KEY, draft);
 
-const stale = read<Draft | null>(DRAFT_KEY, null);
+const stale = readJson<Draft | null>(DRAFT_KEY, null);
 
 if (stale) {
   finish(stale);
-  write(DRAFT_KEY, null);
+  writeJson(DRAFT_KEY, null);
 }
 
 export const sessionStarted = createEvent<string>();

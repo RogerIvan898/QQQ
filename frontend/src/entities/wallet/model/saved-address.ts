@@ -1,29 +1,15 @@
 import { createEvent, createStore } from 'effector';
 
-const STORAGE_KEY = 'poker:withdraw-address';
+import { readStorage, writeStorage } from 'shared/lib/storage';
 
-const readStored = () => {
-  try {
-    return localStorage.getItem(STORAGE_KEY) || null;
-  } catch {
-    return null;
-  }
-};
+const STORAGE_KEY = 'poker:withdraw-address';
 
 export const withdrawAddressSaved = createEvent<string>();
 
 export const $savedWithdrawAddress = createStore<string | null>(
-  readStored()
+  readStorage(STORAGE_KEY) || null
 ).on(withdrawAddressSaved, (_, address) => address.trim() || null);
 
 $savedWithdrawAddress.updates.watch(address => {
-  try {
-    if (address) {
-      localStorage.setItem(STORAGE_KEY, address);
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  } catch {
-    void 0;
-  }
+  writeStorage(STORAGE_KEY, address);
 });

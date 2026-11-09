@@ -61,7 +61,7 @@ const trackVisibility = () => {
   });
 };
 
-const initializeAudio = async () => {
+export const prepareGameAudio = async () => {
   const audioContext = getAudioContext();
   pokerSoundEngine.init(audioContext);
   trackVisibility();
@@ -166,8 +166,6 @@ export const openGameSocket = ({ wsUrl }: GameConnectParams) => {
   resetEventQueue();
   openSocket?.close();
   openSocket = null;
-  void initializeAudio();
-
   const socket = createGameSocket(wsUrl, currentId);
   openSocket = socket;
   queueMicrotask(markGameQueueLive);

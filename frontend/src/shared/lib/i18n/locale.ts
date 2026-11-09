@@ -1,5 +1,7 @@
 import { i18n } from '@lingui/core';
 
+import { readStorage, writeStorage } from 'shared/lib/storage';
+
 import { catalogLoaders } from './catalogs';
 import {
   DEFAULT_LOCALE,
@@ -11,16 +13,8 @@ import {
 const isLocale = (value: string | null): value is Locale =>
   Boolean(value && supportedLocales.includes(value as Locale));
 
-const readStoredLocale = () => {
-  try {
-    return localStorage.getItem(LOCALE_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-};
-
 export const detectLocale = (): Locale => {
-  const stored = readStoredLocale();
+  const stored = readStorage(LOCALE_STORAGE_KEY);
 
   if (isLocale(stored)) {
     return stored;
@@ -54,12 +48,7 @@ export const activateLocale = async (locale: Locale) => {
 
   i18n.loadAndActivate({ locale, messages });
   document.documentElement.lang = locale;
-
-  try {
-    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
-  } catch {
-    void 0;
-  }
+  writeStorage(LOCALE_STORAGE_KEY, locale);
 
   return locale;
 };

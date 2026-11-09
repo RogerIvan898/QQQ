@@ -1,46 +1,25 @@
 import { createEvent, createStore } from 'effector';
 import { useUnit } from 'effector-react';
 
+import { readFlag, writeFlag } from 'shared/lib/storage';
 import { formatCompactNumber } from 'shared/utils/format';
 
 const STORAGE_KEY = 'poker:amounts-in-bb';
 
-const readStored = () => {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === 'on';
-  } catch {
-    return false;
-  }
-};
-
 export const setAmountsInBb = createEvent<boolean>();
 
-export const $amountsInBb = createStore(readStored()).on(
+export const $amountsInBb = createStore(readFlag(STORAGE_KEY, false)).on(
   setAmountsInBb,
   (_, enabled) => enabled
 );
 
-$amountsInBb.updates.watch(enabled => {
-  try {
-    localStorage.setItem(STORAGE_KEY, enabled ? 'on' : 'off');
-  } catch {
-    void 0;
-  }
-});
+$amountsInBb.updates.watch(enabled => writeFlag(STORAGE_KEY, enabled));
 
 const FOUR_COLOR_KEY = 'poker:four-color-deck';
 
-const readFourColor = () => {
-  try {
-    return localStorage.getItem(FOUR_COLOR_KEY) === 'on';
-  } catch {
-    return false;
-  }
-};
-
 export const setFourColorDeck = createEvent<boolean>();
 
-export const $fourColorDeck = createStore(readFourColor()).on(
+export const $fourColorDeck = createStore(readFlag(FOUR_COLOR_KEY, false)).on(
   setFourColorDeck,
   (_, enabled) => enabled
 );
@@ -53,12 +32,7 @@ applyFourColor($fourColorDeck.getState());
 
 $fourColorDeck.updates.watch(enabled => {
   applyFourColor(enabled);
-
-  try {
-    localStorage.setItem(FOUR_COLOR_KEY, enabled ? 'on' : 'off');
-  } catch {
-    void 0;
-  }
+  writeFlag(FOUR_COLOR_KEY, enabled);
 });
 
 export const displayBigBlindChanged = createEvent<number>();

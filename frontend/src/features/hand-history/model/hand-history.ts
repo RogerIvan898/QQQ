@@ -4,6 +4,7 @@ import { parseCard, type CardType as Card } from 'entities/card';
 import { gameModel, SERVER_EVENTS, type ServerGameEvent } from 'entities/game';
 import type { PlayerType as Player } from 'entities/player';
 import { sessionModel } from 'entities/session';
+import { readJson, writeJson, writeStorage } from 'shared/lib/storage';
 
 import type { HandAction, HandRecord, HandSeat } from './types';
 
@@ -12,33 +13,20 @@ const MAX_HANDS_PER_ROOM = 50;
 
 const storageKey = (roomId: string) => `${STORAGE_PREFIX}${roomId}`;
 
-try {
-  window.localStorage.removeItem('poker:hand-history');
-} catch {
-  void 0;
-}
+writeStorage('poker:hand-history', null);
 
 const loadHands = (roomId: string | null): HandRecord[] => {
   if (!roomId) {
     return [];
   }
 
-  try {
-    const raw = window.localStorage.getItem(storageKey(roomId));
-    const parsed: unknown = raw ? JSON.parse(raw) : [];
+  const parsed = readJson<unknown>(storageKey(roomId), []);
 
-    return Array.isArray(parsed) ? (parsed as HandRecord[]) : [];
-  } catch {
-    return [];
-  }
+  return Array.isArray(parsed) ? (parsed as HandRecord[]) : [];
 };
 
 const saveHands = (roomId: string, hands: HandRecord[]) => {
-  try {
-    window.localStorage.setItem(storageKey(roomId), JSON.stringify(hands));
-  } catch {
-    void 0;
-  }
+  writeJson(storageKey(roomId), hands);
 };
 
 export const tableEntered = createEvent<string | null>();

@@ -1,4 +1,10 @@
-import { createEffect, createEvent, createStore, sample } from 'effector';
+import {
+  combine,
+  createEffect,
+  createEvent,
+  createStore,
+  sample,
+} from 'effector';
 
 import type { CardType as Card } from 'entities/card';
 import type { PlayerType as Player } from 'entities/player';
@@ -10,6 +16,7 @@ import {
   closeOpenGameSocket,
   connectionLost,
   openGameSocket,
+  prepareGameAudio,
   sendToGameSocket,
 } from './connection';
 import { INITIAL_GAME_STATE, SERVER_EVENTS } from './constants';
@@ -34,8 +41,22 @@ import type {
 
 export const incomingEvent = createEvent<ServerGameEvent>();
 
-const initializeGameFx = createEffect((params: GameConnectParams) =>
-  openGameSocket(params)
+const TABLE_WAIT_MS = 8000;
+
+const initializeGameFx = createEffect(async (params: GameConnectParams) => {
+  const audioReady = prepareGameAudio();
+  const socket = openGameSocket(params);
+
+  await audioReady;
+
+  return socket;
+});
+
+const waitForTableFx = createEffect(
+  (attempt: number) =>
+    new Promise<number>(resolve =>
+      window.setTimeout(() => resolve(attempt), TABLE_WAIT_MS)
+    )
 );
 
 const sendClientCommandFx = createEffect((command: unknown) => {
@@ -52,7 +73,38 @@ const $socketClient = createStore<WebSocket | null>(null)
   .on(initializeGameFx.doneData, (_, socket) => socket)
   .reset(disconnectGame);
 
-export const $isGameLoading = initializeGameFx.pending;
+const $connectAttempt = createStore(0).on(connectGame, n => n + 1);
+
+const $connecting = createStore(false)
+  .on(connectGame, () => true)
+  .reset(disconnectGame);
+
+const $tableReady = createStore(false)
+  .on(
+    incomingEvent,
+    (ready, event) =>
+      ready ||
+      event.type === SERVER_EVENTS.PLAYER_SEATED ||
+      event.type === SERVER_EVENTS.HAND_STARTED
+  )
+  .reset(connectGame, disconnectGame);
+
+sample({ clock: $connectAttempt, target: waitForTableFx });
+
+sample({
+  clock: waitForTableFx.doneData,
+  source: $connectAttempt,
+  filter: (current, attempt) => current === attempt,
+  fn: () => true,
+  target: $tableReady,
+});
+
+export const $isGameLoading = combine(
+  initializeGameFx.pending,
+  $connecting,
+  $tableReady,
+  (opening, connecting, ready) => opening || (connecting && !ready)
+);
 
 export const $connectionLost = createStore(false)
   .on(connectionLost, (_, lost) => lost)
