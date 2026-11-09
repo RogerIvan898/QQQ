@@ -89,10 +89,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
-  padding: 12px 14px;
-  background: var(--color-bg-muted);
-  border-radius: var(--radius-lg);
+  margin: -2px 0 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent);
   font-size: 13px;
   color: var(--color-text-secondary);
 }
@@ -103,8 +102,17 @@
   gap: 14px;
   flex-shrink: 0;
   padding: 14px;
-  background: var(--color-bg-muted);
+  background:
+    radial-gradient(
+      120% 140% at 100% 0%,
+      color-mix(in srgb, var(--color-primary) 22%, transparent) 0%,
+      transparent 60%
+    ),
+    color-mix(in srgb, var(--color-primary) 6%, var(--color-bg-elevated));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
   border-radius: var(--radius-lg);
+  box-shadow: inset 0 1px 0
+    color-mix(in srgb, var(--color-text) 6%, transparent);
 }
 
 .statusIcon {
@@ -122,15 +130,37 @@
 }
 
 .linkBtn {
+  display: inline-flex;
+  align-items: center;
   margin-left: auto;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--color-primary);
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary-light);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    background var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .linkBtn:hover {
+    background: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  }
+}
+
+.linkBtn:active {
+  transform: scale(0.96);
+}
+
+.linkBtn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .balanceBlock {

@@ -48,27 +48,33 @@ const WalletContent = ({
 
   return (
     <div className={styles.content}>
-      <div className={styles.walletStatus}>
-        <Wallet
-          size={16}
-          className={cn(styles.statusIcon, address && styles.statusConnected)}
-        />
-        {address ? (
-          <span>
-            {t`Wallet connected`}{' '}
-            <span className={styles.address}>{truncateMiddle(address, 4)}</span>
-          </span>
-        ) : (
-          <>
-            <span>{t`Wallet not connected`}</span>
-            <button type="button" className={styles.linkBtn} onClick={connect}>
-              {t`Connect`}
-            </button>
-          </>
-        )}
-      </div>
-
       <div className={styles.walletCard}>
+        <div className={styles.walletStatus}>
+          <Wallet
+            size={16}
+            className={cn(styles.statusIcon, address && styles.statusConnected)}
+          />
+          {address ? (
+            <span>
+              {t`Wallet connected`}{' '}
+              <span className={styles.address}>
+                {truncateMiddle(address, 4)}
+              </span>
+            </span>
+          ) : (
+            <>
+              <span>{t`Wallet not connected`}</span>
+              <button
+                type="button"
+                className={styles.linkBtn}
+                onClick={connect}
+              >
+                {t`Connect`}
+              </button>
+            </>
+          )}
+        </div>
+
         <div className={styles.balanceBlock}>
           <span className={styles.balanceLabel}>{t`Available balance`}</span>
           <span className={styles.balance}>
