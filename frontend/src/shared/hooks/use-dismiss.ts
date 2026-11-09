@@ -39,13 +39,20 @@ export const useDismiss = ({
       return;
     }
 
+    const modalOpen = () =>
+      document.querySelector('[aria-modal="true"]') !== null;
+
     const onPointerDown = (event: PointerEvent) => {
+      if (modalOpen()) {
+        return;
+      }
+
       if (!isInside(event.target)) {
         dismiss();
       }
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') {
+      if (event.key !== 'Escape' || modalOpen()) {
         return;
       }
 
