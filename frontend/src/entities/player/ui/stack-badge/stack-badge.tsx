@@ -140,7 +140,7 @@ export const StackBadge = ({
             <span className={styles.stackAmount}>
               {formatChips(shownAmount)}
             </span>
-            <GramBadge size={16} className={styles.stackLogo} />
+            <GramBadge size={20} className={styles.stackLogo} />
           </div>
         </div>
       </div>
