@@ -197,25 +197,44 @@ export const TransactionsList = () => {
             month: 'long',
           }).format(day);
 
+  const [retrying, setRetrying] = React.useState(false);
+
+  if (retrying && !loading) {
+    setRetrying(false);
+  }
+
+  const retryInitial = () => {
+    setRetrying(true);
+    retry();
+  };
+
+  const showInitialError =
+    items.length === 0 && (error || (retrying && loading));
+
   const renderBody = () => {
+    if (showInitialError) {
+      return (
+        <div className={styles.state}>
+          <AlertCircle size={28} strokeWidth={1.75} />
+          <span>{t`Couldn't load transactions`}</span>
+          <button
+            type="button"
+            className={styles.retryBtn}
+            onClick={retryInitial}
+            disabled={loading}
+          >
+            <RotateCw size={14} className={loading ? styles.spin : undefined} />
+            {t`Try again`}
+          </button>
+        </div>
+      );
+    }
+
     if (initialLoad) {
       return (
         <div className={styles.state}>
           <Loader2 size={24} className={styles.spin} />
           <span>{t`Loading transactions…`}</span>
-        </div>
-      );
-    }
-
-    if (items.length === 0 && error) {
-      return (
-        <div className={styles.state}>
-          <AlertCircle size={28} strokeWidth={1.75} />
-          <span>{t`Couldn't load transactions`}</span>
-          <button type="button" className={styles.retryBtn} onClick={retry}>
-            <RotateCw size={14} />
-            {t`Try again`}
-          </button>
         </div>
       );
     }
