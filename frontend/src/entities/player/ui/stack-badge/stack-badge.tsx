@@ -4,7 +4,7 @@ import { POT_FLIGHT_MS, WINNER_REVEAL_MS } from 'shared/config/table-timing';
 import { useAnimatedNumber } from 'shared/hooks/use-animated-number';
 import { usePresence } from 'shared/hooks/use-presence';
 import { useChipFormatter } from 'shared/lib/display-settings';
-import { Logo } from 'shared/ui/logo';
+import { GramBadge } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 
 import styles from './stack-badge.module.css';
@@ -140,7 +140,7 @@ export const StackBadge = ({
             <span className={styles.stackAmount}>
               {formatChips(shownAmount)}
             </span>
-            <Logo size={16} className={styles.stackLogo} />
+            <GramBadge size={16} className={styles.stackLogo} />
           </div>
         </div>
       </div>

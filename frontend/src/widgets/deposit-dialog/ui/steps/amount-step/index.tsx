@@ -5,7 +5,7 @@ import { useUnit } from 'effector-react';
 import { ChevronRight } from 'lucide-react';
 
 import { walletModel } from 'entities/wallet';
-import { Logo } from 'shared/ui/logo';
+import { GramBadge } from 'shared/ui/gram';
 import { NumberField } from 'shared/ui/number-field';
 import { formatBalance, parseNumericInput } from 'shared/utils/format';
 import { toDepositInputValue } from 'widgets/deposit-dialog/utils';
@@ -70,7 +70,7 @@ export const AmountStep = ({ amount, onChangeAmount, onNext }: Props) => {
             style={{ width: `${Math.max(1, draft.length || 1) + 0.5}ch` }}
           />
           <span className={styles.currency}>
-            <Logo size={20} />
+            <GramBadge size={20} />
             TON
           </span>
         </span>

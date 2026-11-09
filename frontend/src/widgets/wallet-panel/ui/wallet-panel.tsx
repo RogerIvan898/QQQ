@@ -10,7 +10,7 @@ import { useMediaQuery } from 'shared/hooks/use-media-query';
 import { usePresence } from 'shared/hooks/use-presence';
 import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 import { Dialog } from 'shared/ui/dialog';
-import { Logo } from 'shared/ui/logo';
+import { GramBadge } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 import { formatBalance, truncateMiddle } from 'shared/utils/format';
 
@@ -72,7 +72,7 @@ const WalletContent = ({
         <div className={styles.balanceBlock}>
           <span className={styles.balanceLabel}>{t`Available balance`}</span>
           <span className={styles.balance}>
-            <Logo size={26} className={styles.balanceLogo} />
+            <GramBadge size={26} className={styles.balanceLogo} />
             {balance === null ? '—' : formatBalance(balance, i18n.locale)}
             <span className={styles.currency}>TON</span>
           </span>

@@ -1,5 +1,5 @@
 import { useChipFormatter } from 'shared/lib/display-settings';
-import { Logo } from 'shared/ui/logo';
+import { GramMark } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 
 import styles from './bet-badge.module.css';
@@ -22,7 +22,7 @@ export const BetBadge = ({ amount, seat, collecting }: Props) => {
     >
       <div className={styles.amountBadge}>
         <span className={styles.amountLogoGlow}>
-          <Logo size={18} className={styles.amountLogo} />
+          <GramMark size={18} className={styles.amountLogo} />
         </span>
         <span key={amount} className={styles.amountValue}>
           {formatChips(amount)}

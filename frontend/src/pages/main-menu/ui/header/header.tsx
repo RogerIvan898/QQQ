@@ -7,7 +7,7 @@ import { ChevronDown, History, Settings } from 'lucide-react';
 
 import { $currentLocale } from 'shared/lib/i18n';
 import { $tonWallet } from 'shared/lib/ton-connect';
-import { Logo } from 'shared/ui/logo';
+import { GramBadge } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 import { formatBalance, getInitialLetter } from 'shared/utils/format';
 import { SettingsDialog } from 'widgets/settings';
@@ -80,7 +80,7 @@ export const Header = ({
             aria-expanded={isWalletOpen}
             aria-label={t`My Wallet`}
           >
-            <Logo className={styles.tonIcon} />
+            <GramBadge className={styles.tonIcon} />
             <span className={styles.balanceValue}>{formattedBalance}</span>
             <ChevronDown size={16} className={styles.walletChevron} />
           </button>

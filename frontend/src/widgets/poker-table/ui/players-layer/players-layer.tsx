@@ -8,7 +8,7 @@ import { sessionModel } from 'entities/session';
 import { $raisePanelRect } from 'features/player-actions';
 import { useElementSize } from 'shared/hooks/use-element-size';
 import { useChipFormatter } from 'shared/lib/display-settings';
-import { Logo } from 'shared/ui/logo';
+import { GramMark } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 
 import styles from './players-layer.module.css';
@@ -57,7 +57,7 @@ const ChipFlight = ({
     >
       <div className={styles.flightY}>
         <div className={styles.potFlight}>
-          <Logo size={16} className={styles.potFlightLogo} />
+          <GramMark size={16} className={styles.potFlightLogo} />
           <span>{formatChips(amount)}</span>
         </div>
       </div>

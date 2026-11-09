@@ -5,7 +5,7 @@ import type { CardType } from 'entities/card';
 import { Sound } from 'shared/assets/sounds';
 import { useSound } from 'shared/lib/audio';
 import { useChipFormatter } from 'shared/lib/display-settings';
-import { Logo } from 'shared/ui/logo';
+import { GramMark } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 
 import styles from './poker-table.module.css';
@@ -39,7 +39,7 @@ export const PokerTable = ({
           <div className={styles.mainPotArea} data-pot>
             {showPot && (
               <div className={styles.potBadge}>
-                <Logo size={16} className={styles.potLogo} />
+                <GramMark size={16} className={styles.potLogo} />
                 <span className={styles.potValue}>{formatChips(pot)}</span>
               </div>
             )}
