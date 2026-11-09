@@ -10,6 +10,7 @@ import {
   validateNickname,
   type NicknameError,
 } from 'entities/session';
+import { Tooltip } from 'shared/ui/tooltip';
 import { cn } from 'shared/utils/cn';
 
 import styles from './header.module.css';
@@ -59,15 +60,16 @@ export const Nickname = ({ name, onSave }: Props) => {
     return (
       <span className={styles.nameRow}>
         <span className={styles.userName}>{name}</span>
-        <button
-          type="button"
-          className={styles.editName}
-          onClick={start}
-          aria-label={t`Change nickname`}
-          title={t`Change nickname`}
-        >
-          <Pencil size={13} strokeWidth={2.25} />
-        </button>
+        <Tooltip label={t`Change nickname`}>
+          <button
+            type="button"
+            className={styles.editName}
+            onClick={start}
+            aria-label={t`Change nickname`}
+          >
+            <Pencil size={13} strokeWidth={2.25} />
+          </button>
+        </Tooltip>
       </span>
     );
   }
