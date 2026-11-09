@@ -28,6 +28,39 @@ $amountsInBb.updates.watch(enabled => {
   }
 });
 
+const FOUR_COLOR_KEY = 'poker:four-color-deck';
+
+const readFourColor = () => {
+  try {
+    return localStorage.getItem(FOUR_COLOR_KEY) === 'on';
+  } catch {
+    return false;
+  }
+};
+
+export const setFourColorDeck = createEvent<boolean>();
+
+export const $fourColorDeck = createStore(readFourColor()).on(
+  setFourColorDeck,
+  (_, enabled) => enabled
+);
+
+const applyFourColor = (enabled: boolean) => {
+  document.documentElement.toggleAttribute('data-four-color', enabled);
+};
+
+applyFourColor($fourColorDeck.getState());
+
+$fourColorDeck.updates.watch(enabled => {
+  applyFourColor(enabled);
+
+  try {
+    localStorage.setItem(FOUR_COLOR_KEY, enabled ? 'on' : 'off');
+  } catch {
+    void 0;
+  }
+});
+
 export const displayBigBlindChanged = createEvent<number>();
 
 export const $displayBigBlind = createStore(0).on(

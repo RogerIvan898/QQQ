@@ -263,6 +263,9 @@ msgstr "Формат"
 msgid "Four of a kind"
 msgstr "Каре"
 
+msgid "Four-color deck"
+msgstr "Четырёхцветная колода"
+
 msgid "From"
 msgstr "С"
 

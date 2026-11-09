@@ -8,6 +8,7 @@ import {
   Loader2,
   RefreshCw,
   Coins,
+  Palette,
   Volume2,
   VolumeX,
   Wallet,
@@ -15,7 +16,12 @@ import {
 
 import { $soundEnabled, setSoundEnabled } from 'shared/lib/audio';
 import { useCopyToClipboard } from 'shared/lib/clipboard';
-import { $amountsInBb, setAmountsInBb } from 'shared/lib/display-settings';
+import {
+  $amountsInBb,
+  $fourColorDeck,
+  setAmountsInBb,
+  setFourColorDeck,
+} from 'shared/lib/display-settings';
 import {
   changeLocale,
   preloadOtherLocales,
@@ -51,6 +57,10 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
     }
   }, [open, currentLocale]);
   const [soundEnabled, toggleSound] = useUnit([$soundEnabled, setSoundEnabled]);
+  const [fourColor, toggleFourColor] = useUnit([
+    $fourColorDeck,
+    setFourColorDeck,
+  ]);
   const [amountsInBb, toggleAmountsInBb] = useUnit([
     $amountsInBb,
     setAmountsInBb,
@@ -165,6 +175,30 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
               className={cn(
                 styles.switchTrack,
                 amountsInBb && styles.switchTrackOn
+              )}
+              aria-hidden="true"
+            >
+              <span className={styles.switchThumb} />
+            </span>
+          </button>
+
+          <button
+            type="button"
+            role="switch"
+            aria-checked={fourColor}
+            className={styles.soundRow}
+            onClick={() => toggleFourColor(!fourColor)}
+          >
+            <span className={styles.soundIcon} aria-hidden="true">
+              <Palette size={18} />
+            </span>
+
+            <span className={styles.soundText}>{t`Four-color deck`}</span>
+
+            <span
+              className={cn(
+                styles.switchTrack,
+                fourColor && styles.switchTrackOn
               )}
               aria-hidden="true"
             >

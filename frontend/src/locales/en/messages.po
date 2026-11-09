@@ -262,6 +262,9 @@ msgstr "Format"
 msgid "Four of a kind"
 msgstr "Four of a kind"
 
+msgid "Four-color deck"
+msgstr "Four-color deck"
+
 msgid "From"
 msgstr "From"
 

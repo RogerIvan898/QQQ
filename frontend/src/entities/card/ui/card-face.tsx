@@ -1,8 +1,5 @@
 import type { Card } from '../model';
 
-const RED = '#e8262e';
-const BLACK = '#16181d';
-
 const SuitShape = ({ suit }: { suit: Card['suit'] }) => {
   switch (suit) {
     case 'hearts':
@@ -33,7 +30,6 @@ interface Props {
 }
 
 export const CardFace = ({ card }: Props) => {
-  const red = card.suit === 'hearts' || card.suit === 'diamonds';
   const isTen = card.rank === '10';
 
   return (
@@ -41,10 +37,9 @@ export const CardFace = ({ card }: Props) => {
       viewBox="0 0 64 92"
       width="100%"
       height="100%"
-      fill={red ? RED : BLACK}
       aria-hidden="true"
       focusable="false"
-      style={{ display: 'block' }}
+      style={{ display: 'block', fill: `var(--suit-${card.suit})` }}
     >
       <text
         x={isTen ? 3 : 5.5}

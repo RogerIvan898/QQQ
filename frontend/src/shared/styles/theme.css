@@ -1,4 +1,8 @@
 :root {
+  --suit-spades: #16181d;
+  --suit-hearts: #e8262e;
+  --suit-diamonds: #e8262e;
+  --suit-clubs: #16181d;
   --color-primary: #0098ea;
   --color-primary-hover: #0082c8;
   --color-primary-active: #0084cf;
@@ -76,4 +80,9 @@
   --option-off-text: color-mix(in srgb, var(--color-text) 55%, transparent);
   --option-off-icon: color-mix(in srgb, var(--color-text) 45%, transparent);
   --option-hover-border: var(--color-border-hover);
+}
+
+:root[data-four-color] {
+  --suit-diamonds: #1d6fe0;
+  --suit-clubs: #17924a;
 }
