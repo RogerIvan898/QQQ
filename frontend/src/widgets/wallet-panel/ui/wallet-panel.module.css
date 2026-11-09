@@ -133,10 +133,10 @@
   display: inline-flex;
   align-items: center;
   margin-left: auto;
-  height: 30px;
+  height: 28px;
   padding: 0 14px;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 999px;
   background: linear-gradient(
     180deg,
     var(--color-primary-light) -40%,
