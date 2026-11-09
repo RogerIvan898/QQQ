@@ -6,7 +6,7 @@ import { Minus, Plus } from 'lucide-react';
 
 import { $amountsInBb } from 'shared/lib/display-settings';
 import { Button } from 'shared/ui/button';
-import { GramMark } from 'shared/ui/gram';
+import { GramBadge } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 import { parseNumericInput } from 'shared/utils/format';
 import { clamp } from 'shared/utils/math';
@@ -201,7 +201,7 @@ export const BetManager = ({
             {inBb ? (
               <span className={styles.unit}>BB</span>
             ) : (
-              <GramMark size={14} className={styles.logoIcon} />
+              <GramBadge size={20} className={styles.logoIcon} />
             )}
           </div>
         </div>
