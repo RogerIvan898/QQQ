@@ -203,9 +203,6 @@ msgctxt "transaction"
 msgid "Deposit"
 msgstr "Пополнение"
 
-msgid "Deposit address is missing"
-msgstr "Адрес для пополнения не указан"
-
 msgid "Deposit TON"
 msgstr "Пополнение TON"
 

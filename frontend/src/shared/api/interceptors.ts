@@ -4,7 +4,12 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios';
 
-import { API_URL, APP_HEADER, APP_HEADER_VALUE } from './constants';
+import {
+  API_TIMEOUT_MS,
+  API_URL,
+  APP_HEADER,
+  APP_HEADER_VALUE,
+} from './constants';
 import { tokenManager } from './tokenManager';
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -64,6 +69,7 @@ export const setupInterceptors = (apiInstance: AxiosInstance) => {
           {},
           {
             withCredentials: true,
+            timeout: API_TIMEOUT_MS,
             headers: { [APP_HEADER]: APP_HEADER_VALUE },
           }
         );

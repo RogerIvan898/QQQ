@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
-import { beginCell } from '@ton/core';
+import { Address, beginCell } from '@ton/core';
 import { useUnit } from 'effector-react';
 import { Loader2, Wallet } from 'lucide-react';
 
@@ -43,8 +43,11 @@ export const PayViaWalletButton = ({
       return;
     }
 
-    if (!depositAddress.trim()) {
-      alert(t`Deposit address is missing`);
+    if (
+      !Address.isFriendly(depositAddress.trim()) &&
+      !Address.isRaw(depositAddress.trim())
+    ) {
+      onError?.(new Error('Invalid deposit address'));
       return;
     }
 

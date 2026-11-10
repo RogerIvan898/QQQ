@@ -202,9 +202,6 @@ msgctxt "transaction"
 msgid "Deposit"
 msgstr "Deposit"
 
-msgid "Deposit address is missing"
-msgstr "Deposit address is missing"
-
 msgid "Deposit TON"
 msgstr "Deposit TON"
 

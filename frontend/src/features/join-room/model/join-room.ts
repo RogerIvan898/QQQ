@@ -3,8 +3,24 @@ import { createEffect, createStore, sample } from 'effector';
 import { gameModel } from 'entities/game';
 import { roomApi } from 'entities/room';
 
+const isAllowedSocketUrl = (value: string) => {
+  try {
+    const { protocol } = new URL(value, window.location.href);
+
+    return import.meta.env.PROD
+      ? protocol === 'wss:'
+      : protocol === 'wss:' || protocol === 'ws:';
+  } catch {
+    return false;
+  }
+};
+
 export const joinRoomFx = createEffect(async (roomId: string) => {
   const data = await roomApi.join(roomId);
+
+  if (!isAllowedSocketUrl(data.wsUrl)) {
+    throw new Error('Unsafe game socket URL');
+  }
 
   return { roomId, ...data };
 });
