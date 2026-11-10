@@ -1,0 +1,50 @@
+# Локальный стенд: RabbitMQ + chain-service.
+#   docker compose up --build
+#   UI RabbitMQ: http://localhost:15672 (chain / chain), метрики: http://localhost:9090/metrics
+services:
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: chain
+      RABBITMQ_DEFAULT_PASS: chain
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  chain-service:
+    build: .
+    image: chain-service:local
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      MODE: all
+      RABBITMQ_URL: amqp://chain:chain@rabbitmq:5672/
+      PREFETCH_COUNT: "10"
+      MAX_RETRIES: "3"
+      RETRY_BASE_DELAY: 5s
+      METRICS_PORT: "9090"
+      LOG_LEVEL: info
+      # Только для локального стенда: реальной подписи пока нет.
+      ALLOW_STUB_SIGNER: "true"
+    ports:
+      - "9090:9090"
+    # Больше SHUTDOWN_TIMEOUT (30s), чтобы Docker не убил процесс посреди drain.
+    stop_grace_period: 40s
+    restart: unless-stopped
+
+  # Раздельный запуск в продакшене — два экземпляра одного образа:
+  #   chain-consumer: MODE=consumer (можно масштабировать; см. README про seqno)
+  #   chain-watcher:  MODE=watcher  (строго один экземпляр)
+
+volumes:
+  rabbitmq-data:
