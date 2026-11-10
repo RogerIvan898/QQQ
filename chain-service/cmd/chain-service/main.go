@@ -1,10 +1,11 @@
-// Команда chain-service — мост между ядром покер-рума и сетью TON:
+// Команда chain-service — мост между сервисом подписи, ядром и сетью TON:
 //
-//   - MODE=consumer: withdrawals → подпись → withdrawals.signed (для
-//     Broadcaster) и приём подтверждений из withdrawals.result;
-//   - MODE=watcher:  наблюдение за входящими переводами → deposits;
-//   - MODE=broadcaster: withdrawals.signed → отправка в TON → withdrawals.result;
-//   - MODE=all:      все режимы в независимых горутинах.
+//   - broadcaster: withdrawals.signed (от сервиса подписи) → отправка в TON →
+//     withdrawals.result (sent, затем confirmed / failed);
+//   - watcher: входящие переводы на кошелёк депозитов → deposits.
+//
+// По умолчанию работают оба (MODE=all). Подписи здесь нет: ключи — только
+// у сервиса подписи.
 //
 // `chain-service healthcheck` — проверка /readyz для HEALTHCHECK в Docker
 // (в образе scratch нет curl/wget).
@@ -12,7 +13,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -71,15 +71,13 @@ func run() error {
 
 	m := metrics.New()
 
-	// MySQL нужна подписи и broadcaster: история выводов и идемпотентность.
-	var db *sql.DB
-	if cfg.Mode.NeedsDB() {
-		if db, err = store.Open(ctx, cfg.MySQLDSN, cfg.MySQLMaxOpenConns); err != nil {
-			return fmt.Errorf("mysql: %w", err)
-		}
-		defer func() { _ = db.Close() }()
-		log.Info("mysql connected, schema applied")
+	// MySQL: история выводов, ключи идемпотентности, курсор watcher.
+	db, err := store.Open(ctx, cfg.MySQLDSN, cfg.MySQLMaxOpenConns)
+	if err != nil {
+		return fmt.Errorf("mysql: %w", err)
 	}
+	defer func() { _ = db.Close() }()
+	log.Info("mysql connected, schema applied")
 
 	topology := buildTopology(cfg)
 	client := amqp.NewClient(amqp.ClientConfig{
@@ -138,14 +136,6 @@ func run() error {
 		}, client, pub, idem, h, log, m)
 		consumers = append(consumers, c)
 		start("consumer "+queue, c.Run)
-	}
-
-	if cfg.Mode.Consumes() {
-		signer := handler.NewStubSigner(log)
-		withdrawals := handler.NewWithdrawalHandler(pub, signer, repo, cfg.Exchange, cfg.QueueWithdrawalsSigned, log)
-		resultHandler := handler.NewResultHandler(handler.NewLogResultSink(log), m)
-		addConsumer(cfg.QueueWithdrawals, cfg.Workers, withdrawals.Handle)
-		addConsumer(cfg.QueueWithdrawalsResult, cfg.Workers, resultHandler.Handle)
 	}
 
 	// Один клиент TON на процесс: лимит запросов toncenter общий для
@@ -265,23 +255,20 @@ func shutdown(cfg *config.Config, log *zap.Logger, consumers []*amqp.Consumer, w
 	return err
 }
 
-// buildTopology собирает топологию брокера из конфигурации: все четыре
-// очереди с DLQ и биндингами к exchange, delay-очереди — для потребляемых.
+// buildTopology собирает топологию брокера: очереди сервиса с DLQ и
+// биндингами к exchange; delay-очереди — для потребляемой withdrawals.signed.
 func buildTopology(cfg *config.Config) amqp.Topology {
 	return amqp.Topology{
 		Exchange:     cfg.Exchange,
 		ExchangeType: cfg.ExchangeType,
 		QueueType:    cfg.QueueType,
 		Queues: []string{
-			cfg.QueueWithdrawals,
 			cfg.QueueWithdrawalsSigned,
 			cfg.QueueWithdrawalsResult,
 			cfg.QueueDeposits,
 		},
 		Retry: map[string][]amqp.RetryQueue{
-			cfg.QueueWithdrawals:       amqp.RetryQueues(cfg.QueueWithdrawals, cfg.RetryBaseDelay, cfg.MaxRetries),
 			cfg.QueueWithdrawalsSigned: amqp.RetryQueues(cfg.QueueWithdrawalsSigned, cfg.RetryBaseDelay, cfg.MaxRetries),
-			cfg.QueueWithdrawalsResult: amqp.RetryQueues(cfg.QueueWithdrawalsResult, cfg.RetryBaseDelay, cfg.MaxRetries),
 		},
 	}
 }

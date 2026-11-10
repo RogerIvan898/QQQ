@@ -1,4 +1,5 @@
-# Локальный стенд: RabbitMQ + MySQL + chain-service (подпись, broadcaster и watcher в одном процессе).
+# Локальный стенд: RabbitMQ + MySQL + chain-service (broadcaster и watcher в одном процессе).
+# Сервис подписи здесь не поднимается: подписанные транзакции можно публиковать в withdrawals.signed вручную.
 #   docker compose up --build
 #   UI RabbitMQ: http://localhost:15672 (chain / chain), метрики: http://localhost:9090/metrics
 services:
@@ -49,9 +50,8 @@ services:
     environment:
       RABBITMQ_URL: amqp://chain:chain@rabbitmq:5672/
       MYSQL_DSN: chain:chain@tcp(mysql:3306)/chain
-      # Пока подпись — заглушка, настоящая сеть отвергнет её BOC, поэтому и
-      # TON-клиент локально заглушка. Для testnet: TON_CLIENT=toncenter +
-      # TONCENTER_API_KEY (ключ добавим позже).
+      # Локально — заглушка сети. Для testnet: TON_CLIENT=toncenter, адреса
+      # кошельков ниже и TONCENTER_API_KEY (ключ добавим позже).
       TON_CLIENT: stub
       TONCENTER_URL: https://testnet.toncenter.com
       TONCENTER_API_KEY: ""
@@ -64,8 +64,6 @@ services:
       RETRY_BASE_DELAY: 5s
       METRICS_PORT: "9090"
       LOG_LEVEL: info
-      # Только для локального стенда: реальной подписи пока нет.
-      ALLOW_STUB_SIGNER: "true"
     ports:
       - "9090:9090"
     # Больше SHUTDOWN_TIMEOUT (30s), чтобы Docker не убил процесс посреди drain.

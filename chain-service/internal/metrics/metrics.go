@@ -49,7 +49,6 @@ type Metrics struct {
 	ReconnectTotal  prometheus.Counter       // chain_reconnect_total
 	HandlerDuration *prometheus.HistogramVec // chain_handler_duration_seconds{queue}
 	PublishDuration *prometheus.HistogramVec // chain_publish_duration_seconds{queue}
-	WithdrawResults *prometheus.CounterVec   // chain_withdraw_result_total{status}
 }
 
 // New создаёт и регистрирует все метрики.
@@ -91,10 +90,6 @@ func New() *Metrics {
 			Help:    "Время от публикации до подтверждения брокером.",
 			Buckets: []float64{.001, .0025, .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5},
 		}, []string{"queue"}),
-		WithdrawResults: prometheus.NewCounterVec(prometheus.CounterOpts{
-			Name: "chain_withdraw_result_total",
-			Help: "Подтверждения от Broadcaster по статусу.",
-		}, []string{"status"}),
 	}
 
 	reg.MustRegister(
@@ -102,7 +97,6 @@ func New() *Metrics {
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		m.PublishTotal, m.ConsumeTotal, m.RetryTotal, m.DLQTotal,
 		m.ConnectionUp, m.ReconnectTotal, m.HandlerDuration, m.PublishDuration,
-		m.WithdrawResults,
 	)
 	return m
 }

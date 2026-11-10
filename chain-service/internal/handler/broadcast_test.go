@@ -81,18 +81,6 @@ func (r *fakeRepo) MarkFailed(_ context.Context, id, tx, reason string) error {
 	return r.set(id, func(w *store.Withdrawal) { w.Status, w.TxHash, w.Error = store.StatusFailed, tx, reason }, store.StatusSent)
 }
 
-func (r *fakeRepo) MaxSeqno(context.Context) (uint32, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	var m uint32
-	for _, w := range r.rows {
-		if w.Seqno > m {
-			m = w.Seqno
-		}
-	}
-	return m, nil
-}
-
 func (r *fakeRepo) ListSent(_ context.Context, sentAfter time.Time, limit int) ([]store.Withdrawal, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -115,6 +103,19 @@ func (r *fakeRepo) ListStale(_ context.Context, sentBefore time.Time, afterID st
 		}
 	}
 	return out, nil
+}
+
+type fakePublisher struct {
+	msgs []amqp.Message
+	err  error
+}
+
+func (f *fakePublisher) Publish(_ context.Context, m amqp.Message) error {
+	if f.err != nil {
+		return f.err
+	}
+	f.msgs = append(f.msgs, m)
+	return nil
 }
 
 // fakeTON считает отправки и отдаёт заданную транзакцию.
@@ -313,43 +314,4 @@ func TestConfirmPoller(t *testing.T) {
 			t.Fatalf("must stay sent without results, row %+v, published %d", w, len(pub.msgs))
 		}
 	})
-}
-
-func TestWithdrawalHandlerSeqnoFromDB(t *testing.T) {
-	log := zap.NewNop()
-	repo, pub := newFakeRepo(), &fakePublisher{}
-	_, _ = repo.InsertSigned(context.Background(), store.Withdrawal{RequestID: "00000000-0000-4000-8000-000000000001", Seqno: 41, BOC: "x"})
-	h := NewWithdrawalHandler(pub, NewStubSigner(log), repo, "ex", "rk", log)
-	req := WithdrawRequested{RequestID: testRequestID, UserID: 5, Amount: "1", Asset: AssetTON,
-		ToAddress: "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c"}
-	if err := h.Handle(context.Background(), withdrawDelivery(t, req)); err != nil {
-		t.Fatal(err)
-	}
-	var signed WithdrawSigned
-	_ = json.Unmarshal(pub.msgs[0].Body, &signed)
-	if signed.Seqno != 42 {
-		t.Fatalf("seqno = %d, want MAX(seqno)+1 = 42", signed.Seqno)
-	}
-}
-
-func TestWithdrawalHandlerDoesNotResign(t *testing.T) {
-	log := zap.NewNop()
-	repo, pub := newFakeRepo(), &fakePublisher{}
-	h := NewWithdrawalHandler(pub, NewStubSigner(log), repo, "ex", "rk", log)
-	req := WithdrawRequested{RequestID: testRequestID, UserID: 5, Amount: "1", Asset: AssetTON,
-		ToAddress: "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c"}
-
-	for i := 0; i < 2; i++ {
-		if err := h.Handle(context.Background(), withdrawDelivery(t, req)); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if string(pub.msgs[0].Body) != string(pub.msgs[1].Body) {
-		t.Fatal("second delivery must republish the same signed BOC")
-	}
-
-	req.Amount = "2"
-	if err := h.Handle(context.Background(), withdrawDelivery(t, req)); !amqp.IsPermanent(err) {
-		t.Fatalf("reused request_id with other amount must be permanent, got %v", err)
-	}
 }

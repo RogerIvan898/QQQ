@@ -1,5 +1,5 @@
-// Package handler — бизнес-обработчики сообщений: подпись выводов,
-// приём подтверждений от Broadcaster и наблюдение за депозитами.
+// Package handler — бизнес-логика: отправка подписанных выводов в сеть,
+// отслеживание подтверждений и наблюдение за депозитами.
 package handler
 
 import (
@@ -18,10 +18,9 @@ import (
 
 // Типы событий (AMQP-свойство type).
 const (
-	EventWithdrawRequested = "WITHDRAW_REQUESTED"
-	EventWithdrawSigned    = "WITHDRAW_SIGNED"
-	EventWithdrawResult    = "WITHDRAW_RESULT"
-	EventDepositDetected   = "DEPOSIT_DETECTED"
+	EventWithdrawSigned  = "WITHDRAW_SIGNED"
+	EventWithdrawResult  = "WITHDRAW_RESULT"
+	EventDepositDetected = "DEPOSIT_DETECTED"
 )
 
 // Publisher — минимальный интерфейс паблишера (для подмены в тестах).

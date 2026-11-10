@@ -277,15 +277,6 @@ func (r *Withdrawals) InsertSigned(ctx context.Context, w Withdrawal) (bool, err
 	return n == 1, nil
 }
 
-// MaxSeqno — наибольший выданный seqno (0, если выводов не было).
-func (r *Withdrawals) MaxSeqno(ctx context.Context) (uint32, error) {
-	var v sql.NullInt64
-	if err := r.db.QueryRowContext(ctx, `SELECT MAX(seqno) FROM withdrawals`).Scan(&v); err != nil {
-		return 0, dbErr("max seqno", err)
-	}
-	return uint32(v.Int64), nil
-}
-
 // MarkSent переводит signed → sent. Повторный вызов для sent безопасен.
 func (r *Withdrawals) MarkSent(ctx context.Context, requestID, msgHash string) error {
 	_, err := r.db.ExecContext(ctx,

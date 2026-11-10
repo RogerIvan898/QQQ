@@ -19,21 +19,14 @@ import (
 type Mode string
 
 const (
-	// ModeConsumer — только обработка withdrawals → withdrawals.signed
-	// (плюс приём подтверждений из withdrawals.result).
-	ModeConsumer Mode = "consumer"
 	// ModeWatcher — только наблюдение за TON и публикация событий в deposits.
 	ModeWatcher Mode = "watcher"
 	// ModeBroadcaster — withdrawals.signed → отправка BOC в TON →
 	// withdrawals.result (sent / confirmed / failed).
 	ModeBroadcaster Mode = "broadcaster"
-	// ModeAll — все режимы в одном процессе, в независимых горутинах
-	// (удобно локально; в продакшене режимы лучше разносить по контейнерам).
+	// ModeAll — оба режима в одном процессе (по умолчанию).
 	ModeAll Mode = "all"
 )
-
-// Consumes сообщает, нужно ли запускать подпись выводов и приём результатов.
-func (m Mode) Consumes() bool { return m == ModeConsumer || m == ModeAll }
 
 // Watches сообщает, нужно ли запускать наблюдатель депозитов.
 func (m Mode) Watches() bool { return m == ModeWatcher || m == ModeAll }
@@ -41,11 +34,7 @@ func (m Mode) Watches() bool { return m == ModeWatcher || m == ModeAll }
 // Broadcasts сообщает, нужно ли запускать отправку транзакций в сеть.
 func (m Mode) Broadcasts() bool { return m == ModeBroadcaster || m == ModeAll }
 
-// NeedsDB — режимы, которым нужна MySQL (история выводов, курсор watcher).
-// Нужна всем режимам; оставлено функцией на случай новых режимов без БД.
-func (m Mode) NeedsDB() bool { return m.Consumes() || m.Broadcasts() || m.Watches() }
-
-// UsesTON — режимы, которые ходят в сеть TON.
+// UsesTON — режимы, которые ходят в сеть TON (сейчас все).
 func (m Mode) UsesTON() bool { return m.Broadcasts() || m.Watches() }
 
 // Config — полная конфигурация сервиса.
@@ -60,14 +49,12 @@ type Config struct {
 	QueueType    string        // AMQP_QUEUE_TYPE: quorum | classic
 
 	// Имена очередей
-	QueueWithdrawals       string // QUEUE_WITHDRAWALS
 	QueueWithdrawalsSigned string // QUEUE_WITHDRAWALS_SIGNED
 	QueueWithdrawalsResult string // QUEUE_WITHDRAWALS_RESULT
 	QueueDeposits          string // QUEUE_DEPOSITS
 
 	// Консьюмер
 	PrefetchCount  int           // PREFETCH_COUNT
-	Workers        int           // CONSUMER_WORKERS (по умолчанию = PREFETCH_COUNT)
 	MaxRetries     int           // MAX_RETRIES
 	RetryBaseDelay time.Duration // RETRY_BASE_DELAY: задержка первой попытки, далее ×2
 	HandlerTimeout time.Duration // HANDLER_TIMEOUT
@@ -88,9 +75,6 @@ type Config struct {
 	WatcherBatchSize    int           // WATCHER_BATCH_SIZE
 	WatcherStartLT      uint64        // WATCHER_START_LT
 	DepositAddress      string        // TON_DEPOSIT_ADDRESS: кошелёк, на который приходят депозиты
-
-	// Подпись транзакций
-	AllowStubSigner bool // ALLOW_STUB_SIGNER
 
 	// MySQL
 	MySQLDSN          string // MYSQL_DSN
@@ -130,7 +114,6 @@ func Load() (*Config, error) {
 		ExchangeType: strings.ToLower(r.str("AMQP_EXCHANGE_TYPE", "direct")),
 		QueueType:    strings.ToLower(r.str("AMQP_QUEUE_TYPE", "quorum")),
 
-		QueueWithdrawals:       r.str("QUEUE_WITHDRAWALS", "withdrawals"),
 		QueueWithdrawalsSigned: r.str("QUEUE_WITHDRAWALS_SIGNED", "withdrawals.signed"),
 		QueueWithdrawalsResult: r.str("QUEUE_WITHDRAWALS_RESULT", "withdrawals.result"),
 		QueueDeposits:          r.str("QUEUE_DEPOSITS", "deposits"),
@@ -153,8 +136,6 @@ func Load() (*Config, error) {
 		WatcherStartLT:      r.uint64("WATCHER_START_LT", 0),
 		DepositAddress:      r.str("TON_DEPOSIT_ADDRESS", ""),
 
-		AllowStubSigner: r.bool("ALLOW_STUB_SIGNER", false),
-
 		MySQLDSN:          r.str("MYSQL_DSN", ""),
 		MySQLMaxOpenConns: r.int("MYSQL_MAX_OPEN_CONNS", 10),
 
@@ -174,9 +155,6 @@ func Load() (*Config, error) {
 		LogLevel:        strings.ToLower(r.str("LOG_LEVEL", "info")),
 		ShutdownTimeout: r.duration("SHUTDOWN_TIMEOUT", 30*time.Second),
 	}
-	// По умолчанию воркеров столько же, сколько prefetch: каждое
-	// предвыбранное сообщение сразу уходит в обработку.
-	cfg.Workers = r.int("CONSUMER_WORKERS", cfg.PrefetchCount)
 
 	if err := r.err(); err != nil {
 		return nil, err
@@ -204,12 +182,12 @@ func (c *Config) validate() error {
 	add := func(format string, args ...any) { errs = append(errs, fmt.Errorf(format, args...)) }
 
 	switch c.Mode {
-	case ModeConsumer, ModeWatcher, ModeBroadcaster, ModeAll:
+	case ModeWatcher, ModeBroadcaster, ModeAll:
 	default:
-		add("MODE: ожидается consumer|watcher|broadcaster|all, получено %q", c.Mode)
+		add("MODE: ожидается broadcaster|watcher|all, получено %q", c.Mode)
 	}
 
-	if c.Mode.NeedsDB() && c.MySQLDSN == "" {
+	if c.MySQLDSN == "" {
 		add("MYSQL_DSN: обязательная переменная")
 	}
 	if c.MySQLMaxOpenConns < 1 {
@@ -259,7 +237,6 @@ func (c *Config) validate() error {
 	}
 
 	queues := map[string]string{
-		"QUEUE_WITHDRAWALS":        c.QueueWithdrawals,
 		"QUEUE_WITHDRAWALS_SIGNED": c.QueueWithdrawalsSigned,
 		"QUEUE_WITHDRAWALS_RESULT": c.QueueWithdrawalsResult,
 		"QUEUE_DEPOSITS":           c.QueueDeposits,
@@ -278,9 +255,6 @@ func (c *Config) validate() error {
 
 	if c.PrefetchCount < 1 || c.PrefetchCount > 65535 {
 		add("PREFETCH_COUNT: ожидается 1..65535, получено %d", c.PrefetchCount)
-	}
-	if c.Workers < 1 {
-		add("CONSUMER_WORKERS: должно быть >= 1, получено %d", c.Workers)
 	}
 	if c.MaxRetries < 0 || c.MaxRetries > 10 {
 		add("MAX_RETRIES: ожидается 0..10, получено %d", c.MaxRetries)
@@ -319,12 +293,6 @@ func (c *Config) validate() error {
 	case "debug", "info", "warn", "error":
 	default:
 		add("LOG_LEVEL: ожидается debug|info|warn|error, получено %q", c.LogLevel)
-	}
-
-	// Реальной подписи пока нет: без явного согласия сервис не стартует
-	// в режиме, где он выпускает «подписанные» транзакции.
-	if c.Mode.Consumes() && !c.AllowStubSigner {
-		add("ALLOW_STUB_SIGNER: подключён только stub-подписант; для dev/stage задайте ALLOW_STUB_SIGNER=true")
 	}
 
 	return errors.Join(errs...)

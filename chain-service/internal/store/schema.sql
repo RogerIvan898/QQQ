@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS processed_messages (
 -- signed → sent → confirmed | failed
 CREATE TABLE IF NOT EXISTS withdrawals (
     request_id  CHAR(36)        NOT NULL,
-    user_id     BIGINT          NULL,      -- NULL, если строку создал broadcaster
+    user_id     BIGINT          NULL,      -- не используется: подпись в другом сервисе
     amount_nano BIGINT UNSIGNED NULL,
     asset       VARCHAR(16)     NULL,
     to_address  VARCHAR(128)    NULL,
@@ -39,6 +39,3 @@ CREATE TABLE IF NOT EXISTS watcher_cursors (
     PRIMARY KEY (account)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin;
 
--- Индекс для MAX(seqno) при выдаче seqno (без него — полный перебор таблицы).
--- Повторное создание при рестарте пропускается (ошибка 1061).
-CREATE INDEX idx_withdrawals_seqno ON withdrawals (seqno);

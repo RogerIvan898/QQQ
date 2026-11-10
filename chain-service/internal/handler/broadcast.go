@@ -23,7 +23,6 @@ type WithdrawalRepo interface {
 	MarkSent(ctx context.Context, requestID, msgHash string) error
 	MarkConfirmed(ctx context.Context, requestID, txHash string) error
 	MarkFailed(ctx context.Context, requestID, txHash, reason string) error
-	MaxSeqno(ctx context.Context) (uint32, error)
 	ListSent(ctx context.Context, sentAfter time.Time, limit int) ([]store.Withdrawal, error)
 	ListStale(ctx context.Context, sentBefore time.Time, afterID string, limit int) ([]store.Withdrawal, error)
 }
