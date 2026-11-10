@@ -11,6 +11,7 @@ import (
 	"time"
 
 	amqp091 "github.com/rabbitmq/amqp091-go"
+	"github.com/xssnick/tonutils-go/tvm/cell"
 	"go.uber.org/zap"
 
 	"gitlab.com/company-group7340831/poker/chain-service/internal/amqp"
@@ -120,19 +121,34 @@ func (f *fakePublisher) Publish(_ context.Context, m amqp.Message) error {
 
 // fakeTON считает отправки и отдаёт заданную транзакцию.
 type fakeTON struct {
-	sends   int
-	scans   int // запросов окна транзакций
-	single  int // запросов по одному сообщению
-	sendErr error
-	tx      *ton.Tx
+	sends     int
+	attempts  int // все попытки отправки, включая неудачные
+	scans     int // запросов окна транзакций
+	single    int // запросов по одному сообщению
+	sendErr   error
+	failTimes int // сколько первых попыток отправки падают с sendErr (0 — все)
+	tx        *ton.Tx
 }
 
 func (f *fakeTON) SendBoc(_ context.Context, boc string) (string, error) {
-	if f.sendErr != nil {
+	f.attempts++
+	if f.sendErr != nil && (f.failTimes == 0 || f.attempts <= f.failTimes) {
 		return "", f.sendErr
 	}
 	f.sends++
 	return "hash-" + boc[:4], nil
+}
+
+// testBOC — настоящий BOC с одной ячейкой (разный для разных n).
+func testBOC(n uint64) string {
+	return base64.StdEncoding.EncodeToString(cell.BeginCell().MustStoreUInt(n, 64).EndCell().ToBOC())
+}
+
+// fastHandler — broadcaster с короткими паузами повторов для тестов.
+func fastHandler(repo WithdrawalRepo, tc ton.Client, pub Publisher) *BroadcastHandler {
+	h := NewBroadcastHandler(repo, tc, NewResultPublisher(pub, "ex", "withdrawals.result"), zap.NewNop())
+	h.retryInitial, h.retryMax = time.Millisecond, 5*time.Millisecond
+	return h
 }
 
 func (f *fakeTON) FindTransaction(context.Context, string) (*ton.Tx, error) {
@@ -178,7 +194,7 @@ func lastResult(t *testing.T, pub *fakePublisher) WithdrawResult {
 
 func TestBroadcastHandler(t *testing.T) {
 	log := zap.NewNop()
-	boc := base64.StdEncoding.EncodeToString([]byte("boc-one"))
+	boc := testBOC(1)
 
 	t.Run("sends once, redelivery does not resend", func(t *testing.T) {
 		repo, tc, pub := newFakeRepo(), &fakeTON{}, &fakePublisher{}
@@ -207,7 +223,7 @@ func TestBroadcastHandler(t *testing.T) {
 		if err := h.Handle(context.Background(), signedDelivery(t, boc)); err != nil {
 			t.Fatal(err)
 		}
-		other := base64.StdEncoding.EncodeToString([]byte("boc-two"))
+		other := testBOC(2)
 		_ = repo.MarkConfirmed(context.Background(), testRequestID, "x") // не важно: проверка BOC раньше статуса
 		err := h.Handle(context.Background(), signedDelivery(t, other))
 		if !amqp.IsPermanent(err) || tc.sends != 1 {
@@ -215,24 +231,64 @@ func TestBroadcastHandler(t *testing.T) {
 		}
 	})
 
-	t.Run("network error is transient and leaves row signed", func(t *testing.T) {
+	t.Run("transient errors are retried in place until success", func(t *testing.T) {
+		repo, pub := newFakeRepo(), &fakePublisher{}
+		tc := &fakeTON{sendErr: amqp.Transient(errors.New("timeout")), failTimes: 3}
+		if err := fastHandler(repo, tc, pub).Handle(context.Background(), signedDelivery(t, boc)); err != nil {
+			t.Fatalf("Handle must keep retrying and succeed, got %v", err)
+		}
+		if tc.attempts != 4 || tc.sends != 1 {
+			t.Fatalf("attempts=%d sends=%d, want 4 and 1", tc.attempts, tc.sends)
+		}
+		if lastResult(t, pub).Status != ResultSent {
+			t.Fatal("sent result must be published")
+		}
+	})
+
+	t.Run("shutdown stops the retry loop and leaves row signed", func(t *testing.T) {
 		repo := newFakeRepo()
 		tc := &fakeTON{sendErr: amqp.Transient(errors.New("timeout"))}
-		h := NewBroadcastHandler(repo, tc, NewResultPublisher(&fakePublisher{}, "ex", "rk"), log)
-		err := h.Handle(context.Background(), signedDelivery(t, boc))
-		if !amqp.IsTransient(err) {
-			t.Fatalf("want transient, got %v", err)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+		defer cancel()
+		err := fastHandler(repo, tc, &fakePublisher{}).Handle(ctx, signedDelivery(t, boc))
+		if err == nil || ctx.Err() == nil {
+			t.Fatalf("want error after ctx cancel, got %v", err)
 		}
 		w, _ := repo.Get(context.Background(), testRequestID)
-		if w == nil || w.Status != store.StatusSigned {
-			t.Fatalf("row must stay signed, got %+v", w)
+		if w == nil || w.Status != store.StatusSigned || w.MsgHash == "" {
+			t.Fatalf("row must stay signed with msg_hash stored before send, got %+v", w)
+		}
+	})
+
+	t.Run("rejected resend of a message already on chain counts as sent", func(t *testing.T) {
+		repo, pub := newFakeRepo(), &fakePublisher{}
+		// Кошелёк уже принял этот seqno: отправка отклоняется, но транзакция в сети есть.
+		tc := &fakeTON{sendErr: amqp.Transient(errors.New("cannot apply external message")), tx: &ton.Tx{Hash: "tx1", Success: true}}
+		if err := fastHandler(repo, tc, pub).Handle(context.Background(), signedDelivery(t, boc)); err != nil {
+			t.Fatalf("Handle: %v", err)
+		}
+		w, _ := repo.Get(context.Background(), testRequestID)
+		wantHash, _ := ton.MessageHash(boc)
+		if w.Status != store.StatusSent || w.MsgHash != wantHash {
+			t.Fatalf("row %+v, want sent with msg_hash %s", w, wantHash)
+		}
+		if lastResult(t, pub).Status != ResultSent {
+			t.Fatal("sent result must be published")
+		}
+	})
+
+	t.Run("invalid boc is permanent", func(t *testing.T) {
+		err := fastHandler(newFakeRepo(), &fakeTON{}, &fakePublisher{}).Handle(context.Background(),
+			signedDelivery(t, base64.StdEncoding.EncodeToString([]byte("not a boc"))))
+		if !amqp.IsPermanent(err) {
+			t.Fatalf("want permanent, got %v", err)
 		}
 	})
 }
 
 func TestConfirmPoller(t *testing.T) {
 	log := zap.NewNop()
-	boc := base64.StdEncoding.EncodeToString([]byte("boc-one"))
+	boc := testBOC(1)
 	ctx := context.Background()
 
 	setup := func(tx *ton.Tx) (*fakeRepo, *fakePublisher, *ConfirmPoller) {

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -67,16 +66,28 @@ func (p *ResultPublisher) Publish(ctx context.Context, res WithdrawResult) (stri
 //   - уже отправленный/завершённый вывод повторно не отправляется;
 //   - повторная отправка ТОГО ЖЕ BOC безопасна на уровне сети: кошелёк
 //     примет сообщение с данным seqno только один раз.
+//
+// Порядок seqno: временные ошибки (сеть, 429/5xx, БД, брокер) повторяются
+// прямо в обработчике с паузой, пока не пройдут, — сообщение не уходит в
+// delay-очередь, и следующий seqno не обгоняет текущий. Очередь читается
+// одним воркером с prefetch 1, без таймаута обработчика; остановить ожидание
+// может только shutdown (тогда сообщение возвращается в очередь).
 type BroadcastHandler struct {
 	repo    WithdrawalRepo
 	ton     ton.Client
 	results *ResultPublisher
 	log     *zap.Logger
+
+	retryInitial time.Duration // первая пауза между попытками
+	retryMax     time.Duration // максимальная пауза
 }
 
 // NewBroadcastHandler создаёт обработчик.
 func NewBroadcastHandler(repo WithdrawalRepo, client ton.Client, results *ResultPublisher, log *zap.Logger) *BroadcastHandler {
-	return &BroadcastHandler{repo: repo, ton: client, results: results, log: log.Named("broadcaster")}
+	return &BroadcastHandler{
+		repo: repo, ton: client, results: results, log: log.Named("broadcaster"),
+		retryInitial: time.Second, retryMax: 30 * time.Second,
+	}
 }
 
 // Handle обрабатывает WITHDRAW_SIGNED.
@@ -91,22 +102,46 @@ func (h *BroadcastHandler) Handle(ctx context.Context, d amqp091.Delivery) error
 	if !validUUID(msg.RequestID) {
 		return amqp.Permanent(fmt.Errorf("request_id %q is not a UUID", msg.RequestID))
 	}
-	if _, err := base64.StdEncoding.DecodeString(msg.BOC); err != nil || msg.BOC == "" {
-		return amqp.Permanent(errors.New("boc is not valid base64"))
+	// Хэш сообщения считаем сами из BOC: по нему вывод ищется в сети, даже
+	// если ответ sendBoc потерялся или процесс упал сразу после отправки.
+	msgHash, err := ton.MessageHash(msg.BOC)
+	if err != nil {
+		return amqp.Permanent(err)
 	}
 
 	log := h.log.With(
 		zap.String("message_id", amqp.MessageID(d)),
 		zap.String("request_id", msg.RequestID),
-		zap.Uint32("seqno", msg.Seqno))
+		zap.Uint32("seqno", msg.Seqno),
+		zap.String("msg_hash", msgHash))
 
+	delay := h.retryInitial
+	for attempt := 1; ; attempt++ {
+		err := h.handleOnce(ctx, log, msg, msgHash)
+		if err == nil || !amqp.IsTransient(err) || ctx.Err() != nil {
+			return err
+		}
+		log.Warn("broadcast attempt failed, retrying in place to keep seqno order",
+			zap.Int("attempt", attempt), zap.Duration("retry_in", delay), zap.Error(err))
+		select {
+		case <-ctx.Done():
+			return err
+		case <-time.After(delay):
+		}
+		if delay *= 2; delay > h.retryMax {
+			delay = h.retryMax
+		}
+	}
+}
+
+func (h *BroadcastHandler) handleOnce(ctx context.Context, log *zap.Logger, msg WithdrawSigned, msgHash string) error {
 	w, err := h.repo.Get(ctx, msg.RequestID)
 	if err != nil {
 		return err
 	}
 	if w == nil {
-		// Подпись делал другой сервис или другая БД — заводим строку сами.
-		if _, err := h.repo.InsertSigned(ctx, store.Withdrawal{RequestID: msg.RequestID, Seqno: msg.Seqno, BOC: msg.BOC}); err != nil {
+		// Хэш сообщения сохраняется ДО отправки.
+		if _, err := h.repo.InsertSigned(ctx, store.Withdrawal{RequestID: msg.RequestID, Seqno: msg.Seqno, BOC: msg.BOC, MsgHash: msgHash}); err != nil {
 			return err
 		}
 		if w, err = h.repo.Get(ctx, msg.RequestID); err != nil {
@@ -134,18 +169,25 @@ func (h *BroadcastHandler) Handle(ctx context.Context, d amqp091.Delivery) error
 		return err
 	}
 
-	msgHash, err := h.ton.SendBoc(ctx, msg.BOC)
-	if err != nil {
-		return fmt.Errorf("broadcast: %w", err)
+	if _, sendErr := h.ton.SendBoc(ctx, msg.BOC); sendErr != nil {
+		// Отказ может значить, что это сообщение уже в сети: процесс упал
+		// между отправкой и записью sent, и кошелёк этот seqno уже принял.
+		// Проверяем по хэшу, прежде чем считать отправку неудачной.
+		tx, findErr := h.ton.FindTransaction(ctx, msgHash)
+		if findErr != nil || tx == nil {
+			return fmt.Errorf("broadcast: %w", sendErr)
+		}
+		log.Warn("send rejected, but the message is already on chain — treating as sent",
+			zap.NamedError("send_error", sendErr), zap.String("tx_hash", tx.Hash))
 	}
+
 	if err := h.repo.MarkSent(ctx, msg.RequestID, msgHash); err != nil {
-		// Сообщение уйдёт на повтор и отправит тот же BOC ещё раз — безопасно.
 		return err
 	}
 	if _, err := h.results.Publish(ctx, WithdrawResult{RequestID: msg.RequestID, Status: ResultSent, Seqno: msg.Seqno}); err != nil {
 		return fmt.Errorf("publish sent result: %w", err)
 	}
-	log.Info("withdrawal broadcast", zap.String("msg_hash", msgHash))
+	log.Info("withdrawal broadcast")
 	return nil
 }
 

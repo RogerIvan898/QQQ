@@ -59,7 +59,6 @@ services:
       TON_DEPOSIT_ADDRESS: ""
       # Для broadcaster с toncenter — горячий кошелёк выводов.
       TON_WALLET_ADDRESS: ""
-      PREFETCH_COUNT: "10"
       MAX_RETRIES: "3"
       RETRY_BASE_DELAY: 5s
       METRICS_PORT: "9090"

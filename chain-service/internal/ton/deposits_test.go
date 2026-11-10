@@ -2,8 +2,11 @@ package ton
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 	"testing"
+
+	"github.com/xssnick/tonutils-go/tvm/cell"
 )
 
 const txsJSON = `{"transactions":[
@@ -61,5 +64,23 @@ func TestFormatNano(t *testing.T) {
 		if got := FormatNano(in); got != want {
 			t.Errorf("FormatNano(%d) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+func TestMessageHash(t *testing.T) {
+	c := cell.BeginCell().MustStoreUInt(42, 64).EndCell()
+	boc := base64.StdEncoding.EncodeToString(c.ToBOC())
+	h, err := MessageHash(boc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := base64.StdEncoding.EncodeToString(c.Hash()); h != want {
+		t.Fatalf("hash = %s, want %s", h, want)
+	}
+	if _, err := MessageHash("!!!"); err == nil {
+		t.Fatal("invalid base64 must fail")
+	}
+	if _, err := MessageHash(base64.StdEncoding.EncodeToString([]byte("junk"))); err == nil {
+		t.Fatal("non-BOC bytes must fail")
 	}
 }

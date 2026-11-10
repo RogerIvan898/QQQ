@@ -263,10 +263,10 @@ func (r *Withdrawals) Get(ctx context.Context, requestID string) (*Withdrawal, e
 func (r *Withdrawals) InsertSigned(ctx context.Context, w Withdrawal) (bool, error) {
 	res, err := r.db.ExecContext(ctx,
 		`INSERT IGNORE INTO withdrawals
-		   (request_id, user_id, amount_nano, asset, to_address, seqno, boc, boc_hash, status)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		   (request_id, user_id, amount_nano, asset, to_address, seqno, boc, boc_hash, msg_hash, status)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		w.RequestID, nullInt(w.UserID), nullUint(w.AmountNano), nullStr(w.Asset), nullStr(w.ToAddress),
-		w.Seqno, w.BOC, BOCHash(w.BOC), StatusSigned)
+		w.Seqno, w.BOC, BOCHash(w.BOC), nullStr(w.MsgHash), StatusSigned)
 	if err != nil {
 		return false, dbErr("insert withdrawal", err)
 	}

@@ -6,6 +6,9 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
+
+	"github.com/xssnick/tonutils-go/tvm/cell"
 )
 
 // Tx — транзакция кошелька, порождённая нашим внешним сообщением.
@@ -67,4 +70,19 @@ func (s Stub) FindTransactions(ctx context.Context, _ string, msgHashes []string
 		out[h], _ = s.FindTransaction(ctx, h)
 	}
 	return out, nil
+}
+
+// MessageHash считает хэш внешнего сообщения из его BOC (base64) — хэш
+// корневой ячейки. Именно он стоит в in_msg.hash транзакции кошелька, так
+// что вывод можно найти в сети, не полагаясь на ответ sendBoc.
+func MessageHash(boc string) (string, error) {
+	raw, err := base64.StdEncoding.DecodeString(boc)
+	if err != nil {
+		return "", fmt.Errorf("boc is not valid base64: %w", err)
+	}
+	root, err := cell.FromBOC(raw)
+	if err != nil {
+		return "", fmt.Errorf("boc is not a valid bag of cells: %w", err)
+	}
+	return base64.StdEncoding.EncodeToString(root.Hash()), nil
 }

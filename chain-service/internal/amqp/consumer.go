@@ -251,7 +251,12 @@ func (c *Consumer) handle(d amqp091.Delivery) {
 	}
 
 	log.Debug("message received")
-	hctx, cancel := context.WithTimeout(c.workCtx, c.cfg.HandlerTimeout)
+	// HandlerTimeout <= 0 — без таймаута (обработчик сам решает, сколько
+	// ждать; прервать его может только shutdown через workCtx).
+	hctx, cancel := context.WithCancel(c.workCtx)
+	if c.cfg.HandlerTimeout > 0 {
+		hctx, cancel = context.WithTimeout(c.workCtx, c.cfg.HandlerTimeout)
+	}
 	start := time.Now()
 	err := c.handler(hctx, d)
 	cancel()

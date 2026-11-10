@@ -54,10 +54,8 @@ type Config struct {
 	QueueDeposits          string // QUEUE_DEPOSITS
 
 	// Консьюмер
-	PrefetchCount  int           // PREFETCH_COUNT
 	MaxRetries     int           // MAX_RETRIES
 	RetryBaseDelay time.Duration // RETRY_BASE_DELAY: задержка первой попытки, далее ×2
-	HandlerTimeout time.Duration // HANDLER_TIMEOUT
 
 	// Паблишер
 	PublishTimeout time.Duration // PUBLISH_TIMEOUT: ожидание ack от брокера
@@ -118,10 +116,8 @@ func Load() (*Config, error) {
 		QueueWithdrawalsResult: r.str("QUEUE_WITHDRAWALS_RESULT", "withdrawals.result"),
 		QueueDeposits:          r.str("QUEUE_DEPOSITS", "deposits"),
 
-		PrefetchCount:  r.int("PREFETCH_COUNT", 10),
 		MaxRetries:     r.int("MAX_RETRIES", 3),
 		RetryBaseDelay: r.duration("RETRY_BASE_DELAY", 5*time.Second),
-		HandlerTimeout: r.duration("HANDLER_TIMEOUT", 30*time.Second),
 
 		PublishTimeout: r.duration("PUBLISH_TIMEOUT", 5*time.Second),
 
@@ -253,9 +249,6 @@ func (c *Config) validate() error {
 		seen[name] = env
 	}
 
-	if c.PrefetchCount < 1 || c.PrefetchCount > 65535 {
-		add("PREFETCH_COUNT: ожидается 1..65535, получено %d", c.PrefetchCount)
-	}
 	if c.MaxRetries < 0 || c.MaxRetries > 10 {
 		add("MAX_RETRIES: ожидается 0..10, получено %d", c.MaxRetries)
 	}
@@ -268,7 +261,6 @@ func (c *Config) validate() error {
 
 	positive := map[string]time.Duration{
 		"RETRY_BASE_DELAY":             c.RetryBaseDelay,
-		"HANDLER_TIMEOUT":              c.HandlerTimeout,
 		"PUBLISH_TIMEOUT":              c.PublishTimeout,
 		"RECONNECT_INITIAL_DELAY":      c.ReconnectInitialDelay,
 		"RECONNECT_MAX_DELAY":          c.ReconnectMaxDelay,

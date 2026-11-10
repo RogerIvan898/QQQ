@@ -61,7 +61,6 @@ func run() error {
 	log.Info("starting chain-service",
 		zap.String("rabbitmq_url", cfg.RedactedRabbitURL()),
 		zap.String("exchange", cfg.Exchange),
-		zap.Int("prefetch", cfg.PrefetchCount),
 		zap.Int("max_retries", cfg.MaxRetries))
 
 	// Первый SIGINT/SIGTERM запускает graceful shutdown; после stop()
@@ -123,21 +122,6 @@ func run() error {
 		}()
 	}
 
-	addConsumer := func(queue string, workers int, h amqp.Handler) {
-		c := amqp.NewConsumer(amqp.ConsumerConfig{
-			Queue:            queue,
-			TagPrefix:        hostname,
-			Prefetch:         cfg.PrefetchCount,
-			Workers:          workers,
-			MaxRetries:       cfg.MaxRetries,
-			RetryQueues:      topology.Retry[queue],
-			HandlerTimeout:   cfg.HandlerTimeout,
-			ResubscribeDelay: cfg.ReconnectInitialDelay,
-		}, client, pub, idem, h, log, m)
-		consumers = append(consumers, c)
-		start("consumer "+queue, c.Run)
-	}
-
 	// Один клиент TON на процесс: лимит запросов toncenter общий для
 	// broadcaster и watcher.
 	var tonClient ton.Network
@@ -160,8 +144,21 @@ func run() error {
 
 	if cfg.Mode.Broadcasts() {
 		broadcaster := handler.NewBroadcastHandler(repo, tonClient, results, log)
-		// Один воркер: кошелёк принимает seqno строго по порядку.
-		addConsumer(cfg.QueueWithdrawalsSigned, 1, broadcaster.Handle)
+		// Строгий порядок seqno: prefetch 1, один воркер, без таймаута —
+		// временные ошибки обработчик повторяет на месте, не пропуская
+		// следующий seqno вперёд.
+		c := amqp.NewConsumer(amqp.ConsumerConfig{
+			Queue:            cfg.QueueWithdrawalsSigned,
+			TagPrefix:        hostname,
+			Prefetch:         1,
+			Workers:          1,
+			MaxRetries:       cfg.MaxRetries,
+			RetryQueues:      topology.Retry[cfg.QueueWithdrawalsSigned],
+			HandlerTimeout:   0,
+			ResubscribeDelay: cfg.ReconnectInitialDelay,
+		}, client, pub, idem, broadcaster.Handle, log, m)
+		consumers = append(consumers, c)
+		start("consumer "+cfg.QueueWithdrawalsSigned, c.Run)
 
 		poller := handler.NewConfirmPoller(handler.ConfirmPollerConfig{
 			Account:   cfg.WalletAddress,
