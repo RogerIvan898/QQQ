@@ -12,23 +12,31 @@ stages:
   - docker
   - scan
 
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+    # Lint/tests also run in merge requests, not only after merging.
+    # Remove this line if you want pipelines only on the default branch and tags.
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+default:
+  interruptible: true
+
+# The template puts this job into the "test" stage; move it to our own stage.
+secret_detection:
+  stage: secret-detection
+
 # Scan the freshly pushed frontend image (runs only when the image was built).
+# Rules MUST stay identical to frontend:docker, otherwise the pipeline fails to create.
 container_scanning:
   stage: scan
   needs: [frontend:docker]
   variables:
     CS_IMAGE: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
   rules:
-    - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG)
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG'
       changes: [frontend/**/*]
-
-workflow:
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-    - if: $CI_COMMIT_TAG
-
-default:
-  interruptible: true
 
 # ---------- frontend ----------
 .frontend:
@@ -99,12 +107,15 @@ backend:test:
   stage: docker
   image: docker:27
   services: [docker:27-dind]
+  interruptible: false # don't let a newer pipeline cancel a push halfway
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
   before_script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-  script:
     - IMAGE=$CI_REGISTRY_IMAGE/$APP
     - TAGS="-t $IMAGE:$CI_COMMIT_SHORT_SHA -t $IMAGE:latest"
     - if [ -n "$CI_COMMIT_TAG" ]; then TAGS="$TAGS -t $IMAGE:$CI_COMMIT_TAG"; fi
+  script:
     - docker build $BUILD_ARGS $TAGS $APP
     - docker push --all-tags $IMAGE
 
@@ -112,40 +123,36 @@ frontend:docker:
   extends: .docker
   variables:
     APP: frontend
-    BUILD_ARGS: --target prebuilt
+    BUILD_ARGS: --target prebuilt --build-arg VITE_APP_URL=$VITE_APP_URL --build-arg VITE_API_URL=$VITE_API_URL
   needs: [frontend:check, frontend:build]
   before_script:
     - '[ -n "$VITE_APP_URL" ] || { echo "VITE_APP_URL is not set (Settings > CI/CD > Variables)"; exit 1; }'
     - !reference [.docker, before_script]
-  script:
-    - docker build --build-arg VITE_APP_URL=$VITE_APP_URL --build-arg VITE_API_URL=$VITE_API_URL $BUILD_ARGS $TAGS $APP
   rules:
-    - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG)
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG'
       changes: [frontend/**/*]
 
 backend:docker:
   extends: .docker
-  variables: { APP: backend }
-  script:
-    - IMAGE=$CI_REGISTRY_IMAGE/$APP
-    - TAGS="-t $IMAGE:$CI_COMMIT_SHORT_SHA -t $IMAGE:latest"
-    - if [ -n "$CI_COMMIT_TAG" ]; then TAGS="$TAGS -t $IMAGE:$CI_COMMIT_TAG"; fi
-    - docker build $BUILD_ARGS $TAGS $APP
-    - docker push --all-tags $IMAGE
-    - docker run -p 8080:8080 -e BOT_TOKEN=$BOT_TOKEN poker-backend
+  variables:
+    APP: backend # build context = backend/, Dockerfile = backend/Dockerfile
   rules:
-    - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG)
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG'
       exists: [backend/Dockerfile]
       changes: [backend/**/*]
 
+# ---------- GitLab Pages ----------
+# Rules MUST match frontend:build (same changes), otherwise "needs" points to a
+# job that doesn't exist and the whole pipeline fails to create.
 pages:
   stage: docker
   needs: [frontend:build]
+  interruptible: false
   script:
     - mkdir -p public
     - cp -r frontend/dist/* public/
   artifacts:
-    paths:
-      - public
+    paths: [public]
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes: [frontend/**/*, .gitlab-ci.yml]
