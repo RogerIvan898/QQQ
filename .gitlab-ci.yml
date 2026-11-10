@@ -73,35 +73,6 @@ frontend:build:
     paths: [frontend/dist/]
     expire_in: 1 week
 
-# ---------- backend (C++, CMake) ----------
-# Dormant until backend/CMakeLists.txt exists.
-.backend:
-  image: gcc:14
-  variables:
-    BUILD_DIR: backend/build
-  before_script:
-    - apt-get update -qq && apt-get install -y -qq cmake ninja-build >/dev/null
-  rules:
-    - exists: [backend/CMakeLists.txt]
-      changes: [backend/**/*, .gitlab-ci.yml]
-
-backend:build:
-  extends: .backend
-  stage: build
-  script:
-    - cmake -S backend -B $BUILD_DIR -G Ninja -DCMAKE_BUILD_TYPE=Release
-    - cmake --build $BUILD_DIR -j
-  artifacts:
-    paths: [backend/build/]
-    expire_in: 1 day
-
-backend:test:
-  extends: .backend
-  stage: test
-  needs: [backend:build]
-  script:
-    - ctest --test-dir $BUILD_DIR --output-on-failure
-
 # ---------- docker images (push to GitLab registry on default branch / tags) ----------
 .docker:
   stage: docker
@@ -132,8 +103,10 @@ frontend:docker:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG'
       changes: [frontend/**/*]
 
+# Everything (deps, compile) happens inside backend/Dockerfile; CI only runs docker build + push.
 backend:docker:
   extends: .docker
+  needs: [] # start immediately, don't download artifacts from other jobs
   variables:
     APP: backend # build context = backend/, Dockerfile = backend/Dockerfile
   rules:
