@@ -3,7 +3,8 @@
 //   - MODE=consumer: withdrawals → подпись → withdrawals.signed (для
 //     Broadcaster) и приём подтверждений из withdrawals.result;
 //   - MODE=watcher:  наблюдение за входящими переводами → deposits;
-//   - MODE=all:      оба режима в независимых горутинах.
+//   - MODE=broadcaster: withdrawals.signed → отправка в TON → withdrawals.result;
+//   - MODE=all:      все режимы в независимых горутинах.
 //
 // `chain-service healthcheck` — проверка /readyz для HEALTHCHECK в Docker
 // (в образе scratch нет curl/wget).
@@ -11,6 +12,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -28,6 +30,8 @@ import (
 	"gitlab.com/company-group7340831/poker/chain-service/internal/handler"
 	"gitlab.com/company-group7340831/poker/chain-service/internal/idempotency"
 	"gitlab.com/company-group7340831/poker/chain-service/internal/metrics"
+	"gitlab.com/company-group7340831/poker/chain-service/internal/store"
+	"gitlab.com/company-group7340831/poker/chain-service/internal/ton"
 )
 
 const appID = "chain-service"
@@ -68,6 +72,16 @@ func run() error {
 
 	m := metrics.New()
 
+	// MySQL нужна подписи и broadcaster: история выводов и идемпотентность.
+	var db *sql.DB
+	if cfg.Mode.NeedsDB() {
+		if db, err = store.Open(ctx, cfg.MySQLDSN, cfg.MySQLMaxOpenConns); err != nil {
+			return fmt.Errorf("mysql: %w", err)
+		}
+		defer func() { _ = db.Close() }()
+		log.Info("mysql connected, schema applied")
+	}
+
 	topology := buildTopology(cfg)
 	client := amqp.NewClient(amqp.ClientConfig{
 		URL:                   cfg.RabbitURL,
@@ -93,10 +107,23 @@ func run() error {
 		ConfirmTimeout: cfg.PublishTimeout,
 	}, log, m)
 
-	idem := idempotency.NewMemoryStore(cfg.IdempotencyTTL)
-	go idem.Run(ctx, cfg.IdempotencyCleanupInterval, func(removed, left int) {
-		log.Debug("idempotency cleanup", zap.Int("removed", removed), zap.Int("left", left))
-	})
+	var idem amqp.IdempotencyStore
+	if db != nil {
+		s := store.NewIdempotency(db, cfg.IdempotencyTTL, log)
+		go s.Run(ctx, cfg.IdempotencyCleanupInterval)
+		idem = s
+	} else {
+		s := idempotency.NewMemoryStore(cfg.IdempotencyTTL)
+		go s.Run(ctx, cfg.IdempotencyCleanupInterval, func(removed, left int) {
+			log.Debug("idempotency cleanup", zap.Int("removed", removed), zap.Int("left", left))
+		})
+		idem = s
+	}
+	var repo *store.Withdrawals
+	if db != nil {
+		repo = store.NewWithdrawals(db)
+	}
+	results := handler.NewResultPublisher(pub, cfg.Exchange, cfg.QueueWithdrawalsResult)
 
 	var (
 		workers   sync.WaitGroup
@@ -112,31 +139,60 @@ func run() error {
 		}()
 	}
 
-	if cfg.Mode.Consumes() {
-		signer := handler.NewStubSigner(log)
-		withdrawals := handler.NewWithdrawalHandler(pub, signer, cfg.Exchange, cfg.QueueWithdrawalsSigned, log)
-		results := handler.NewResultHandler(handler.NewLogResultSink(log), m)
+	addConsumer := func(queue string, workers int, h amqp.Handler) {
+		c := amqp.NewConsumer(amqp.ConsumerConfig{
+			Queue:            queue,
+			TagPrefix:        hostname,
+			Prefetch:         cfg.PrefetchCount,
+			Workers:          workers,
+			MaxRetries:       cfg.MaxRetries,
+			RetryQueues:      topology.Retry[queue],
+			HandlerTimeout:   cfg.HandlerTimeout,
+			ResubscribeDelay: cfg.ReconnectInitialDelay,
+		}, client, pub, idem, h, log, m)
+		consumers = append(consumers, c)
+		start("consumer "+queue, c.Run)
+	}
 
-		for _, q := range []struct {
-			queue string
-			h     amqp.Handler
-		}{
-			{cfg.QueueWithdrawals, withdrawals.Handle},
-			{cfg.QueueWithdrawalsResult, results.Handle},
-		} {
-			c := amqp.NewConsumer(amqp.ConsumerConfig{
-				Queue:            q.queue,
-				TagPrefix:        hostname,
-				Prefetch:         cfg.PrefetchCount,
-				Workers:          cfg.Workers,
-				MaxRetries:       cfg.MaxRetries,
-				RetryQueues:      topology.Retry[q.queue],
-				HandlerTimeout:   cfg.HandlerTimeout,
-				ResubscribeDelay: cfg.ReconnectInitialDelay,
-			}, client, pub, idem, q.h, log, m)
-			consumers = append(consumers, c)
-			start("consumer "+q.queue, c.Run)
+	if cfg.Mode.Consumes() {
+		maxSeqno, err := repo.MaxSeqno(ctx)
+		if err != nil {
+			_ = client.Close()
+			return fmt.Errorf("read max seqno: %w", err)
 		}
+		signer := handler.NewStubSigner(log, maxSeqno+1)
+		withdrawals := handler.NewWithdrawalHandler(pub, signer, repo, cfg.Exchange, cfg.QueueWithdrawalsSigned, log)
+		resultHandler := handler.NewResultHandler(handler.NewLogResultSink(log), m)
+		addConsumer(cfg.QueueWithdrawals, cfg.Workers, withdrawals.Handle)
+		addConsumer(cfg.QueueWithdrawalsResult, cfg.Workers, resultHandler.Handle)
+	}
+
+	if cfg.Mode.Broadcasts() {
+		var tonClient ton.Client
+		if cfg.TONClient == "stub" {
+			log.Warn("STUB TON client is active: nothing is really sent to the network")
+			tonClient = ton.Stub{}
+		} else {
+			if cfg.ToncenterAPIKey == "" {
+				log.Warn("TONCENTER_API_KEY is empty: public rate limit applies")
+			}
+			tonClient = ton.NewToncenter(ton.ToncenterConfig{
+				BaseURL: cfg.ToncenterURL,
+				APIKey:  cfg.ToncenterAPIKey,
+				RPS:     cfg.ToncenterRPS,
+				Timeout: cfg.ToncenterTimeout,
+			})
+		}
+		broadcaster := handler.NewBroadcastHandler(repo, tonClient, results, log)
+		// Один воркер: кошелёк принимает seqno строго по порядку.
+		addConsumer(cfg.QueueWithdrawalsSigned, 1, broadcaster.Handle)
+
+		poller := handler.NewConfirmPoller(handler.ConfirmPollerConfig{
+			Interval:  cfg.ConfirmPollInterval,
+			Timeout:   cfg.ConfirmTimeout,
+			BatchSize: cfg.ConfirmBatchSize,
+		}, repo, tonClient, results, log)
+		start("confirm poller", poller.Run)
 	}
 
 	if cfg.Mode.Watches() {
@@ -221,8 +277,7 @@ func shutdown(cfg *config.Config, log *zap.Logger, consumers []*amqp.Consumer, w
 }
 
 // buildTopology собирает топологию брокера из конфигурации: все четыре
-// очереди с DLQ и биндингами к exchange, delay-очереди — только для
-// очередей, которые этот сервис потребляет.
+// очереди с DLQ и биндингами к exchange, delay-очереди — для потребляемых.
 func buildTopology(cfg *config.Config) amqp.Topology {
 	return amqp.Topology{
 		Exchange:     cfg.Exchange,
@@ -236,6 +291,7 @@ func buildTopology(cfg *config.Config) amqp.Topology {
 		},
 		Retry: map[string][]amqp.RetryQueue{
 			cfg.QueueWithdrawals:       amqp.RetryQueues(cfg.QueueWithdrawals, cfg.RetryBaseDelay, cfg.MaxRetries),
+			cfg.QueueWithdrawalsSigned: amqp.RetryQueues(cfg.QueueWithdrawalsSigned, cfg.RetryBaseDelay, cfg.MaxRetries),
 			cfg.QueueWithdrawalsResult: amqp.RetryQueues(cfg.QueueWithdrawalsResult, cfg.RetryBaseDelay, cfg.MaxRetries),
 		},
 	}

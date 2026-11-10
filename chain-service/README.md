@@ -9,9 +9,18 @@ Go-сервис между ядром покер-рума и сетью TON. Р�
 | `withdrawals.result` | вход | `WITHDRAW_RESULT` | Broadcaster → chain-service |
 | `deposits` | выход | `DEPOSIT_DETECTED` | chain-service (watcher) → ядро |
 
-Режимы (`MODE`): `consumer` — `withdrawals` → `withdrawals.signed` и приём `withdrawals.result`; `watcher` — опрос TON и публикация в `deposits`; `all` — оба, в независимых горутинах.
+Режимы (`MODE`):
 
-> **Подпись и чтение TON сейчас заглушки.** `StubSigner` не подписывает ничего по-настоящему, `StubTONClient` не находит депозитов. Чтобы никто случайно не выкатил заглушку, режим consumer не стартует без `ALLOW_STUB_SIGNER=true`. Реальные реализации подключаются через интерфейсы `handler.Signer` и `handler.TONClient` (tonutils-go, ключ из KMS/Vault).
+| Режим | Что делает | Нужна MySQL |
+|---|---|---|
+| `consumer` | `withdrawals` → подпись → `withdrawals.signed`; приём `withdrawals.result` | да |
+| `broadcaster` | `withdrawals.signed` → отправка в TON (toncenter) → `withdrawals.result`: `sent`, затем `confirmed` / `failed` | да |
+| `watcher` | опрос TON → `deposits` | нет |
+| `all` | всё сразу, в независимых горутинах (для локального стенда) | да |
+
+В продакшене это три контейнера из одного образа. Приватный ключ нужен только `consumer`; `broadcaster` ходит в интернет и ключа не видит.
+
+> **Подпись и чтение депозитов сейчас заглушки.** `StubSigner` не подписывает ничего по-настоящему, `StubTONClient` не находит депозитов. Чтобы никто случайно не выкатил заглушку, режим consumer не стартует без `ALLOW_STUB_SIGNER=true`. Реальные реализации подключаются через интерфейсы `handler.Signer` и `handler.TONClient` (tonutils-go, ключ из KMS/Vault). Broadcaster уже умеет работать с настоящим toncenter (`TON_CLIENT=toncenter`), но BOC от заглушки сеть отвергнет — поэтому в compose стоит `TON_CLIENT=stub`.
 
 ## Запуск
 
@@ -23,7 +32,7 @@ docker compose up --build
 
 RabbitMQ UI — http://localhost:15672 (`chain` / `chain`), метрики — http://localhost:9090/metrics.
 
-Локально (нужен Go ≥ 1.26 и запущенный RabbitMQ):
+Локально (нужен Go ≥ 1.26, запущенные RabbitMQ и MySQL 8):
 
 ```bash
 cp .env.example .env
@@ -44,7 +53,17 @@ go build ./... && go vet ./... && go test ./...
   "to_address": "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c" }
 ```
 
-В `withdrawals.signed` появится `{ "request_id": "...", "boc": "base64...", "seqno": 1 }`.
+В `withdrawals.signed` появится `{ "request_id": "...", "boc": "base64...", "seqno": 1 }`, broadcaster отправит его (в compose — заглушкой), и в логах появятся результаты `sent`, затем `confirmed`. Состояние — в таблице `withdrawals`.
+
+## Broadcaster и MySQL
+
+Схема ([`internal/store/schema.sql`](internal/store/schema.sql)) применяется при старте: `processed_messages` (ключи идемпотентности с TTL) и `withdrawals` (одна строка на `request_id`: seqno, BOC, его sha256, статус `signed → sent → confirmed | failed`, хэши сообщения и транзакции).
+
+- **Подпись.** Перед публикацией вывод сохраняется по `request_id`. Повтор того же запроса не подписывается заново — публикуется сохранённый BOC. Тот же `request_id` с другой суммой, адресом или пользователем уходит в DLQ. Stub-подписант продолжает seqno с `MAX(seqno) + 1` из БД.
+- **Отправка.** `POST /api/v2/sendBocReturnHash`. Вывод в статусе `sent`/`confirmed`/`failed` повторно не отправляется; другой BOC для того же `request_id` не отправляется никогда (DLQ). Повторная отправка того же BOC безопасна: кошелёк примет seqno один раз. Сетевые ошибки, 429 и 5xx — повтор, 400 — DLQ. Очередь `withdrawals.signed` читается одним воркером: seqno должны идти по порядку.
+- **Подтверждение.** Фоновый опрос каждые `CONFIRM_POLL_INTERVAL` ищет транзакцию через `GET /api/v3/transactionsByMessage`. Нашлась и успешна — `confirmed`; прервана — `failed`; не нашлась за `CONFIRM_TIMEOUT` — `failed`. **`CONFIRM_TIMEOUT` должен быть больше `valid_until` сообщений кошелька**, иначе вывод могут объявить неуспешным, а транзакция всё же пройдёт.
+- **Ключ toncenter** — `TONCENTER_API_KEY`, пока пустой (публичный лимит ~1 запрос/с, `TONCENTER_RPS=1`). С ключом лимит можно поднять.
+- Ядру, которому нужны результаты, достаточно своей очереди, привязанной к `core.events` с ключом `withdrawals.result`: direct-exchange отдаст копию каждой очереди.
 
 ## Контракт сообщений
 
@@ -76,12 +95,14 @@ go build ./... && go vet ./... && go test ./...
 - **Publisher confirms.** `Confirm(false)` + `NotifyPublish`; публикация mandatory и ждёт ack. Nack, `basic.return` (некуда доставить) или таймаут `PUBLISH_TIMEOUT` возвращают ошибку.
 - **Consumer.** `Qos(PREFETCH_COUNT)`, только ручной ack после успешной обработки, пул из `CONSUMER_WORKERS` воркеров.
 - **Ошибки.** Постоянные (невалидные данные) → `Nack(false, false)` → DLQ. Временные (сеть, таймаут, nack брокера) → копия в delay-очередь с `x-retry-count` + 1 и ack исходного; после `MAX_RETRIES` → DLQ. Если не удалось даже поставить повтор, сообщение возвращается в очередь (`requeue`), а не теряется. Неизвестные ошибки считаются постоянными: деньги безопаснее разобрать вручную.
-- **Идемпотентность.** `message_id` проверяется до обработки и помечается после успеха (до ack). Параллельная обработка двух копий одного сообщения заблокирована. MVP-хранилище — in-memory `sync.Map` с TTL 24 ч; для нескольких реплик замените на Redis/Postgres (интерфейс `amqp.IdempotencyStore`).
+- **Идемпотентность.** `message_id` проверяется до обработки и помечается после успеха (до ack). Параллельная обработка двух копий одного сообщения заблокирована. Хранилище — таблица `processed_messages` в MySQL (TTL 24 ч, общая для реплик); в режиме `watcher` без БД — in-memory `sync.Map`.
 - **Graceful shutdown.** SIGINT/SIGTERM → `ch.Cancel(tag, false)` → ожидание in-flight (`sync.WaitGroup`) до `SHUTDOWN_TIMEOUT` → закрытие каналов и соединения. Если таймаут истёк, обработчики прерываются, а их сообщения возвращаются в очередь.
 
 ### Seqno и масштабирование
 
-Seqno кошелька выдаётся последовательно под мьютексом внутри процесса. Несколько consumer-реплик с **одним** горячим кошельком будут конфликтовать по seqno — нужен либо один consumer, либо распределённая блокировка, либо кошелёк на реплику. Watcher — строго один экземпляр (курсор `lt` пока в памяти).
+Seqno кошелька выдаётся последовательно под мьютексом внутри процесса. Несколько consumer-реплик с **одним** горячим кошельком будут конфликтовать по seqno — нужен один consumer, распределённая блокировка или кошелёк на реплику. Broadcaster — тоже один экземпляр на кошелёк. Watcher — строго один (курсор `lt` пока в памяти).
+
+Известное ограничение заглушки: если подпись прошла, а запись в БД — нет, seqno пропускается. Настоящий подписант должен брать seqno из сети (get-метод кошелька) с учётом неподтверждённых выводов из `withdrawals`.
 
 ## HTTP (`METRICS_PORT`, по умолчанию 9090)
 
@@ -91,7 +112,7 @@ Seqno кошелька выдаётся последовательно под м
 
 ## Переменные окружения
 
-Полный список со значениями по умолчанию — в [`.env.example`](.env.example). Обязательна только `RABBITMQ_URL` (и `ALLOW_STUB_SIGNER=true`, пока нет настоящей подписи).
+Полный список со значениями по умолчанию — в [`.env.example`](.env.example). Обязательны `RABBITMQ_URL`, `MYSQL_DSN` (кроме `watcher`) и `ALLOW_STUB_SIGNER=true`, пока нет настоящей подписи.
 
 ## Структура
 
@@ -102,7 +123,9 @@ internal/amqp/client.go        соединение, переподключен�
 internal/amqp/publisher.go     publisher confirms + NotifyReturn
 internal/amqp/consumer.go      QoS, воркеры, ack/nack, повторы, DLQ, shutdown
 internal/amqp/errors.go        классификация ошибок (Permanent / Transient)
-internal/idempotency/          in-memory хранилище message_id с TTL
-internal/handler/              вывод, подтверждения, депозиты, валидация TON
+internal/idempotency/          in-memory хранилище message_id с TTL (watcher)
+internal/store/                MySQL: схема, идемпотентность, история выводов
+internal/ton/                  клиент toncenter и заглушка
+internal/handler/              подпись, broadcaster, подтверждения, депозиты, валидация TON
 internal/metrics/              Prometheus и HTTP-сервер
 ```

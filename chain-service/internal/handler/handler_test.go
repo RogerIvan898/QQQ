@@ -132,7 +132,7 @@ func TestWithdrawalHandler(t *testing.T) {
 
 	t.Run("signs and publishes", func(t *testing.T) {
 		pub := &fakePublisher{}
-		h := NewWithdrawalHandler(pub, NewStubSigner(log), "core.events", "withdrawals.signed", log)
+		h := NewWithdrawalHandler(pub, NewStubSigner(log, 1), newFakeRepo(), "core.events", "withdrawals.signed", log)
 		if err := h.Handle(context.Background(), withdrawDelivery(t, valid)); err != nil {
 			t.Fatalf("Handle: %v", err)
 		}
@@ -158,7 +158,7 @@ func TestWithdrawalHandler(t *testing.T) {
 	t.Run("invalid request is permanent", func(t *testing.T) {
 		bad := valid
 		bad.Amount = "-5"
-		h := NewWithdrawalHandler(&fakePublisher{}, NewStubSigner(log), "x", "y", log)
+		h := NewWithdrawalHandler(&fakePublisher{}, NewStubSigner(log, 1), newFakeRepo(), "x", "y", log)
 		err := h.Handle(context.Background(), withdrawDelivery(t, bad))
 		if !amqp.IsPermanent(err) {
 			t.Fatalf("want permanent error, got %v", err)
@@ -168,14 +168,14 @@ func TestWithdrawalHandler(t *testing.T) {
 	t.Run("wrong event type is permanent", func(t *testing.T) {
 		d := withdrawDelivery(t, valid)
 		d.Type = "SOMETHING_ELSE"
-		h := NewWithdrawalHandler(&fakePublisher{}, NewStubSigner(log), "x", "y", log)
+		h := NewWithdrawalHandler(&fakePublisher{}, NewStubSigner(log, 1), newFakeRepo(), "x", "y", log)
 		if err := h.Handle(context.Background(), d); !amqp.IsPermanent(err) {
 			t.Fatalf("want permanent error, got %v", err)
 		}
 	})
 
 	t.Run("publish failure is transient", func(t *testing.T) {
-		h := NewWithdrawalHandler(&fakePublisher{err: amqp.ErrPublishTimeout}, NewStubSigner(log), "x", "y", log)
+		h := NewWithdrawalHandler(&fakePublisher{err: amqp.ErrPublishTimeout}, NewStubSigner(log, 1), newFakeRepo(), "x", "y", log)
 		err := h.Handle(context.Background(), withdrawDelivery(t, valid))
 		if !amqp.IsTransient(err) || !errors.Is(err, amqp.ErrPublishTimeout) {
 			t.Fatalf("want transient publish timeout, got %v", err)

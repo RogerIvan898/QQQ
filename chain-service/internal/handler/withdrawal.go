@@ -12,6 +12,7 @@ import (
 
 	"gitlab.com/company-group7340831/poker/chain-service/internal/amqp"
 	"gitlab.com/company-group7340831/poker/chain-service/internal/metrics"
+	"gitlab.com/company-group7340831/poker/chain-service/internal/store"
 )
 
 // AssetTON — единственный поддерживаемый в MVP актив.
@@ -59,6 +60,7 @@ type WithdrawSigned struct {
 type WithdrawalHandler struct {
 	pub        Publisher
 	signer     Signer
+	repo       WithdrawalRepo
 	exchange   string
 	routingKey string
 	log        *zap.Logger
@@ -66,10 +68,11 @@ type WithdrawalHandler struct {
 
 // NewWithdrawalHandler создаёт обработчик. exchange/routingKey — куда
 // публиковать WITHDRAW_SIGNED.
-func NewWithdrawalHandler(pub Publisher, signer Signer, exchange, routingKey string, log *zap.Logger) *WithdrawalHandler {
+func NewWithdrawalHandler(pub Publisher, signer Signer, repo WithdrawalRepo, exchange, routingKey string, log *zap.Logger) *WithdrawalHandler {
 	return &WithdrawalHandler{
 		pub:        pub,
 		signer:     signer,
+		repo:       repo,
 		exchange:   exchange,
 		routingKey: routingKey,
 		log:        log.Named("withdrawal"),
@@ -81,10 +84,11 @@ func NewWithdrawalHandler(pub Publisher, signer Signer, exchange, routingKey str
 // Ошибки валидации — постоянные (сразу DLQ, повтор не исправит данные).
 // Ошибки подписи и публикации классифицирует сам источник.
 //
-// Защита от двойного вывода: исходящий message_id детерминирован от
-// request_id. Если входящее сообщение будет обработано повторно (например,
-// процесс упал между публикацией и ack), Broadcaster получит тот же
-// message_id и обязан отбросить дубль по message_id/request_id.
+// Защита от двойного вывода: подписанный вывод сохраняется в withdrawals
+// по request_id до публикации. Повторный запрос с тем же request_id не
+// подписывается заново — публикуется сохранённый BOC (тот же seqno, тот же
+// детерминированный message_id). Запрос с тем же request_id, но другими
+// суммой/адресом/пользователем уходит в DLQ.
 func (h *WithdrawalHandler) Handle(ctx context.Context, d amqp091.Delivery) error {
 	if err := checkEnvelope(d, EventWithdrawRequested); err != nil {
 		return amqp.Permanent(err)
@@ -106,15 +110,48 @@ func (h *WithdrawalHandler) Handle(ctx context.Context, d amqp091.Delivery) erro
 		zap.String("asset", req.Asset),
 	)
 
-	signed, err := h.signer.Sign(ctx, SignRequest{
-		RequestID:  req.RequestID,
-		ToAddress:  req.ToAddress,
-		AmountNano: amountNano,
-		Asset:      req.Asset,
-	})
+	w, err := h.repo.Get(ctx, req.RequestID)
 	if err != nil {
-		return fmt.Errorf("sign withdrawal: %w", err)
+		return err
 	}
+	if w == nil {
+		signed, err := h.signer.Sign(ctx, SignRequest{
+			RequestID:  req.RequestID,
+			ToAddress:  req.ToAddress,
+			AmountNano: amountNano,
+			Asset:      req.Asset,
+		})
+		if err != nil {
+			return fmt.Errorf("sign withdrawal: %w", err)
+		}
+		inserted, err := h.repo.InsertSigned(ctx, store.Withdrawal{
+			RequestID:  req.RequestID,
+			UserID:     req.UserID,
+			AmountNano: amountNano,
+			Asset:      req.Asset,
+			ToAddress:  req.ToAddress,
+			Seqno:      signed.Seqno,
+			BOC:        signed.BOC,
+		})
+		if err != nil {
+			return err
+		}
+		if inserted {
+			w = &store.Withdrawal{RequestID: req.RequestID, UserID: req.UserID, AmountNano: amountNano,
+				Asset: req.Asset, ToAddress: req.ToAddress, Seqno: signed.Seqno, BOC: signed.BOC}
+		} else if w, err = h.repo.Get(ctx, req.RequestID); err != nil || w == nil {
+			// Параллельная обработка успела вставить строку первой.
+			return amqp.Transient(fmt.Errorf("reload withdrawal after conflict: %v", err))
+		}
+	} else {
+		log.Info("withdrawal already signed, republishing stored BOC", zap.String("status", w.Status))
+	}
+
+	if w.UserID != 0 && (w.UserID != req.UserID || w.AmountNano != amountNano || w.ToAddress != req.ToAddress) {
+		log.Error("request_id reused with different withdrawal parameters")
+		return amqp.Permanent(fmt.Errorf("request %s conflicts with stored withdrawal", req.RequestID))
+	}
+	signed := SignedTx{BOC: w.BOC, Seqno: w.Seqno}
 
 	body, err := json.Marshal(WithdrawSigned{RequestID: req.RequestID, BOC: signed.BOC, Seqno: signed.Seqno})
 	if err != nil {

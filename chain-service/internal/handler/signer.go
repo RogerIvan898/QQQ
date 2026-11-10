@@ -48,9 +48,14 @@ type StubSigner struct {
 }
 
 // NewStubSigner создаёт заглушку и громко предупреждает в логах.
-func NewStubSigner(log *zap.Logger) *StubSigner {
-	log.Warn("STUB signer is active: withdrawals are NOT really signed, do not use in production")
-	return &StubSigner{seqno: 1}
+// nextSeqno — первый выдаваемый seqno (в main: MAX(seqno) из БД + 1).
+func NewStubSigner(log *zap.Logger, nextSeqno uint32) *StubSigner {
+	log.Warn("STUB signer is active: withdrawals are NOT really signed, do not use in production",
+		zap.Uint32("next_seqno", nextSeqno))
+	if nextSeqno == 0 {
+		nextSeqno = 1
+	}
+	return &StubSigner{seqno: nextSeqno}
 }
 
 // Sign выдаёт фиктивную «подпись» с монотонным seqno.

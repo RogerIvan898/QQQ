@@ -24,15 +24,25 @@ const (
 	ModeConsumer Mode = "consumer"
 	// ModeWatcher — только наблюдение за TON и публикация событий в deposits.
 	ModeWatcher Mode = "watcher"
-	// ModeAll — оба режима в одном процессе, в независимых горутинах.
+	// ModeBroadcaster — withdrawals.signed → отправка BOC в TON →
+	// withdrawals.result (sent / confirmed / failed).
+	ModeBroadcaster Mode = "broadcaster"
+	// ModeAll — все режимы в одном процессе, в независимых горутинах
+	// (удобно локально; в продакшене режимы лучше разносить по контейнерам).
 	ModeAll Mode = "all"
 )
 
-// Consumes сообщает, нужно ли запускать консьюмеры очередей вывода.
+// Consumes сообщает, нужно ли запускать подпись выводов и приём результатов.
 func (m Mode) Consumes() bool { return m == ModeConsumer || m == ModeAll }
 
 // Watches сообщает, нужно ли запускать наблюдатель депозитов.
 func (m Mode) Watches() bool { return m == ModeWatcher || m == ModeAll }
+
+// Broadcasts сообщает, нужно ли запускать отправку транзакций в сеть.
+func (m Mode) Broadcasts() bool { return m == ModeBroadcaster || m == ModeAll }
+
+// NeedsDB — режимы, которым нужна MySQL (история выводов).
+func (m Mode) NeedsDB() bool { return m.Consumes() || m.Broadcasts() }
 
 // Config — полная конфигурация сервиса.
 type Config struct {
@@ -76,6 +86,22 @@ type Config struct {
 
 	// Подпись транзакций
 	AllowStubSigner bool // ALLOW_STUB_SIGNER
+
+	// MySQL
+	MySQLDSN          string // MYSQL_DSN
+	MySQLMaxOpenConns int    // MYSQL_MAX_OPEN_CONNS
+
+	// Сеть TON
+	TONClient        string        // TON_CLIENT: toncenter | stub
+	ToncenterURL     string        // TONCENTER_URL
+	ToncenterAPIKey  string        // TONCENTER_API_KEY (пусто — без ключа, лимит ~1 rps)
+	ToncenterRPS     float64       // TONCENTER_RPS
+	ToncenterTimeout time.Duration // TONCENTER_TIMEOUT
+
+	// Broadcaster: ожидание подтверждений
+	ConfirmPollInterval time.Duration // CONFIRM_POLL_INTERVAL
+	ConfirmTimeout      time.Duration // CONFIRM_TIMEOUT
+	ConfirmBatchSize    int           // CONFIRM_BATCH_SIZE
 
 	// Прочее
 	MetricsPort     int           // METRICS_PORT
@@ -121,6 +147,19 @@ func Load() (*Config, error) {
 
 		AllowStubSigner: r.bool("ALLOW_STUB_SIGNER", false),
 
+		MySQLDSN:          r.str("MYSQL_DSN", ""),
+		MySQLMaxOpenConns: r.int("MYSQL_MAX_OPEN_CONNS", 10),
+
+		TONClient:        strings.ToLower(r.str("TON_CLIENT", "toncenter")),
+		ToncenterURL:     strings.TrimRight(r.str("TONCENTER_URL", "https://testnet.toncenter.com"), "/"),
+		ToncenterAPIKey:  r.str("TONCENTER_API_KEY", ""),
+		ToncenterRPS:     r.float("TONCENTER_RPS", 1),
+		ToncenterTimeout: r.duration("TONCENTER_TIMEOUT", 10*time.Second),
+
+		ConfirmPollInterval: r.duration("CONFIRM_POLL_INTERVAL", 5*time.Second),
+		ConfirmTimeout:      r.duration("CONFIRM_TIMEOUT", 15*time.Minute),
+		ConfirmBatchSize:    r.int("CONFIRM_BATCH_SIZE", 50),
+
 		MetricsPort:     r.int("METRICS_PORT", 9090),
 		LogLevel:        strings.ToLower(r.str("LOG_LEVEL", "info")),
 		ShutdownTimeout: r.duration("SHUTDOWN_TIMEOUT", 30*time.Second),
@@ -155,9 +194,33 @@ func (c *Config) validate() error {
 	add := func(format string, args ...any) { errs = append(errs, fmt.Errorf(format, args...)) }
 
 	switch c.Mode {
-	case ModeConsumer, ModeWatcher, ModeAll:
+	case ModeConsumer, ModeWatcher, ModeBroadcaster, ModeAll:
 	default:
-		add("MODE: ожидается consumer|watcher|all, получено %q", c.Mode)
+		add("MODE: ожидается consumer|watcher|broadcaster|all, получено %q", c.Mode)
+	}
+
+	if c.Mode.NeedsDB() && c.MySQLDSN == "" {
+		add("MYSQL_DSN: обязательна для режимов consumer/broadcaster/all")
+	}
+	if c.MySQLMaxOpenConns < 1 {
+		add("MYSQL_MAX_OPEN_CONNS: должно быть >= 1")
+	}
+	if c.Mode.Broadcasts() {
+		switch c.TONClient {
+		case "stub":
+		case "toncenter":
+			if u, err := url.Parse(c.ToncenterURL); err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" {
+				add("TONCENTER_URL: ожидается http(s) URL")
+			}
+		default:
+			add("TON_CLIENT: ожидается toncenter|stub, получено %q", c.TONClient)
+		}
+		if c.ToncenterRPS <= 0 {
+			add("TONCENTER_RPS: должно быть > 0")
+		}
+		if c.ConfirmBatchSize < 1 {
+			add("CONFIRM_BATCH_SIZE: должно быть >= 1")
+		}
 	}
 
 	if c.RabbitURL == "" {
@@ -220,6 +283,9 @@ func (c *Config) validate() error {
 		"IDEMPOTENCY_CLEANUP_INTERVAL": c.IdempotencyCleanupInterval,
 		"WATCHER_POLL_INTERVAL":        c.WatcherPollInterval,
 		"SHUTDOWN_TIMEOUT":             c.ShutdownTimeout,
+		"TONCENTER_TIMEOUT":            c.ToncenterTimeout,
+		"CONFIRM_POLL_INTERVAL":        c.ConfirmPollInterval,
+		"CONFIRM_TIMEOUT":              c.ConfirmTimeout,
 	}
 	for env, d := range positive {
 		if d <= 0 {
@@ -281,6 +347,19 @@ func (r *reader) uint64(key string, def uint64) uint64 {
 		return def
 	}
 	return n
+}
+
+func (r *reader) float(key string, def float64) float64 {
+	v, ok := os.LookupEnv(key)
+	if !ok || strings.TrimSpace(v) == "" {
+		return def
+	}
+	f, err := strconv.ParseFloat(strings.TrimSpace(v), 64)
+	if err != nil {
+		r.errs = append(r.errs, fmt.Errorf("%s: ожидается число, получено %q", key, v))
+		return def
+	}
+	return f
 }
 
 func (r *reader) bool(key string, def bool) bool {
