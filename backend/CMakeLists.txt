@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Boost REQUIRED COMPONENTS json system)
 find_package(OpenSSL REQUIRED)
 
-add_executable(poker_backend src/main.cpp)
+add_executable(poker_backend src/main.cpp src/telegram_auth.hpp)
 
 target_compile_features(poker_backend PRIVATE cxx_std_20)
 target_link_libraries(poker_backend PRIVATE
