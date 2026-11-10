@@ -43,6 +43,7 @@ type ConsumerConfig struct {
 	RetryQueues      []RetryQueue  // delay-очереди по номеру попытки
 	HandlerTimeout   time.Duration // таймаут одного вызова обработчика
 	ResubscribeDelay time.Duration // пауза перед повторной подпиской после обрыва
+	MaxBodyBytes     int           // максимальный размер тела; больше — сразу в DLQ (0 — без лимита)
 }
 
 // Consumer читает очередь с ручным ack и пулом воркеров.
@@ -215,6 +216,15 @@ func (c *Consumer) handle(d amqp091.Delivery) {
 	// Обработчики уже прерваны таймаутом остановки: вернуть в очередь.
 	if c.workCtx.Err() != nil {
 		c.nack(d, log, true, metrics.ConsumeRequeued)
+		return
+	}
+
+	// Огромное тело не разбираем: оно лишь тратило бы память и CPU, пока
+	// очередь стоит.
+	if c.cfg.MaxBodyBytes > 0 && len(d.Body) > c.cfg.MaxBodyBytes {
+		log.Error("message body too large, sending to DLQ",
+			zap.Int("size", len(d.Body)), zap.Int("limit", c.cfg.MaxBodyBytes))
+		c.toDLQ(d, log)
 		return
 	}
 

@@ -50,6 +50,10 @@ go build ./... && go vet ./... && go test ./...
 - `WITHDRAW_RESULT`: `request_id`, `status` (`sent` | `confirmed` | `failed`), `tx_hash`, `seqno`, `error`.
 - `DEPOSIT_DETECTED`: `tx_hash`, `lt`, `from_address`, `to_address`, `amount` (`"50.5"`), `amount_nano`, `asset`, `comment`, `tx_time`, `detected_at`.
 
+У каждого исходящего сообщения AMQP-свойство `user_id` = пользователь RabbitMQ, под которым работает chain-service. RabbitMQ отклоняет публикацию, если оно не совпадает с пользователем соединения, поэтому подделать его нельзя. **Ядро обязано принимать `DEPOSIT_DETECTED` и `WITHDRAW_RESULT` только с `user_id` chain-service** — иначе любой, кто может писать в exchange, сможет «зачислить» депозит или вызвать возврат денег. Каждому сервису — свой пользователь RabbitMQ с правами только на свои очереди.
+
+Входящее сообщение больше `MAX_MESSAGE_BYTES` (64 КБ) сразу уходит в DLQ без разбора.
+
 Исходящие `message_id` детерминированы (UUIDv5 от `request_id` + статус / `tx_hash`): повторная публикация того же события приходит с тем же `message_id`, получатель обязан отбросить дубль.
 
 ### Что должен обеспечить сервис подписи
@@ -91,6 +95,15 @@ go build ./... && go vet ./... && go test ./...
 
 - `/metrics` — `chain_publish_total{queue,status}`, `chain_consume_total{queue,status}`, `chain_retry_total{queue}`, `chain_dlq_total{queue}`, `chain_connection_up`, `chain_reconnect_total`, `chain_handler_duration_seconds`, `chain_publish_duration_seconds`.
 - `/healthz` — liveness; `/readyz` — есть соединение с RabbitMQ (используется `HEALTHCHECK` в Dockerfile).
+- Эндпоинты без авторизации: вне Docker привяжите их к внутреннему интерфейсу через `METRICS_HOST`.
+
+## Безопасность
+
+- Ключей кошелька в сервисе нет: отправляются только транзакции, уже подписанные сервисом подписи.
+- Подлинность исходящих событий — через `user_id` (см. «Контракт сообщений»).
+- toncenter — только по https; это единственный источник данных о депозитах, для крупных сумм в будущем стоит сверять со вторым источником (lite-сервер с доказательствами).
+- Сборка на Go 1.27.3 (`toolchain` в `go.mod`, тег образа в Dockerfile); проверка зависимостей: `go run golang.org/x/vuln/cmd/govulncheck@latest ./...`.
+- Учётки и открытые порты в `docker-compose.yml` — только для локальной разработки.
 
 ## Переменные окружения
 

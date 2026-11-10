@@ -31,7 +31,12 @@ type MessagePublisher interface {
 
 // PublisherConfig — параметры паблишера.
 type PublisherConfig struct {
-	AppID          string        // AMQP-свойство app_id
+	AppID string // AMQP-свойство app_id
+	// UserID — AMQP-свойство user_id = имя пользователя соединения. RabbitMQ
+	// проверяет, что оно совпадает с пользователем, под которым открыто
+	// соединение, и отклоняет подделку, поэтому получатель может по нему
+	// убедиться, что событие опубликовал именно chain-service.
+	UserID         string
 	ConfirmTimeout time.Duration // сколько ждать ack от брокера
 }
 
@@ -151,6 +156,7 @@ func (p *Publisher) send(ctx context.Context, msg Message) (*pendingConfirm, *pu
 			Type:          msg.Type,
 			Timestamp:     time.Now().UTC(),
 			AppId:         p.cfg.AppID,
+			UserId:        p.cfg.UserID,
 			Body:          msg.Body,
 		})
 	if err != nil {

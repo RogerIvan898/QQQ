@@ -15,6 +15,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -100,6 +101,7 @@ func run() error {
 
 	pub := amqp.NewPublisher(client, amqp.PublisherConfig{
 		AppID:          appID,
+		UserID:         cfg.RabbitUser(),
 		ConfirmTimeout: cfg.PublishTimeout,
 	}, log, m)
 
@@ -155,6 +157,7 @@ func run() error {
 			MaxRetries:       cfg.MaxRetries,
 			RetryQueues:      topology.Retry[cfg.QueueWithdrawalsSigned],
 			HandlerTimeout:   0,
+			MaxBodyBytes:     cfg.MaxMessageBytes,
 			ResubscribeDelay: cfg.ReconnectInitialDelay,
 		}, client, pub, idem, broadcaster.Handle, log, m)
 		consumers = append(consumers, c)
@@ -291,8 +294,12 @@ func healthcheck() int {
 	if port == "" {
 		port = "9090"
 	}
+	host := os.Getenv("METRICS_HOST")
+	if host == "" || host == "0.0.0.0" || host == "::" {
+		host = "127.0.0.1"
+	}
 	client := &http.Client{Timeout: 3 * time.Second}
-	resp, err := client.Get("http://127.0.0.1:" + port + "/readyz")
+	resp, err := client.Get("http://" + net.JoinHostPort(host, port) + "/readyz")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "healthcheck:", err)
 		return 1

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---------- сборка ----------
-FROM golang:1.27-alpine AS build
+FROM golang:1.27.3-alpine AS build
 WORKDIR /src
 
 # Сначала только зависимости — слой кешируется, пока не меняется go.mod/go.sum.

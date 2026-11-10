@@ -8,6 +8,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"strconv"
@@ -94,6 +95,8 @@ type Config struct {
 
 	// Прочее
 	MetricsPort     int           // METRICS_PORT
+	MetricsHost     string        // METRICS_HOST: интерфейс HTTP (пусто — все)
+	MaxMessageBytes int           // MAX_MESSAGE_BYTES: лимит тела входящего сообщения
 	LogLevel        string        // LOG_LEVEL
 	ShutdownTimeout time.Duration // SHUTDOWN_TIMEOUT
 }
@@ -148,6 +151,8 @@ func Load() (*Config, error) {
 		WalletAddress:       r.str("TON_WALLET_ADDRESS", ""),
 
 		MetricsPort:     r.int("METRICS_PORT", 9090),
+		MetricsHost:     r.str("METRICS_HOST", ""),
+		MaxMessageBytes: r.int("MAX_MESSAGE_BYTES", 64*1024),
 		LogLevel:        strings.ToLower(r.str("LOG_LEVEL", "info")),
 		ShutdownTimeout: r.duration("SHUTDOWN_TIMEOUT", 30*time.Second),
 	}
@@ -162,7 +167,19 @@ func Load() (*Config, error) {
 }
 
 // MetricsAddr — адрес HTTP-сервера метрик и health-эндпоинтов.
-func (c *Config) MetricsAddr() string { return fmt.Sprintf(":%d", c.MetricsPort) }
+func (c *Config) MetricsAddr() string {
+	return net.JoinHostPort(c.MetricsHost, strconv.Itoa(c.MetricsPort))
+}
+
+// RabbitUser — имя пользователя из RABBITMQ_URL (для AMQP-свойства user_id).
+// Без явного пользователя amqp091 подключается как guest.
+func (c *Config) RabbitUser() string {
+	u, err := url.Parse(c.RabbitURL)
+	if err != nil || u.User == nil || u.User.Username() == "" {
+		return "guest"
+	}
+	return u.User.Username()
+}
 
 // RedactedRabbitURL — URL брокера без пароля, пригодный для логов.
 func (c *Config) RedactedRabbitURL() string {
@@ -199,8 +216,11 @@ func (c *Config) validate() error {
 		switch c.TONClient {
 		case "stub":
 		case "toncenter":
-			if u, err := url.Parse(c.ToncenterURL); err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" {
-				add("TONCENTER_URL: ожидается http(s) URL")
+			// Ключ API уходит в заголовке — только по https. http допустим
+			// лишь для локального мока.
+			if u, err := url.Parse(c.ToncenterURL); err != nil || u.Host == "" ||
+				!(u.Scheme == "https" || (u.Scheme == "http" && isLocalHost(u.Hostname()))) {
+				add("TONCENTER_URL: ожидается https:// URL (http — только для localhost)")
 			}
 		default:
 			add("TON_CLIENT: ожидается toncenter|stub, получено %q", c.TONClient)
@@ -252,6 +272,9 @@ func (c *Config) validate() error {
 	if c.MaxRetries < 0 || c.MaxRetries > 10 {
 		add("MAX_RETRIES: ожидается 0..10, получено %d", c.MaxRetries)
 	}
+	if c.MaxMessageBytes < 1024 {
+		add("MAX_MESSAGE_BYTES: должно быть >= 1024")
+	}
 	if c.MetricsPort < 1 || c.MetricsPort > 65535 {
 		add("METRICS_PORT: ожидается 1..65535, получено %d", c.MetricsPort)
 	}
@@ -288,6 +311,14 @@ func (c *Config) validate() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func isLocalHost(h string) bool {
+	if h == "localhost" {
+		return true
+	}
+	ip := net.ParseIP(h)
+	return ip != nil && ip.IsLoopback()
 }
 
 // reader читает переменные окружения, накапливая ошибки парсинга.
