@@ -23,6 +23,7 @@ type WithdrawalRepo interface {
 	MarkSent(ctx context.Context, requestID, msgHash string) error
 	MarkConfirmed(ctx context.Context, requestID, txHash string) error
 	MarkFailed(ctx context.Context, requestID, txHash, reason string) error
+	MaxSeqno(ctx context.Context) (uint32, error)
 	ListSent(ctx context.Context, limit int) ([]store.Withdrawal, error)
 }
 
@@ -151,7 +152,7 @@ func (h *BroadcastHandler) Handle(ctx context.Context, d amqp091.Delivery) error
 // ConfirmPollerConfig — параметры опроса подтверждений.
 type ConfirmPollerConfig struct {
 	Interval  time.Duration
-	Timeout   time.Duration // сколько ждать транзакцию после отправки
+	Timeout   time.Duration // после этого срока вывод уходит на ручной разбор
 	BatchSize int
 }
 
@@ -161,9 +162,9 @@ type ConfirmPollerConfig struct {
 // Порядок «сначала публикация, потом запись в БД»: если запись не удастся,
 // следующий опрос опубликует тот же результат с тем же message_id.
 //
-// ВАЖНО: CONFIRM_TIMEOUT должен быть больше срока жизни внешнего сообщения
-// кошелька (valid_until), иначе вывод может быть объявлен failed (и
-// деньги возвращены пользователю), а транзакция всё же пройдёт.
+// По истечении CONFIRM_TIMEOUT вывод НЕ объявляется failed (транзакция
+// ещё может пройти): опросчик пишет ошибку для ручного разбора и
+// продолжает проверять. failed — только для найденной прерванной транзакции.
 type ConfirmPoller struct {
 	cfg     ConfirmPollerConfig
 	repo    WithdrawalRepo
@@ -230,8 +231,12 @@ func (p *ConfirmPoller) check(ctx context.Context, w store.Withdrawal) {
 	case tx != nil:
 		res = WithdrawResult{RequestID: w.RequestID, Status: ResultFailed, TxHash: tx.Hash, Seqno: w.Seqno, Error: tx.Reason}
 	case !w.SentAt.IsZero() && p.now().Sub(w.SentAt) > p.cfg.Timeout:
-		res = WithdrawResult{RequestID: w.RequestID, Status: ResultFailed, Seqno: w.Seqno,
-			Error: fmt.Sprintf("transaction not found within %s", p.cfg.Timeout)}
+		// Не объявляем failed: BOC ещё может попасть в блок, и тогда ядро
+		// вернуло бы деньги за прошедший вывод. Вывод остаётся sent и
+		// продолжает проверяться; решение — за человеком.
+		log.Error("transaction not found within confirm timeout, manual review required",
+			zap.Duration("timeout", p.cfg.Timeout), zap.Time("sent_at", w.SentAt))
+		return
 	default:
 		return // ещё ждём
 	}

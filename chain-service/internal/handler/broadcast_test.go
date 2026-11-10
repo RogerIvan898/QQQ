@@ -80,6 +80,18 @@ func (r *fakeRepo) MarkFailed(_ context.Context, id, tx, reason string) error {
 	return r.set(id, func(w *store.Withdrawal) { w.Status, w.TxHash, w.Error = store.StatusFailed, tx, reason }, store.StatusSent)
 }
 
+func (r *fakeRepo) MaxSeqno(context.Context) (uint32, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var m uint32
+	for _, w := range r.rows {
+		if w.Seqno > m {
+			m = w.Seqno
+		}
+	}
+	return m, nil
+}
+
 func (r *fakeRepo) ListSent(_ context.Context, limit int) ([]store.Withdrawal, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -223,25 +235,39 @@ func TestConfirmPoller(t *testing.T) {
 		}
 	})
 
-	t.Run("waits, then times out", func(t *testing.T) {
+	t.Run("timeout does not declare failed", func(t *testing.T) {
 		repo, pub, p := setup(nil)
 		p.Poll(ctx)
-		if len(pub.msgs) != 0 {
-			t.Fatal("must not publish while waiting")
-		}
 		p.now = func() time.Time { return time.Now().Add(2 * time.Minute) }
 		p.Poll(ctx)
 		w, _ := repo.Get(ctx, testRequestID)
-		if w.Status != store.StatusFailed || lastResult(t, pub).Status != ResultFailed {
-			t.Fatalf("row %+v", w)
+		if w.Status != store.StatusSent || len(pub.msgs) != 0 {
+			t.Fatalf("must stay sent without results, row %+v, published %d", w, len(pub.msgs))
 		}
 	})
+}
+
+func TestWithdrawalHandlerSeqnoFromDB(t *testing.T) {
+	log := zap.NewNop()
+	repo, pub := newFakeRepo(), &fakePublisher{}
+	_, _ = repo.InsertSigned(context.Background(), store.Withdrawal{RequestID: "00000000-0000-4000-8000-000000000001", Seqno: 41, BOC: "x"})
+	h := NewWithdrawalHandler(pub, NewStubSigner(log), repo, "ex", "rk", log)
+	req := WithdrawRequested{RequestID: testRequestID, UserID: 5, Amount: "1", Asset: AssetTON,
+		ToAddress: "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c"}
+	if err := h.Handle(context.Background(), withdrawDelivery(t, req)); err != nil {
+		t.Fatal(err)
+	}
+	var signed WithdrawSigned
+	_ = json.Unmarshal(pub.msgs[0].Body, &signed)
+	if signed.Seqno != 42 {
+		t.Fatalf("seqno = %d, want MAX(seqno)+1 = 42", signed.Seqno)
+	}
 }
 
 func TestWithdrawalHandlerDoesNotResign(t *testing.T) {
 	log := zap.NewNop()
 	repo, pub := newFakeRepo(), &fakePublisher{}
-	h := NewWithdrawalHandler(pub, NewStubSigner(log, 1), repo, "ex", "rk", log)
+	h := NewWithdrawalHandler(pub, NewStubSigner(log), repo, "ex", "rk", log)
 	req := WithdrawRequested{RequestID: testRequestID, UserID: 5, Amount: "1", Asset: AssetTON,
 		ToAddress: "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c"}
 

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	amqp091 "github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
@@ -58,9 +59,13 @@ type WithdrawSigned struct {
 
 // WithdrawalHandler: withdrawals → подпись → withdrawals.signed.
 type WithdrawalHandler struct {
-	pub        Publisher
-	signer     Signer
-	repo       WithdrawalRepo
+	pub    Publisher
+	signer Signer
+	repo   WithdrawalRepo
+	// signMu сериализует «проверка → seqno из БД → подпись → запись»: seqno
+	// не расходуется, пока строка не сохранена, и параллельные копии одного
+	// request_id не подписываются дважды.
+	signMu     sync.Mutex
 	exchange   string
 	routingKey string
 	log        *zap.Logger
@@ -110,12 +115,22 @@ func (h *WithdrawalHandler) Handle(ctx context.Context, d amqp091.Delivery) erro
 		zap.String("asset", req.Asset),
 	)
 
+	h.signMu.Lock()
+	defer h.signMu.Unlock()
+
 	w, err := h.repo.Get(ctx, req.RequestID)
 	if err != nil {
 		return err
 	}
 	if w == nil {
+		// Seqno берётся из БД, а не из счётчика: если подпись или запись
+		// не удались, следующий запрос получит тот же seqno — дыр нет.
+		maxSeqno, err := h.repo.MaxSeqno(ctx)
+		if err != nil {
+			return err
+		}
 		signed, err := h.signer.Sign(ctx, SignRequest{
+			Seqno:      maxSeqno + 1,
 			RequestID:  req.RequestID,
 			ToAddress:  req.ToAddress,
 			AmountNano: amountNano,

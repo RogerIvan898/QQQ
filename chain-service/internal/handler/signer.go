@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -14,6 +13,7 @@ import (
 
 // SignRequest — данные для подписи исходящего перевода.
 type SignRequest struct {
+	Seqno      uint32 // seqno, на котором подписывать (выдаёт вызывающий)
 	RequestID  string
 	ToAddress  string
 	AmountNano uint64
@@ -37,37 +37,25 @@ type Signer interface {
 }
 
 // StubSigner — ЗАГЛУШКА для разработки: никаких ключей и реальной подписи.
-// BOC содержит base64 от JSON с параметрами перевода, seqno — локальный
-// счётчик. Запуск с ней требует явного ALLOW_STUB_SIGNER=true.
+// BOC содержит base64 от JSON с параметрами перевода. Запуск с ней требует явного ALLOW_STUB_SIGNER=true.
 //
 // Продакшен-реализация: tonutils-go (wallet.V4R2/V5R1), ключ из KMS/Vault,
 // seqno — get-метод seqno кошелька плюс локальная очередь неподтверждённых.
-type StubSigner struct {
-	mu    sync.Mutex
-	seqno uint32
-}
+type StubSigner struct{}
 
 // NewStubSigner создаёт заглушку и громко предупреждает в логах.
-// nextSeqno — первый выдаваемый seqno (в main: MAX(seqno) из БД + 1).
-func NewStubSigner(log *zap.Logger, nextSeqno uint32) *StubSigner {
-	log.Warn("STUB signer is active: withdrawals are NOT really signed, do not use in production",
-		zap.Uint32("next_seqno", nextSeqno))
-	if nextSeqno == 0 {
-		nextSeqno = 1
-	}
-	return &StubSigner{seqno: nextSeqno}
+func NewStubSigner(log *zap.Logger) *StubSigner {
+	log.Warn("STUB signer is active: withdrawals are NOT really signed, do not use in production")
+	return &StubSigner{}
 }
 
-// Sign выдаёт фиктивную «подпись» с монотонным seqno.
+// Sign выдаёт фиктивную «подпись» на переданном seqno.
 func (s *StubSigner) Sign(ctx context.Context, req SignRequest) (SignedTx, error) {
 	if err := ctx.Err(); err != nil {
 		return SignedTx{}, amqp.Transient(err)
 	}
 
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	seqno := s.seqno
+	seqno := req.Seqno
 	payload, err := json.Marshal(struct {
 		Stub       bool   `json:"stub"`
 		RequestID  string `json:"request_id"`
@@ -80,6 +68,5 @@ func (s *StubSigner) Sign(ctx context.Context, req SignRequest) (SignedTx, error
 	if err != nil {
 		return SignedTx{}, amqp.Permanent(err)
 	}
-	s.seqno++
 	return SignedTx{BOC: base64.StdEncoding.EncodeToString(payload), Seqno: seqno}, nil
 }

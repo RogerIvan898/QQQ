@@ -28,7 +28,6 @@ import (
 	"gitlab.com/company-group7340831/poker/chain-service/internal/amqp"
 	"gitlab.com/company-group7340831/poker/chain-service/internal/config"
 	"gitlab.com/company-group7340831/poker/chain-service/internal/handler"
-	"gitlab.com/company-group7340831/poker/chain-service/internal/idempotency"
 	"gitlab.com/company-group7340831/poker/chain-service/internal/metrics"
 	"gitlab.com/company-group7340831/poker/chain-service/internal/store"
 	"gitlab.com/company-group7340831/poker/chain-service/internal/ton"
@@ -107,22 +106,9 @@ func run() error {
 		ConfirmTimeout: cfg.PublishTimeout,
 	}, log, m)
 
-	var idem amqp.IdempotencyStore
-	if db != nil {
-		s := store.NewIdempotency(db, cfg.IdempotencyTTL, log)
-		go s.Run(ctx, cfg.IdempotencyCleanupInterval)
-		idem = s
-	} else {
-		s := idempotency.NewMemoryStore(cfg.IdempotencyTTL)
-		go s.Run(ctx, cfg.IdempotencyCleanupInterval, func(removed, left int) {
-			log.Debug("idempotency cleanup", zap.Int("removed", removed), zap.Int("left", left))
-		})
-		idem = s
-	}
-	var repo *store.Withdrawals
-	if db != nil {
-		repo = store.NewWithdrawals(db)
-	}
+	idem := store.NewIdempotency(db, cfg.IdempotencyTTL, log)
+	go idem.Run(ctx, cfg.IdempotencyCleanupInterval)
+	repo := store.NewWithdrawals(db)
 	results := handler.NewResultPublisher(pub, cfg.Exchange, cfg.QueueWithdrawalsResult)
 
 	var (
@@ -155,12 +141,7 @@ func run() error {
 	}
 
 	if cfg.Mode.Consumes() {
-		maxSeqno, err := repo.MaxSeqno(ctx)
-		if err != nil {
-			_ = client.Close()
-			return fmt.Errorf("read max seqno: %w", err)
-		}
-		signer := handler.NewStubSigner(log, maxSeqno+1)
+		signer := handler.NewStubSigner(log)
 		withdrawals := handler.NewWithdrawalHandler(pub, signer, repo, cfg.Exchange, cfg.QueueWithdrawalsSigned, log)
 		resultHandler := handler.NewResultHandler(handler.NewLogResultSink(log), m)
 		addConsumer(cfg.QueueWithdrawals, cfg.Workers, withdrawals.Handle)
