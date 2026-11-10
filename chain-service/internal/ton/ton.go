@@ -28,9 +28,12 @@ type Client interface {
 	FindTransaction(ctx context.Context, msgHash string) (*Tx, error)
 }
 
-// Network — клиент для broadcaster и watcher одновременно.
+// Network — клиент для broadcaster, опроса подтверждений и watcher.
 type Network interface {
 	Client
+	// FindTransactions ищет транзакции по хэшам сообщений среди последних
+	// limit транзакций кошелька account одним запросом.
+	FindTransactions(ctx context.Context, account string, msgHashes []string, limit int) (map[string]*Tx, error)
 	// DepositsSince читает транзакции кошелька account с lt > afterLT.
 	DepositsSince(ctx context.Context, account string, afterLT uint64, limit int) (DepositBatch, error)
 }
@@ -55,4 +58,13 @@ func (Stub) FindTransaction(_ context.Context, msgHash string) (*Tx, error) {
 // DepositsSince у заглушки ничего не находит и не двигает курсор.
 func (Stub) DepositsSince(_ context.Context, _ string, afterLT uint64, _ int) (DepositBatch, error) {
 	return DepositBatch{NextLT: afterLT}, nil
+}
+
+// FindTransactions у заглушки «подтверждает» все запрошенные сообщения.
+func (s Stub) FindTransactions(ctx context.Context, _ string, msgHashes []string, _ int) (map[string]*Tx, error) {
+	out := make(map[string]*Tx, len(msgHashes))
+	for _, h := range msgHashes {
+		out[h], _ = s.FindTransaction(ctx, h)
+	}
+	return out, nil
 }

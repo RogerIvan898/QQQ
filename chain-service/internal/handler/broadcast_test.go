@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -92,12 +93,24 @@ func (r *fakeRepo) MaxSeqno(context.Context) (uint32, error) {
 	return m, nil
 }
 
-func (r *fakeRepo) ListSent(_ context.Context, limit int) ([]store.Withdrawal, error) {
+func (r *fakeRepo) ListSent(_ context.Context, sentAfter time.Time, limit int) ([]store.Withdrawal, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	var out []store.Withdrawal
 	for _, w := range r.rows {
-		if w.Status == store.StatusSent && len(out) < limit {
+		if w.Status == store.StatusSent && w.SentAt.After(sentAfter) && len(out) < limit {
+			out = append(out, *w)
+		}
+	}
+	return out, nil
+}
+
+func (r *fakeRepo) ListStale(_ context.Context, sentBefore time.Time, afterID string, limit int) ([]store.Withdrawal, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var out []store.Withdrawal
+	for _, w := range r.rows {
+		if w.Status == store.StatusSent && !w.SentAt.After(sentBefore) && w.RequestID > afterID && len(out) < limit {
 			out = append(out, *w)
 		}
 	}
@@ -107,6 +120,8 @@ func (r *fakeRepo) ListSent(_ context.Context, limit int) ([]store.Withdrawal, e
 // fakeTON считает отправки и отдаёт заданную транзакцию.
 type fakeTON struct {
 	sends   int
+	scans   int // запросов окна транзакций
+	single  int // запросов по одному сообщению
 	sendErr error
 	tx      *ton.Tx
 }
@@ -119,7 +134,21 @@ func (f *fakeTON) SendBoc(_ context.Context, boc string) (string, error) {
 	return "hash-" + boc[:4], nil
 }
 
-func (f *fakeTON) FindTransaction(context.Context, string) (*ton.Tx, error) { return f.tx, nil }
+func (f *fakeTON) FindTransaction(context.Context, string) (*ton.Tx, error) {
+	f.single++
+	return f.tx, nil
+}
+
+func (f *fakeTON) FindTransactions(_ context.Context, _ string, hashes []string, _ int) (map[string]*ton.Tx, error) {
+	f.scans++
+	out := map[string]*ton.Tx{}
+	if f.tx != nil {
+		for _, h := range hashes {
+			out[h] = f.tx
+		}
+	}
+	return out, nil
+}
 
 const testRequestID = "1b4e28ba-2fa1-11d2-883f-0016d3cca427"
 
@@ -209,7 +238,7 @@ func TestConfirmPoller(t *testing.T) {
 		repo, pub := newFakeRepo(), &fakePublisher{}
 		_, _ = repo.InsertSigned(ctx, store.Withdrawal{RequestID: testRequestID, Seqno: 7, BOC: boc})
 		_ = repo.MarkSent(ctx, testRequestID, "h")
-		p := NewConfirmPoller(ConfirmPollerConfig{Interval: time.Second, Timeout: time.Minute, BatchSize: 10},
+		p := NewConfirmPoller(ConfirmPollerConfig{Interval: time.Second, Timeout: time.Minute, BatchSize: 10, StaleEvery: 1},
 			repo, &fakeTON{tx: tx}, NewResultPublisher(pub, "ex", "rk"), log)
 		return repo, pub, p
 	}
@@ -232,6 +261,45 @@ func TestConfirmPoller(t *testing.T) {
 		w, _ := repo.Get(ctx, testRequestID)
 		if w.Status != store.StatusFailed || lastResult(t, pub).Status != ResultFailed {
 			t.Fatalf("row %+v", w)
+		}
+	})
+
+	t.Run("one scan for many fresh withdrawals", func(t *testing.T) {
+		repo, pub := newFakeRepo(), &fakePublisher{}
+		for i := 0; i < 20; i++ {
+			id := fmt.Sprintf("00000000-0000-4000-8000-%012d", i)
+			_, _ = repo.InsertSigned(ctx, store.Withdrawal{RequestID: id, Seqno: uint32(i + 1), BOC: fmt.Sprint("boc", i)})
+			_ = repo.MarkSent(ctx, id, fmt.Sprint("h", i))
+		}
+		tc := &fakeTON{tx: &ton.Tx{Hash: "tx", Success: true}}
+		p := NewConfirmPoller(ConfirmPollerConfig{Interval: time.Second, Timeout: time.Minute, BatchSize: 50},
+			repo, tc, NewResultPublisher(pub, "ex", "rk"), log)
+		p.Poll(ctx)
+		if tc.scans != 1 || tc.single != 0 {
+			t.Fatalf("scans=%d single=%d, want 1 and 0", tc.scans, tc.single)
+		}
+		if len(pub.msgs) != 20 {
+			t.Fatalf("published %d results, want 20", len(pub.msgs))
+		}
+	})
+
+	t.Run("stale withdrawals do not block fresh ones", func(t *testing.T) {
+		repo, pub := newFakeRepo(), &fakePublisher{}
+		for i := 0; i < 5; i++ { // зависшие, больше BatchSize
+			id := fmt.Sprintf("00000000-0000-4000-8000-%012d", i)
+			_, _ = repo.InsertSigned(ctx, store.Withdrawal{RequestID: id, Seqno: uint32(i + 1), BOC: fmt.Sprint("old", i)})
+			_ = repo.MarkSent(ctx, id, fmt.Sprint("old", i))
+			repo.rows[id].SentAt = time.Now().Add(-time.Hour)
+		}
+		_, _ = repo.InsertSigned(ctx, store.Withdrawal{RequestID: testRequestID, Seqno: 9, BOC: boc})
+		_ = repo.MarkSent(ctx, testRequestID, "fresh")
+
+		tc := &fakeTON{tx: &ton.Tx{Hash: "tx", Success: true}}
+		p := NewConfirmPoller(ConfirmPollerConfig{Interval: time.Second, Timeout: time.Minute, BatchSize: 2, StaleEvery: 100},
+			repo, tc, NewResultPublisher(pub, "ex", "rk"), log)
+		p.Poll(ctx)
+		if w, _ := repo.Get(ctx, testRequestID); w.Status != store.StatusConfirmed {
+			t.Fatalf("fresh withdrawal must be confirmed, got %s", w.Status)
 		}
 	})
 

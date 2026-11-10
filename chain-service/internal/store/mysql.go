@@ -91,6 +91,12 @@ func migrate(ctx context.Context, db *sql.DB) error {
 			continue
 		}
 		if _, err := db.ExecContext(ctx, stmt); err != nil {
+			// CREATE INDEX / ADD COLUMN без IF NOT EXISTS (его нет в MySQL 8.0):
+			// «уже существует» при повторном старте — не ошибка.
+			var me *mysql.MySQLError
+			if errors.As(err, &me) && (me.Number == 1060 || me.Number == 1061) {
+				continue
+			}
 			return fmt.Errorf("apply schema: %w", err)
 		}
 	}
@@ -174,20 +180,35 @@ func (s *Idempotency) Run(ctx context.Context, interval time.Duration) {
 		case <-ctx.Done():
 			return
 		case <-t.C:
-			qctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-			res, err := s.db.ExecContext(qctx,
-				`DELETE FROM processed_messages WHERE expires_at <= UTC_TIMESTAMP(3) LIMIT 10000`)
-			cancel()
-			if err != nil {
-				if ctx.Err() == nil {
-					s.log.Warn("idempotency cleanup failed", zap.Error(err))
-				}
-				continue
-			}
-			n, _ := res.RowsAffected()
-			s.log.Debug("idempotency cleanup", zap.Int64("removed", n))
+			s.log.Debug("idempotency cleanup", zap.Int64("removed", s.cleanup(ctx)))
 		}
 	}
+}
+
+// cleanup удаляет просроченные ключи пачками, пока удаляются полные пачки:
+// одной пачки за интервал не хватило бы при большом потоке, а один
+// огромный DELETE надолго держал бы блокировки.
+func (s *Idempotency) cleanup(ctx context.Context) int64 {
+	const batch = 10000
+	var total int64
+	for ctx.Err() == nil {
+		qctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		res, err := s.db.ExecContext(qctx,
+			`DELETE FROM processed_messages WHERE expires_at <= UTC_TIMESTAMP(3) LIMIT ?`, batch)
+		cancel()
+		if err != nil {
+			if ctx.Err() == nil {
+				s.log.Warn("idempotency cleanup failed", zap.Error(err))
+			}
+			return total
+		}
+		n, _ := res.RowsAffected()
+		total += n
+		if n < batch {
+			return total
+		}
+	}
+	return total
 }
 
 // ---------- выводы ----------
@@ -299,13 +320,27 @@ func (r *Withdrawals) MarkFailed(ctx context.Context, requestID, txHash, reason 
 	return nil
 }
 
-// ListSent — отправленные, но ещё не подтверждённые выводы (старые первыми).
-func (r *Withdrawals) ListSent(ctx context.Context, limit int) ([]Withdrawal, error) {
-	rows, err := r.db.QueryContext(ctx,
-		`SELECT `+withdrawalCols+` FROM withdrawals WHERE status = ? ORDER BY sent_at LIMIT ?`,
-		StatusSent, limit)
+// ListSent — свежие отправленные выводы (sent_at > sentAfter), старые первыми.
+func (r *Withdrawals) ListSent(ctx context.Context, sentAfter time.Time, limit int) ([]Withdrawal, error) {
+	return r.list(ctx, "list sent",
+		`SELECT `+withdrawalCols+` FROM withdrawals
+		 WHERE status = ? AND sent_at > ? ORDER BY sent_at LIMIT ?`,
+		StatusSent, sentAfter.UTC(), limit)
+}
+
+// ListStale — зависшие выводы (sent_at <= sentBefore) по кругу: следующая
+// страница после afterID в порядке request_id.
+func (r *Withdrawals) ListStale(ctx context.Context, sentBefore time.Time, afterID string, limit int) ([]Withdrawal, error) {
+	return r.list(ctx, "list stale",
+		`SELECT `+withdrawalCols+` FROM withdrawals
+		 WHERE status = ? AND sent_at <= ? AND request_id > ? ORDER BY request_id LIMIT ?`,
+		StatusSent, sentBefore.UTC(), afterID, limit)
+}
+
+func (r *Withdrawals) list(ctx context.Context, op, query string, args ...any) ([]Withdrawal, error) {
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, dbErr("list sent", err)
+		return nil, dbErr(op, err)
 	}
 	defer rows.Close()
 
@@ -313,12 +348,12 @@ func (r *Withdrawals) ListSent(ctx context.Context, limit int) ([]Withdrawal, er
 	for rows.Next() {
 		w, err := scanWithdrawal(rows)
 		if err != nil {
-			return nil, dbErr("scan withdrawal", err)
+			return nil, dbErr(op, err)
 		}
 		out = append(out, *w)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, dbErr("list sent", err)
+		return nil, dbErr(op, err)
 	}
 	return out, nil
 }

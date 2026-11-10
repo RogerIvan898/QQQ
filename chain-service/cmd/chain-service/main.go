@@ -174,6 +174,8 @@ func run() error {
 		addConsumer(cfg.QueueWithdrawalsSigned, 1, broadcaster.Handle)
 
 		poller := handler.NewConfirmPoller(handler.ConfirmPollerConfig{
+			Account:   cfg.WalletAddress,
+			ScanLimit: cfg.ConfirmScanLimit,
 			Interval:  cfg.ConfirmPollInterval,
 			Timeout:   cfg.ConfirmTimeout,
 			BatchSize: cfg.ConfirmBatchSize,

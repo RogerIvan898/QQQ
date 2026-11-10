@@ -41,6 +41,8 @@ type toncenterTx struct {
 		} `json:"compute_ph"`
 	} `json:"description"`
 	InMsg *struct {
+		Hash           string  `json:"hash"`
+		HashNorm       string  `json:"hash_norm"`
 		Source         *string `json:"source"` // null — внешнее сообщение (наш вывод)
 		Destination    string  `json:"destination"`
 		Value          *string `json:"value"`

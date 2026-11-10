@@ -24,7 +24,8 @@ type WithdrawalRepo interface {
 	MarkConfirmed(ctx context.Context, requestID, txHash string) error
 	MarkFailed(ctx context.Context, requestID, txHash, reason string) error
 	MaxSeqno(ctx context.Context) (uint32, error)
-	ListSent(ctx context.Context, limit int) ([]store.Withdrawal, error)
+	ListSent(ctx context.Context, sentAfter time.Time, limit int) ([]store.Withdrawal, error)
+	ListStale(ctx context.Context, sentBefore time.Time, afterID string, limit int) ([]store.Withdrawal, error)
 }
 
 // ResultPublisher публикует WITHDRAW_RESULT. message_id детерминирован от
@@ -151,13 +152,33 @@ func (h *BroadcastHandler) Handle(ctx context.Context, d amqp091.Delivery) error
 
 // ConfirmPollerConfig — параметры опроса подтверждений.
 type ConfirmPollerConfig struct {
-	Interval  time.Duration
-	Timeout   time.Duration // после этого срока вывод уходит на ручной разбор
-	BatchSize int
+	Account    string        // горячий кошелёк, с которого уходят выводы
+	Interval   time.Duration // период опроса
+	Timeout    time.Duration // после этого срока вывод уходит на ручной разбор
+	BatchSize  int           // сколько свежих выводов сверять за проход
+	ScanLimit  int           // сколько последних транзакций кошелька читать за проход
+	StaleEvery int           // зависшие проверяются раз в StaleEvery проходов
+	StaleBatch int           // сколько зависших проверять за раз
+}
+
+// ConfirmTON — то, что нужно опросчику от сети.
+type ConfirmTON interface {
+	// FindTransactions одним запросом ищет среди последних limit транзакций
+	// кошелька те, что порождены внешними сообщениями с данными хэшами.
+	FindTransactions(ctx context.Context, account string, msgHashes []string, limit int) (map[string]*ton.Tx, error)
+	// FindTransaction ищет одну транзакцию по хэшу сообщения — для зависших,
+	// которые уже выпали из окна последних транзакций.
+	FindTransaction(ctx context.Context, msgHash string) (*ton.Tx, error)
 }
 
 // ConfirmPoller периодически проверяет отправленные выводы и публикует
 // WITHDRAW_RESULT{confirmed|failed}.
+//
+// Свежие выводы (моложе CONFIRM_TIMEOUT) сверяются ОДНИМ запросом последних
+// транзакций кошелька на проход: расход лимита toncenter не зависит от числа
+// ожидающих выводов и почти не отнимается у broadcaster. Зависшие выводы
+// проверяются отдельно, редко и по кругу (курсор по request_id), поэтому не
+// забивают выборку и не мешают свежим.
 //
 // Порядок «сначала публикация, потом запись в БД»: если запись не удастся,
 // следующий опрос опубликует тот же результат с тем же message_id.
@@ -168,18 +189,30 @@ type ConfirmPollerConfig struct {
 type ConfirmPoller struct {
 	cfg     ConfirmPollerConfig
 	repo    WithdrawalRepo
-	ton     ton.Client
+	ton     ConfirmTON
 	results *ResultPublisher
 	log     *zap.Logger
 	now     func() time.Time
+
+	passes       int
+	staleAfterID string // курсор обхода зависших по кругу
 }
 
 // NewConfirmPoller создаёт опросчик.
-func NewConfirmPoller(cfg ConfirmPollerConfig, repo WithdrawalRepo, client ton.Client, results *ResultPublisher, log *zap.Logger) *ConfirmPoller {
+func NewConfirmPoller(cfg ConfirmPollerConfig, repo WithdrawalRepo, client ConfirmTON, results *ResultPublisher, log *zap.Logger) *ConfirmPoller {
+	if cfg.StaleEvery < 1 {
+		cfg.StaleEvery = 12
+	}
+	if cfg.StaleBatch < 1 {
+		cfg.StaleBatch = 5
+	}
+	if cfg.ScanLimit < 1 {
+		cfg.ScanLimit = 100
+	}
 	return &ConfirmPoller{cfg: cfg, repo: repo, ton: client, results: results, log: log.Named("confirm_poller"), now: time.Now}
 }
 
-// Run опрашивает до отмены ctx; начатая пачка дорабатывается.
+// Run опрашивает до отмены ctx; начатый проход дорабатывается.
 func (p *ConfirmPoller) Run(ctx context.Context) error {
 	p.log.Info("confirm poller started", zap.Duration("interval", p.cfg.Interval), zap.Duration("timeout", p.cfg.Timeout))
 	t := time.NewTicker(p.cfg.Interval)
@@ -195,56 +228,98 @@ func (p *ConfirmPoller) Run(ctx context.Context) error {
 	}
 }
 
-// Poll — один проход по отправленным выводам.
+// Poll — один проход: свежие выводы, а раз в StaleEvery проходов — зависшие.
 func (p *ConfirmPoller) Poll(ctx context.Context) {
 	work := context.WithoutCancel(ctx)
-	qctx, cancel := context.WithTimeout(work, 10*time.Second)
-	sent, err := p.repo.ListSent(qctx, p.cfg.BatchSize)
+	cutoff := p.now().Add(-p.cfg.Timeout)
+	p.pollFresh(work, cutoff)
+
+	p.passes++
+	if p.passes%p.cfg.StaleEvery == 0 && ctx.Err() == nil {
+		p.pollStale(work, cutoff)
+	}
+}
+
+func (p *ConfirmPoller) pollFresh(ctx context.Context, cutoff time.Time) {
+	qctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	fresh, err := p.repo.ListSent(qctx, cutoff, p.cfg.BatchSize)
 	cancel()
 	if err != nil {
 		p.log.Warn("list sent withdrawals failed", zap.Error(err))
 		return
 	}
-	for _, w := range sent {
-		if ctx.Err() != nil {
-			return
+	if len(fresh) == 0 {
+		return
+	}
+
+	hashes := make([]string, 0, len(fresh))
+	for _, w := range fresh {
+		hashes = append(hashes, w.MsgHash)
+	}
+	fctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	found, err := p.ton.FindTransactions(fctx, p.cfg.Account, hashes, p.cfg.ScanLimit)
+	cancel()
+	if err != nil {
+		p.log.Warn("scan wallet transactions failed", zap.Error(err))
+		return
+	}
+	for _, w := range fresh {
+		if tx := found[w.MsgHash]; tx != nil {
+			p.finalize(ctx, w, tx)
 		}
-		wctx, cancel := context.WithTimeout(work, 30*time.Second)
-		p.check(wctx, w)
-		cancel()
 	}
 }
 
-func (p *ConfirmPoller) check(ctx context.Context, w store.Withdrawal) {
-	log := p.log.With(zap.String("request_id", w.RequestID), zap.Uint32("seqno", w.Seqno), zap.String("msg_hash", w.MsgHash))
-
-	tx, err := p.ton.FindTransaction(ctx, w.MsgHash)
+func (p *ConfirmPoller) pollStale(ctx context.Context, cutoff time.Time) {
+	qctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	stale, err := p.repo.ListStale(qctx, cutoff, p.staleAfterID, p.cfg.StaleBatch)
+	cancel()
 	if err != nil {
-		log.Warn("find transaction failed", zap.Error(err))
+		p.log.Warn("list stale withdrawals failed", zap.Error(err))
 		return
 	}
+	if len(stale) < p.cfg.StaleBatch {
+		p.staleAfterID = "" // круг пройден — в следующий раз с начала
+	} else {
+		p.staleAfterID = stale[len(stale)-1].RequestID
+	}
 
-	var res WithdrawResult
-	switch {
-	case tx != nil && tx.Success:
-		res = WithdrawResult{RequestID: w.RequestID, Status: ResultConfirmed, TxHash: tx.Hash, Seqno: w.Seqno}
-	case tx != nil:
-		res = WithdrawResult{RequestID: w.RequestID, Status: ResultFailed, TxHash: tx.Hash, Seqno: w.Seqno, Error: tx.Reason}
-	case !w.SentAt.IsZero() && p.now().Sub(w.SentAt) > p.cfg.Timeout:
+	for _, w := range stale {
+		fctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		tx, err := p.ton.FindTransaction(fctx, w.MsgHash)
+		cancel()
+		if err != nil {
+			p.log.Warn("find transaction failed", zap.String("request_id", w.RequestID), zap.Error(err))
+			continue
+		}
+		if tx != nil {
+			p.finalize(ctx, w, tx)
+			continue
+		}
 		// Не объявляем failed: BOC ещё может попасть в блок, и тогда ядро
-		// вернуло бы деньги за прошедший вывод. Вывод остаётся sent и
-		// продолжает проверяться; решение — за человеком.
-		log.Error("transaction not found within confirm timeout, manual review required",
-			zap.Duration("timeout", p.cfg.Timeout), zap.Time("sent_at", w.SentAt))
-		return
-	default:
-		return // ещё ждём
+		// вернуло бы деньги за прошедший вывод. Решение — за человеком.
+		p.log.Error("transaction not found within confirm timeout, manual review required",
+			zap.String("request_id", w.RequestID), zap.Uint32("seqno", w.Seqno),
+			zap.String("msg_hash", w.MsgHash), zap.Time("sent_at", w.SentAt), zap.Duration("timeout", p.cfg.Timeout))
+	}
+}
+
+// finalize публикует итог найденной транзакции и записывает его в БД.
+func (p *ConfirmPoller) finalize(ctx context.Context, w store.Withdrawal, tx *ton.Tx) {
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	log := p.log.With(zap.String("request_id", w.RequestID), zap.Uint32("seqno", w.Seqno), zap.String("msg_hash", w.MsgHash))
+
+	res := WithdrawResult{RequestID: w.RequestID, Status: ResultConfirmed, TxHash: tx.Hash, Seqno: w.Seqno}
+	if !tx.Success {
+		res.Status, res.Error = ResultFailed, tx.Reason
 	}
 
 	if _, err := p.results.Publish(ctx, res); err != nil {
 		log.Error("publish result failed, will retry", zap.String("status", res.Status), zap.Error(err))
 		return
 	}
+	var err error
 	if res.Status == ResultConfirmed {
 		err = p.repo.MarkConfirmed(ctx, w.RequestID, res.TxHash)
 	} else {

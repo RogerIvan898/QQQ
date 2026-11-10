@@ -107,6 +107,8 @@ type Config struct {
 	ConfirmPollInterval time.Duration // CONFIRM_POLL_INTERVAL
 	ConfirmTimeout      time.Duration // CONFIRM_TIMEOUT
 	ConfirmBatchSize    int           // CONFIRM_BATCH_SIZE
+	ConfirmScanLimit    int           // CONFIRM_SCAN_LIMIT: сколько последних транзакций кошелька читать за проход
+	WalletAddress       string        // TON_WALLET_ADDRESS: горячий кошелёк, с которого уходят выводы
 
 	// Прочее
 	MetricsPort     int           // METRICS_PORT
@@ -165,6 +167,8 @@ func Load() (*Config, error) {
 		ConfirmPollInterval: r.duration("CONFIRM_POLL_INTERVAL", 5*time.Second),
 		ConfirmTimeout:      r.duration("CONFIRM_TIMEOUT", 15*time.Minute),
 		ConfirmBatchSize:    r.int("CONFIRM_BATCH_SIZE", 50),
+		ConfirmScanLimit:    r.int("CONFIRM_SCAN_LIMIT", 100),
+		WalletAddress:       r.str("TON_WALLET_ADDRESS", ""),
 
 		MetricsPort:     r.int("METRICS_PORT", 9090),
 		LogLevel:        strings.ToLower(r.str("LOG_LEVEL", "info")),
@@ -214,6 +218,9 @@ func (c *Config) validate() error {
 	if c.Mode.Watches() && c.TONClient == "toncenter" && c.DepositAddress == "" {
 		add("TON_DEPOSIT_ADDRESS: обязательна для watcher с TON_CLIENT=toncenter")
 	}
+	if c.Mode.Broadcasts() && c.TONClient == "toncenter" && c.WalletAddress == "" {
+		add("TON_WALLET_ADDRESS: обязательна для broadcaster с TON_CLIENT=toncenter")
+	}
 	if c.Mode.UsesTON() {
 		switch c.TONClient {
 		case "stub":
@@ -226,6 +233,9 @@ func (c *Config) validate() error {
 		}
 		if c.ToncenterRPS <= 0 {
 			add("TONCENTER_RPS: должно быть > 0")
+		}
+		if c.ConfirmScanLimit < 1 || c.ConfirmScanLimit > 1000 {
+			add("CONFIRM_SCAN_LIMIT: ожидается 1..1000")
 		}
 		if c.ConfirmBatchSize < 1 {
 			add("CONFIRM_BATCH_SIZE: должно быть >= 1")

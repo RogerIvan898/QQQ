@@ -34,7 +34,7 @@ func TestSendBoc(t *testing.T) {
 		_, _ = w.Write([]byte(`{"ok":true,"result":{"@type":"ext.message.info","hash":"raw","hash_norm":"norm"}}`))
 	})
 	h, err := c.SendBoc(context.Background(), "te6cc")
-	if err != nil || h != "norm" {
+	if err != nil || h != "raw" {
 		t.Fatalf("SendBoc = %q, %v", h, err)
 	}
 }
@@ -94,4 +94,28 @@ func TestFindTransaction(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestFindTransactions(t *testing.T) {
+	c := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		if r.URL.Path != "/api/v3/transactions" || q.Get("account") != "EQhot" || q.Get("sort") != "desc" || q.Get("limit") != "100" {
+			t.Errorf("unexpected request %s", r.URL)
+		}
+		_, _ = w.Write([]byte(`{"transactions":[
+		 {"hash":"tx1","lt":"10","description":{"aborted":false},"in_msg":{"hash":"m1","source":null}},
+		 {"hash":"tx2","lt":"11","description":{"aborted":true},"in_msg":{"hash":"x","hash_norm":"m2","source":null}},
+		 {"hash":"tx3","lt":"12","description":{"aborted":false},"in_msg":{"hash":"m3","source":"0:AAA"}}
+		]}`))
+	})
+	got, err := c.FindTransactions(context.Background(), "EQhot", []string{"m1", "m2", "m3", "m4"}, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 2 || got["m1"].Hash != "tx1" || !got["m1"].Success || got["m2"].Success {
+		t.Fatalf("unexpected result %+v", got)
+	}
+	if got["m3"] != nil {
+		t.Error("internal incoming message must not match a withdrawal")
+	}
 }

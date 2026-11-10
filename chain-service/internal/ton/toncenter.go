@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"golang.org/x/time/rate"
@@ -62,15 +63,15 @@ func (t *Toncenter) SendBoc(ctx context.Context, boc string) (string, error) {
 	if !resp.OK {
 		return "", amqp.Transient(fmt.Errorf("sendBoc: %s", resp.Error))
 	}
-	// Для поиска транзакции нужен нормализованный хэш внешнего сообщения
-	// (не зависит от подписи-обёртки); старые версии API его не отдают.
+	// Храним хэш сообщения в том виде, в каком оно попадёт в блок: он
+	// совпадает с in_msg.hash транзакции кошелька. Нормализованный — запасной.
+	if resp.Result.Hash != "" {
+		return resp.Result.Hash, nil
+	}
 	if resp.Result.HashNorm != "" {
 		return resp.Result.HashNorm, nil
 	}
-	if resp.Result.Hash == "" {
-		return "", amqp.Transient(errors.New("sendBoc: empty message hash in response"))
-	}
-	return resp.Result.Hash, nil
+	return "", amqp.Transient(errors.New("sendBoc: empty message hash in response"))
 }
 
 // FindTransaction ищет входящую транзакцию кошелька по хэшу сообщения.
@@ -181,4 +182,50 @@ func truncate(s string, n int) string {
 		return s
 	}
 	return s[:n]
+}
+
+// FindTransactions одним запросом читает последние limit транзакций кошелька
+// account и возвращает те, что порождены внешними сообщениями с хэшами из
+// msgHashes (сверяются и hash, и hash_norm). Ключ результата — хэш из запроса.
+func (t *Toncenter) FindTransactions(ctx context.Context, account string, msgHashes []string, limit int) (map[string]*Tx, error) {
+	want := make(map[string]struct{}, len(msgHashes))
+	for _, h := range msgHashes {
+		want[h] = struct{}{}
+	}
+
+	q := url.Values{}
+	q.Set("account", account)
+	q.Set("sort", "desc")
+	q.Set("limit", strconv.Itoa(limit))
+	var resp struct {
+		Transactions []toncenterTx `json:"transactions"`
+	}
+	if err := t.do(ctx, http.MethodGet, "/api/v3/transactions?"+q.Encode(), nil, &resp); err != nil {
+		return nil, fmt.Errorf("transactions: %w", err)
+	}
+
+	out := make(map[string]*Tx)
+	for _, tx := range resp.Transactions {
+		in := tx.InMsg
+		if in == nil || in.Source != nil { // нужны только внешние входящие (наши выводы)
+			continue
+		}
+		for _, h := range []string{in.Hash, in.HashNorm} {
+			if _, ok := want[h]; ok && h != "" {
+				out[h] = txResult(tx)
+			}
+		}
+	}
+	return out, nil
+}
+
+func txResult(tx toncenterTx) *Tx {
+	out := &Tx{Hash: tx.Hash, LT: tx.LT, Success: true}
+	switch {
+	case tx.Description.Aborted:
+		out.Success, out.Reason = false, "transaction aborted"
+	case tx.Description.ComputePh.Success != nil && !*tx.Description.ComputePh.Success:
+		out.Success, out.Reason = false, "compute phase failed"
+	}
+	return out
 }

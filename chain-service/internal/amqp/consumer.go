@@ -231,9 +231,15 @@ func (c *Consumer) handle(d amqp091.Delivery) {
 	// не должны обрабатываться параллельно: вторая возвращается в очередь
 	// и после завершения первой будет отсечена как дубликат.
 	if _, busy := c.processing.LoadOrStore(msgID, struct{}{}); busy {
-		log.Warn("same message_id is being processed, requeue")
-		_ = sleepCtx(c.workCtx, 500*time.Millisecond)
-		c.nack(d, log, true, metrics.ConsumeRequeued)
+		// Возвращаем в очередь с паузой (без паузы копия крутилась бы
+		// через брокер вхолостую), но воркер не держим: nack по таймеру.
+		// inflight учитывает отложенный nack, чтобы Shutdown его дождался.
+		log.Warn("same message_id is being processed, requeue later")
+		c.inflight.Add(1)
+		time.AfterFunc(500*time.Millisecond, func() {
+			defer c.inflight.Done()
+			c.nack(d, log, true, metrics.ConsumeRequeued)
+		})
 		return
 	}
 	defer c.processing.Delete(msgID)
