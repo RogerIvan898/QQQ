@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	amqp091 "github.com/rabbitmq/amqp091-go"
@@ -68,4 +69,31 @@ func decodeJSON(body []byte, v any) error {
 func validUUID(s string) bool {
 	_, err := uuid.Parse(s)
 	return err == nil
+}
+
+// sleep — пауза, прерываемая ctx. false — ctx отменён.
+func sleep(ctx context.Context, d time.Duration) bool {
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-t.C:
+		return true
+	}
+}
+
+// runEvery вызывает fn сразу и затем каждые interval, пока ctx не отменён.
+// Начатый вызов fn дорабатывает до конца.
+func runEvery(ctx context.Context, interval time.Duration, fn func()) {
+	t := time.NewTicker(interval)
+	defer t.Stop()
+	for {
+		fn()
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+		}
+	}
 }

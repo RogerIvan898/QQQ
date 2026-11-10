@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
 	"go.uber.org/zap"
@@ -41,33 +40,6 @@ type DepositSource interface {
 type CursorStore interface {
 	Load(ctx context.Context, account string) (uint64, bool, error)
 	Save(ctx context.Context, account string, lt uint64) error
-}
-
-// MemoryCursors — CursorStore в памяти (для заглушки и тестов).
-type MemoryCursors struct {
-	mu sync.Mutex
-	m  map[string]uint64
-}
-
-// NewMemoryCursors создаёт курсоры в памяти.
-func NewMemoryCursors() *MemoryCursors { return &MemoryCursors{m: map[string]uint64{}} }
-
-// Load возвращает курсор.
-func (c *MemoryCursors) Load(_ context.Context, account string) (uint64, bool, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	v, ok := c.m[account]
-	return v, ok, nil
-}
-
-// Save сохраняет курсор (только вперёд).
-func (c *MemoryCursors) Save(_ context.Context, account string, lt uint64) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if lt > c.m[account] {
-		c.m[account] = lt
-	}
-	return nil
 }
 
 // DepositWatcherConfig — параметры наблюдателя.
@@ -119,19 +91,13 @@ func (w *DepositWatcher) Run(ctx context.Context) error {
 	}
 	w.log.Info("deposit watcher started", zap.Duration("interval", w.cfg.PollInterval), zap.Uint64("from_lt", w.lastLT))
 
-	t := time.NewTicker(w.cfg.PollInterval)
-	defer t.Stop()
-	for {
+	runEvery(ctx, w.cfg.PollInterval, func() {
 		for w.Poll(ctx) && ctx.Err() == nil {
 		}
-		select {
-		case <-ctx.Done():
-			w.saveCursor(context.WithoutCancel(ctx))
-			w.log.Info("deposit watcher stopped", zap.Uint64("last_lt", w.lastLT))
-			return nil
-		case <-t.C:
-		}
-	}
+	})
+	w.saveCursor(context.WithoutCancel(ctx))
+	w.log.Info("deposit watcher stopped", zap.Uint64("last_lt", w.lastLT))
+	return nil
 }
 
 func (w *DepositWatcher) loadCursor(ctx context.Context) error {
@@ -147,10 +113,8 @@ func (w *DepositWatcher) loadCursor(ctx context.Context) error {
 			return nil
 		}
 		w.log.Warn("load watcher cursor failed, retrying", zap.Error(err))
-		select {
-		case <-ctx.Done():
+		if !sleep(ctx, 5*time.Second) {
 			return nil
-		case <-time.After(5 * time.Second):
 		}
 	}
 }

@@ -82,17 +82,7 @@ func (t *Toncenter) FindTransaction(ctx context.Context, msgHash string) (*Tx, e
 	q.Set("limit", "1")
 
 	var resp struct {
-		Transactions []struct {
-			Hash        string `json:"hash"`
-			LT          string `json:"lt"`
-			Description struct {
-				Aborted   bool `json:"aborted"`
-				ComputePh struct {
-					Success  *bool `json:"success"`
-					ExitCode int   `json:"exit_code"`
-				} `json:"compute_ph"`
-			} `json:"description"`
-		} `json:"transactions"`
+		Transactions []toncenterTx `json:"transactions"`
 	}
 	err := t.do(ctx, http.MethodGet, "/api/v3/transactionsByMessage?"+q.Encode(), nil, &resp)
 	var he *HTTPError
@@ -106,15 +96,7 @@ func (t *Toncenter) FindTransaction(ctx context.Context, msgHash string) (*Tx, e
 		return nil, nil
 	}
 
-	tx := resp.Transactions[0]
-	out := &Tx{Hash: tx.Hash, LT: tx.LT, Success: true}
-	switch {
-	case tx.Description.Aborted:
-		out.Success, out.Reason = false, "transaction aborted"
-	case tx.Description.ComputePh.Success != nil && !*tx.Description.ComputePh.Success:
-		out.Success, out.Reason = false, fmt.Sprintf("compute phase failed, exit code %d", tx.Description.ComputePh.ExitCode)
-	}
-	return out, nil
+	return txResult(resp.Transactions[0]), nil
 }
 
 // HTTPError — неуспешный ответ toncenter.
@@ -158,7 +140,7 @@ func (t *Toncenter) do(ctx context.Context, method, path string, body []byte, ou
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		he := &HTTPError{Status: resp.StatusCode, Body: truncate(string(data), 300)}
+		he := &HTTPError{Status: resp.StatusCode, Body: amqp.Truncate(string(data), 300)}
 		switch {
 		case resp.StatusCode == http.StatusBadRequest || resp.StatusCode == http.StatusUnprocessableEntity:
 			// Битый запрос / BOC — повтор не поможет.
@@ -177,13 +159,6 @@ func (t *Toncenter) do(ctx context.Context, method, path string, body []byte, ou
 	return nil
 }
 
-func truncate(s string, n int) string {
-	if len(s) <= n {
-		return s
-	}
-	return s[:n]
-}
-
 // FindTransactions одним запросом читает последние limit транзакций кошелька
 // account и возвращает те, что порождены внешними сообщениями с хэшами из
 // msgHashes (сверяются и hash, и hash_norm). Ключ результата — хэш из запроса.
@@ -193,19 +168,13 @@ func (t *Toncenter) FindTransactions(ctx context.Context, account string, msgHas
 		want[h] = struct{}{}
 	}
 
-	q := url.Values{}
-	q.Set("account", account)
-	q.Set("sort", "desc")
-	q.Set("limit", strconv.Itoa(limit))
-	var resp struct {
-		Transactions []toncenterTx `json:"transactions"`
-	}
-	if err := t.do(ctx, http.MethodGet, "/api/v3/transactions?"+q.Encode(), nil, &resp); err != nil {
-		return nil, fmt.Errorf("transactions: %w", err)
+	txs, err := t.transactions(ctx, account, 0, "desc", limit)
+	if err != nil {
+		return nil, err
 	}
 
 	out := make(map[string]*Tx)
-	for _, tx := range resp.Transactions {
+	for _, tx := range txs {
 		in := tx.InMsg
 		if in == nil || in.Source != nil { // нужны только внешние входящие (наши выводы)
 			continue
@@ -219,13 +188,34 @@ func (t *Toncenter) FindTransactions(ctx context.Context, account string, msgHas
 	return out, nil
 }
 
+// transactions читает транзакции кошелька account через /api/v3/transactions.
+// startLT > 0 — только с lt >= startLT; sort — asc | desc.
+func (t *Toncenter) transactions(ctx context.Context, account string, startLT uint64, sort string, limit int) ([]toncenterTx, error) {
+	q := url.Values{}
+	q.Set("account", account)
+	if startLT > 0 {
+		q.Set("start_lt", strconv.FormatUint(startLT, 10))
+	}
+	q.Set("sort", sort)
+	q.Set("limit", strconv.Itoa(limit))
+
+	var resp struct {
+		Transactions []toncenterTx `json:"transactions"`
+	}
+	if err := t.do(ctx, http.MethodGet, "/api/v3/transactions?"+q.Encode(), nil, &resp); err != nil {
+		return nil, fmt.Errorf("transactions: %w", err)
+	}
+	return resp.Transactions, nil
+}
+
+// txResult — итог транзакции: успешна или прервана (и почему).
 func txResult(tx toncenterTx) *Tx {
 	out := &Tx{Hash: tx.Hash, LT: tx.LT, Success: true}
-	switch {
+	switch ph := tx.Description.ComputePh; {
 	case tx.Description.Aborted:
 		out.Success, out.Reason = false, "transaction aborted"
-	case tx.Description.ComputePh.Success != nil && !*tx.Description.ComputePh.Success:
-		out.Success, out.Reason = false, "compute phase failed"
+	case ph.Success != nil && !*ph.Success:
+		out.Success, out.Reason = false, fmt.Sprintf("compute phase failed, exit code %d", ph.ExitCode)
 	}
 	return out
 }

@@ -3,7 +3,6 @@ package ton
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 )
@@ -37,7 +36,8 @@ type toncenterTx struct {
 	Description struct {
 		Aborted   bool `json:"aborted"`
 		ComputePh struct {
-			Success *bool `json:"success"`
+			Success  *bool `json:"success"`
+			ExitCode int   `json:"exit_code"`
 		} `json:"compute_ph"`
 	} `json:"description"`
 	InMsg *struct {
@@ -64,19 +64,11 @@ type toncenterTx struct {
 // прервана. Внешние сообщения (наши собственные выводы) и возвраты
 // пропускаются.
 func (t *Toncenter) DepositsSince(ctx context.Context, account string, afterLT uint64, limit int) (DepositBatch, error) {
-	q := url.Values{}
-	q.Set("account", account)
-	q.Set("start_lt", strconv.FormatUint(afterLT+1, 10))
-	q.Set("sort", "asc")
-	q.Set("limit", strconv.Itoa(limit))
-
-	var resp struct {
-		Transactions []toncenterTx `json:"transactions"`
+	txs, err := t.transactions(ctx, account, afterLT+1, "asc", limit)
+	if err != nil {
+		return DepositBatch{}, err
 	}
-	if err := t.do(ctx, "GET", "/api/v3/transactions?"+q.Encode(), nil, &resp); err != nil {
-		return DepositBatch{}, fmt.Errorf("transactions: %w", err)
-	}
-	return parseDeposits(resp.Transactions, afterLT, limit)
+	return parseDeposits(txs, afterLT, limit)
 }
 
 func parseDeposits(txs []toncenterTx, afterLT uint64, limit int) (DepositBatch, error) {
@@ -104,7 +96,7 @@ func toDeposit(tx toncenterTx, lt uint64) (Deposit, bool) {
 	if in == nil || in.Source == nil || *in.Source == "" || in.Bounced || in.Value == nil {
 		return Deposit{}, false
 	}
-	if tx.Description.Aborted || (tx.Description.ComputePh.Success != nil && !*tx.Description.ComputePh.Success) {
+	if !txResult(tx).Success {
 		return Deposit{}, false
 	}
 	amount, err := strconv.ParseUint(*in.Value, 10, 64)

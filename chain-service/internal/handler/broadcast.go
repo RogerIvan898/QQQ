@@ -123,10 +123,8 @@ func (h *BroadcastHandler) Handle(ctx context.Context, d amqp091.Delivery) error
 		}
 		log.Warn("broadcast attempt failed, retrying in place to keep seqno order",
 			zap.Int("attempt", attempt), zap.Duration("retry_in", delay), zap.Error(err))
-		select {
-		case <-ctx.Done():
+		if !sleep(ctx, delay) {
 			return err
-		case <-time.After(delay):
 		}
 		if delay *= 2; delay > h.retryMax {
 			delay = h.retryMax
@@ -256,17 +254,9 @@ func NewConfirmPoller(cfg ConfirmPollerConfig, repo WithdrawalRepo, client Confi
 // Run опрашивает до отмены ctx; начатый проход дорабатывается.
 func (p *ConfirmPoller) Run(ctx context.Context) error {
 	p.log.Info("confirm poller started", zap.Duration("interval", p.cfg.Interval), zap.Duration("timeout", p.cfg.Timeout))
-	t := time.NewTicker(p.cfg.Interval)
-	defer t.Stop()
-	for {
-		p.Poll(ctx)
-		select {
-		case <-ctx.Done():
-			p.log.Info("confirm poller stopped")
-			return nil
-		case <-t.C:
-		}
-	}
+	runEvery(ctx, p.cfg.Interval, func() { p.Poll(ctx) })
+	p.log.Info("confirm poller stopped")
+	return nil
 }
 
 // Poll — один проход: свежие выводы, а раз в StaleEvery проходов — зависшие.

@@ -125,7 +125,7 @@ func TestNextBackoff(t *testing.T) {
 }
 
 func TestTruncateKeepsUTF8(t *testing.T) {
-	s := truncate("ошибка", 3) // 3 байта режут вторую кириллическую букву
+	s := Truncate("ошибка", 3) // 3 байта режут вторую кириллическую букву
 	if s != "о" {
 		t.Errorf("truncate = %q, want %q", s, "о")
 	}

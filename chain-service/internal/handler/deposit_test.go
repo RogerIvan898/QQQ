@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -12,6 +13,33 @@ import (
 	"gitlab.com/company-group7340831/poker/chain-service/internal/amqp"
 	"gitlab.com/company-group7340831/poker/chain-service/internal/ton"
 )
+
+// MemoryCursors — CursorStore в памяти (для тестов).
+type MemoryCursors struct {
+	mu sync.Mutex
+	m  map[string]uint64
+}
+
+// NewMemoryCursors создаёт курсоры в памяти.
+func NewMemoryCursors() *MemoryCursors { return &MemoryCursors{m: map[string]uint64{}} }
+
+// Load возвращает курсор.
+func (c *MemoryCursors) Load(_ context.Context, account string) (uint64, bool, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	v, ok := c.m[account]
+	return v, ok, nil
+}
+
+// Save сохраняет курсор (только вперёд).
+func (c *MemoryCursors) Save(_ context.Context, account string, lt uint64) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if lt > c.m[account] {
+		c.m[account] = lt
+	}
+	return nil
+}
 
 type fakeSource struct {
 	batch  ton.DepositBatch

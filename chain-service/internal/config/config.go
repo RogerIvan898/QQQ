@@ -333,67 +333,36 @@ func (r *reader) str(key, def string) string {
 	return def
 }
 
-func (r *reader) int(key string, def int) int {
+// parse читает key и разбирает его функцией conv. Пустое значение — def;
+// ошибка разбора копится в r.errs с подсказкой want, возвращается def.
+func parse[T any](r *reader, key string, def T, want string, conv func(string) (T, error)) T {
 	v, ok := os.LookupEnv(key)
-	if !ok || strings.TrimSpace(v) == "" {
+	v = strings.TrimSpace(v)
+	if !ok || v == "" {
 		return def
 	}
-	n, err := strconv.Atoi(strings.TrimSpace(v))
+	out, err := conv(v)
 	if err != nil {
-		r.errs = append(r.errs, fmt.Errorf("%s: ожидается целое число, получено %q", key, v))
+		r.errs = append(r.errs, fmt.Errorf("%s: ожидается %s, получено %q", key, want, v))
 		return def
 	}
-	return n
+	return out
+}
+
+func (r *reader) int(key string, def int) int {
+	return parse(r, key, def, "целое число", strconv.Atoi)
 }
 
 func (r *reader) uint64(key string, def uint64) uint64 {
-	v, ok := os.LookupEnv(key)
-	if !ok || strings.TrimSpace(v) == "" {
-		return def
-	}
-	n, err := strconv.ParseUint(strings.TrimSpace(v), 10, 64)
-	if err != nil {
-		r.errs = append(r.errs, fmt.Errorf("%s: ожидается неотрицательное целое, получено %q", key, v))
-		return def
-	}
-	return n
+	return parse(r, key, def, "неотрицательное целое", func(v string) (uint64, error) {
+		return strconv.ParseUint(v, 10, 64)
+	})
 }
 
 func (r *reader) float(key string, def float64) float64 {
-	v, ok := os.LookupEnv(key)
-	if !ok || strings.TrimSpace(v) == "" {
-		return def
-	}
-	f, err := strconv.ParseFloat(strings.TrimSpace(v), 64)
-	if err != nil {
-		r.errs = append(r.errs, fmt.Errorf("%s: ожидается число, получено %q", key, v))
-		return def
-	}
-	return f
-}
-
-func (r *reader) bool(key string, def bool) bool {
-	v, ok := os.LookupEnv(key)
-	if !ok || strings.TrimSpace(v) == "" {
-		return def
-	}
-	b, err := strconv.ParseBool(strings.TrimSpace(v))
-	if err != nil {
-		r.errs = append(r.errs, fmt.Errorf("%s: ожидается true|false, получено %q", key, v))
-		return def
-	}
-	return b
+	return parse(r, key, def, "число", func(v string) (float64, error) { return strconv.ParseFloat(v, 64) })
 }
 
 func (r *reader) duration(key string, def time.Duration) time.Duration {
-	v, ok := os.LookupEnv(key)
-	if !ok || strings.TrimSpace(v) == "" {
-		return def
-	}
-	d, err := time.ParseDuration(strings.TrimSpace(v))
-	if err != nil {
-		r.errs = append(r.errs, fmt.Errorf("%s: ожидается длительность вида 5s/1m, получено %q", key, v))
-		return def
-	}
-	return d
+	return parse(r, key, def, "длительность вида 5s/1m", time.ParseDuration)
 }

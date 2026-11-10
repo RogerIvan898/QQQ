@@ -93,12 +93,13 @@ func retryHeaders(src amqp091.Table, messageID string, attempt int, queue string
 	h[HeaderRetryCount] = int32(attempt)
 	h[HeaderOriginalQueue] = queue
 	if lastErr != nil {
-		h[HeaderLastError] = truncate(lastErr.Error(), 512)
+		h[HeaderLastError] = Truncate(lastErr.Error(), 512)
 	}
 	return h
 }
 
-func truncate(s string, max int) string {
+// Truncate обрезает s до max байт, не разрезая UTF-8 символ.
+func Truncate(s string, max int) string {
 	if len(s) <= max {
 		return s
 	}
