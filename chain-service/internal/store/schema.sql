@@ -30,3 +30,11 @@ CREATE TABLE IF NOT EXISTS withdrawals (
     PRIMARY KEY (request_id),
     KEY idx_withdrawals_status_sent (status, sent_at)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin;
+
+-- Курсор наблюдателя депозитов: последний обработанный lt по адресу кошелька.
+CREATE TABLE IF NOT EXISTS watcher_cursors (
+    account    VARCHAR(128)    NOT NULL,
+    last_lt    BIGINT UNSIGNED NOT NULL,
+    updated_at DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    PRIMARY KEY (account)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin;

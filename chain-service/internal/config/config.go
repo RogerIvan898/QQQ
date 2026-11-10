@@ -41,8 +41,12 @@ func (m Mode) Watches() bool { return m == ModeWatcher || m == ModeAll }
 // Broadcasts сообщает, нужно ли запускать отправку транзакций в сеть.
 func (m Mode) Broadcasts() bool { return m == ModeBroadcaster || m == ModeAll }
 
-// NeedsDB — режимы, которым нужна MySQL (история выводов).
-func (m Mode) NeedsDB() bool { return m.Consumes() || m.Broadcasts() }
+// NeedsDB — режимы, которым нужна MySQL (история выводов, курсор watcher).
+// Нужна всем режимам; оставлено функцией на случай новых режимов без БД.
+func (m Mode) NeedsDB() bool { return m.Consumes() || m.Broadcasts() || m.Watches() }
+
+// UsesTON — режимы, которые ходят в сеть TON.
+func (m Mode) UsesTON() bool { return m.Broadcasts() || m.Watches() }
 
 // Config — полная конфигурация сервиса.
 type Config struct {
@@ -83,6 +87,7 @@ type Config struct {
 	WatcherPollInterval time.Duration // WATCHER_POLL_INTERVAL
 	WatcherBatchSize    int           // WATCHER_BATCH_SIZE
 	WatcherStartLT      uint64        // WATCHER_START_LT
+	DepositAddress      string        // TON_DEPOSIT_ADDRESS: кошелёк, на который приходят депозиты
 
 	// Подпись транзакций
 	AllowStubSigner bool // ALLOW_STUB_SIGNER
@@ -144,6 +149,7 @@ func Load() (*Config, error) {
 		WatcherPollInterval: r.duration("WATCHER_POLL_INTERVAL", 10*time.Second),
 		WatcherBatchSize:    r.int("WATCHER_BATCH_SIZE", 100),
 		WatcherStartLT:      r.uint64("WATCHER_START_LT", 0),
+		DepositAddress:      r.str("TON_DEPOSIT_ADDRESS", ""),
 
 		AllowStubSigner: r.bool("ALLOW_STUB_SIGNER", false),
 
@@ -200,12 +206,15 @@ func (c *Config) validate() error {
 	}
 
 	if c.Mode.NeedsDB() && c.MySQLDSN == "" {
-		add("MYSQL_DSN: обязательна для режимов consumer/broadcaster/all")
+		add("MYSQL_DSN: обязательная переменная")
 	}
 	if c.MySQLMaxOpenConns < 1 {
 		add("MYSQL_MAX_OPEN_CONNS: должно быть >= 1")
 	}
-	if c.Mode.Broadcasts() {
+	if c.Mode.Watches() && c.TONClient == "toncenter" && c.DepositAddress == "" {
+		add("TON_DEPOSIT_ADDRESS: обязательна для watcher с TON_CLIENT=toncenter")
+	}
+	if c.Mode.UsesTON() {
 		switch c.TONClient {
 		case "stub":
 		case "toncenter":

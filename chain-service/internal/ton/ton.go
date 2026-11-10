@@ -28,6 +28,13 @@ type Client interface {
 	FindTransaction(ctx context.Context, msgHash string) (*Tx, error)
 }
 
+// Network — клиент для broadcaster и watcher одновременно.
+type Network interface {
+	Client
+	// DepositsSince читает транзакции кошелька account с lt > afterLT.
+	DepositsSince(ctx context.Context, account string, afterLT uint64, limit int) (DepositBatch, error)
+}
+
 // Stub — ЗАГЛУШКА для локальной разработки: «отправка» всегда успешна,
 // транзакция «находится» сразу. Нужна, пока подписант — тоже заглушка
 // (его BOC настоящая сеть всё равно отвергнет).
@@ -43,4 +50,9 @@ func (Stub) SendBoc(_ context.Context, boc string) (string, error) {
 func (Stub) FindTransaction(_ context.Context, msgHash string) (*Tx, error) {
 	sum := sha256.Sum256([]byte("tx:" + msgHash))
 	return &Tx{Hash: base64.StdEncoding.EncodeToString(sum[:]), LT: "0", Success: true}, nil
+}
+
+// DepositsSince у заглушки ничего не находит и не двигает курсор.
+func (Stub) DepositsSince(_ context.Context, _ string, afterLT uint64, _ int) (DepositBatch, error) {
+	return DepositBatch{NextLT: afterLT}, nil
 }

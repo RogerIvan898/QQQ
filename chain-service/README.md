@@ -15,12 +15,12 @@ Go-сервис между ядром покер-рума и сетью TON. Р�
 |---|---|---|
 | `consumer` | `withdrawals` → подпись → `withdrawals.signed`; приём `withdrawals.result` | да |
 | `broadcaster` | `withdrawals.signed` → отправка в TON (toncenter) → `withdrawals.result`: `sent`, затем `confirmed` / `failed` | да |
-| `watcher` | опрос TON → `deposits` | нет |
+| `watcher` | транзакции кошелька депозитов (toncenter) → `deposits` | да |
 | `all` | всё сразу, в независимых горутинах (для локального стенда) | да |
 
 В продакшене это три контейнера из одного образа. Приватный ключ нужен только `consumer`; `broadcaster` ходит в интернет и ключа не видит.
 
-> **Подпись и чтение депозитов сейчас заглушки.** `StubSigner` не подписывает ничего по-настоящему, `StubTONClient` не находит депозитов. Чтобы никто случайно не выкатил заглушку, режим consumer не стартует без `ALLOW_STUB_SIGNER=true`. Реальные реализации подключаются через интерфейсы `handler.Signer` и `handler.TONClient` (tonutils-go, ключ из KMS/Vault). Broadcaster уже умеет работать с настоящим toncenter (`TON_CLIENT=toncenter`), но BOC от заглушки сеть отвергнет — поэтому в compose стоит `TON_CLIENT=stub`.
+> **Подпись сейчас заглушка.** `StubSigner` не подписывает ничего по-настоящему. Чтобы никто случайно не выкатил заглушку, режим consumer не стартует без `ALLOW_STUB_SIGNER=true`. Настоящая подпись подключается через интерфейс `handler.Signer` (tonutils-go, ключ из KMS/Vault). Broadcaster и watcher уже умеют работать с настоящим toncenter (`TON_CLIENT=toncenter`), но BOC от заглушки сеть отвергнет — поэтому в compose стоит `TON_CLIENT=stub`.
 
 ## Запуск
 
@@ -63,6 +63,17 @@ go build ./... && go vet ./... && go test ./...
 - **Отправка.** `POST /api/v2/sendBocReturnHash`. Вывод в статусе `sent`/`confirmed`/`failed` повторно не отправляется; другой BOC для того же `request_id` не отправляется никогда (DLQ). Повторная отправка того же BOC безопасна: кошелёк примет seqno один раз. Сетевые ошибки, 429 и 5xx — повтор, 400 — DLQ. Очередь `withdrawals.signed` читается одним воркером: seqno должны идти по порядку.
 - **Подтверждение.** Фоновый опрос каждые `CONFIRM_POLL_INTERVAL` ищет транзакцию через `GET /api/v3/transactionsByMessage`. Нашлась и успешна — `confirmed`; прервана — `failed`; не нашлась за `CONFIRM_TIMEOUT` — `failed`. **`CONFIRM_TIMEOUT` должен быть больше `valid_until` сообщений кошелька**, иначе вывод могут объявить неуспешным, а транзакция всё же пройдёт.
 - **Ключ toncenter** — `TONCENTER_API_KEY`, пока пустой (публичный лимит ~1 запрос/с, `TONCENTER_RPS=1`). С ключом лимит можно поднять.
+## Watcher (депозиты)
+
+Схема: **один кошелёк депозитов** (`TON_DEPOSIT_ADDRESS`), пользователь указывает в комментарии к переводу свой код. Пока поддерживается только TON, без жетонов.
+
+- Каждые `WATCHER_POLL_INTERVAL` читает `GET /api/v3/transactions?account=…&start_lt=…&sort=asc` пачками по `WATCHER_BATCH_SIZE`; если пачка полная, сразу запрашивает следующую.
+- Депозит — транзакция с внутренним входящим сообщением (есть отправитель), не bounced, с ненулевой суммой и не прерванная. Собственные выводы (внешние сообщения) и возвраты пропускаются.
+- `DEPOSIT_DETECTED`: `tx_hash`, `lt`, `from_address`, `to_address`, `amount` ("50.5"), `amount_nano`, `asset`, `comment`, `tx_time`, `detected_at`. `message_id` — UUIDv5 от `tx_hash`.
+- Курсор (`lt`) хранится в таблице `watcher_cursors` и двигается только после подтверждённой брокером публикации. После рестарта watcher продолжает с того же места; при сбое событие может прийти повторно с тем же `message_id` — **ядро обязано дедуплицировать по `message_id`/`tx_hash`**.
+- Кому зачислить, решает ядро по `comment`. Перевод без комментария или с неизвестным кодом ядро должно отправлять на ручной разбор.
+- Запускать строго один watcher на кошелёк.
+
 - Ядру, которому нужны результаты, достаточно своей очереди, привязанной к `core.events` с ключом `withdrawals.result`: direct-exchange отдаст копию каждой очереди.
 
 ## Контракт сообщений
@@ -100,7 +111,7 @@ go build ./... && go vet ./... && go test ./...
 
 ### Seqno и масштабирование
 
-Seqno кошелька выдаётся последовательно под мьютексом внутри процесса. Несколько consumer-реплик с **одним** горячим кошельком будут конфликтовать по seqno — нужен один consumer, распределённая блокировка или кошелёк на реплику. Broadcaster — тоже один экземпляр на кошелёк. Watcher — строго один (курсор `lt` пока в памяти).
+Seqno кошелька выдаётся последовательно под мьютексом внутри процесса. Несколько consumer-реплик с **одним** горячим кошельком будут конфликтовать по seqno — нужен один consumer, распределённая блокировка или кошелёк на реплику. Broadcaster — тоже один экземпляр на кошелёк. Watcher — строго один на кошелёк.
 
 Известное ограничение заглушки: если подпись прошла, а запись в БД — нет, seqno пропускается. Настоящий подписант должен брать seqno из сети (get-метод кошелька) с учётом неподтверждённых выводов из `withdrawals`.
 
@@ -112,7 +123,7 @@ Seqno кошелька выдаётся последовательно под м
 
 ## Переменные окружения
 
-Полный список со значениями по умолчанию — в [`.env.example`](.env.example). Обязательны `RABBITMQ_URL`, `MYSQL_DSN` (кроме `watcher`) и `ALLOW_STUB_SIGNER=true`, пока нет настоящей подписи.
+Полный список со значениями по умолчанию — в [`.env.example`](.env.example). Обязательны `RABBITMQ_URL`, `MYSQL_DSN`, `TON_DEPOSIT_ADDRESS` (для watcher с toncenter) и `ALLOW_STUB_SIGNER=true` (для consumer, пока нет настоящей подписи).
 
 ## Структура
 
@@ -123,9 +134,9 @@ internal/amqp/client.go        соединение, переподключен�
 internal/amqp/publisher.go     publisher confirms + NotifyReturn
 internal/amqp/consumer.go      QoS, воркеры, ack/nack, повторы, DLQ, shutdown
 internal/amqp/errors.go        классификация ошибок (Permanent / Transient)
-internal/idempotency/          in-memory хранилище message_id с TTL (watcher)
-internal/store/                MySQL: схема, идемпотентность, история выводов
-internal/ton/                  клиент toncenter и заглушка
+internal/idempotency/          in-memory хранилище message_id с TTL (запасной вариант)
+internal/store/                MySQL: схема, идемпотентность, история выводов, курсор watcher
+internal/ton/                  клиент toncenter (отправка, подтверждения, депозиты) и заглушка
 internal/handler/              подпись, broadcaster, подтверждения, депозиты, валидация TON
 internal/metrics/              Prometheus и HTTP-сервер
 ```

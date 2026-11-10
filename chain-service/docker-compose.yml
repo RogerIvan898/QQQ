@@ -56,6 +56,8 @@ services:
       TON_CLIENT: stub
       TONCENTER_URL: https://testnet.toncenter.com
       TONCENTER_API_KEY: ""
+      # Для watcher с toncenter — адрес кошелька депозитов.
+      TON_DEPOSIT_ADDRESS: ""
       PREFETCH_COUNT: "10"
       MAX_RETRIES: "3"
       RETRY_BASE_DELAY: 5s

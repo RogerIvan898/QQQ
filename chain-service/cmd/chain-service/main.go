@@ -167,10 +167,12 @@ func run() error {
 		addConsumer(cfg.QueueWithdrawalsResult, cfg.Workers, resultHandler.Handle)
 	}
 
-	if cfg.Mode.Broadcasts() {
-		var tonClient ton.Client
+	// Один клиент TON на процесс: лимит запросов toncenter общий для
+	// broadcaster и watcher.
+	var tonClient ton.Network
+	if cfg.Mode.UsesTON() {
 		if cfg.TONClient == "stub" {
-			log.Warn("STUB TON client is active: nothing is really sent to the network")
+			log.Warn("STUB TON client is active: nothing is really sent to or read from the network")
 			tonClient = ton.Stub{}
 		} else {
 			if cfg.ToncenterAPIKey == "" {
@@ -183,6 +185,9 @@ func run() error {
 				Timeout: cfg.ToncenterTimeout,
 			})
 		}
+	}
+
+	if cfg.Mode.Broadcasts() {
 		broadcaster := handler.NewBroadcastHandler(repo, tonClient, results, log)
 		// Один воркер: кошелёк принимает seqno строго по порядку.
 		addConsumer(cfg.QueueWithdrawalsSigned, 1, broadcaster.Handle)
@@ -197,13 +202,14 @@ func run() error {
 
 	if cfg.Mode.Watches() {
 		watcher := handler.NewDepositWatcher(handler.DepositWatcherConfig{
+			Account:        cfg.DepositAddress,
 			Exchange:       cfg.Exchange,
 			RoutingKey:     cfg.QueueDeposits,
 			PollInterval:   cfg.WatcherPollInterval,
 			BatchSize:      cfg.WatcherBatchSize,
 			StartLT:        cfg.WatcherStartLT,
 			PublishTimeout: cfg.PublishTimeout,
-		}, handler.StubTONClient{}, pub, log)
+		}, tonClient, store.NewCursors(db), pub, log)
 		start("deposit watcher", watcher.Run)
 	}
 
