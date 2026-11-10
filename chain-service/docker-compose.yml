@@ -1,4 +1,4 @@
-# Локальный стенд: RabbitMQ + MySQL + chain-service (MODE=all).
+# Локальный стенд: RabbitMQ + MySQL + chain-service (подпись, broadcaster и watcher в одном процессе).
 #   docker compose up --build
 #   UI RabbitMQ: http://localhost:15672 (chain / chain), метрики: http://localhost:9090/metrics
 services:
@@ -47,7 +47,6 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      MODE: all
       RABBITMQ_URL: amqp://chain:chain@rabbitmq:5672/
       MYSQL_DSN: chain:chain@tcp(mysql:3306)/chain
       # Пока подпись — заглушка, настоящая сеть отвергнет её BOC, поэтому и
@@ -70,11 +69,6 @@ services:
     # Больше SHUTDOWN_TIMEOUT (30s), чтобы Docker не убил процесс посреди drain.
     stop_grace_period: 40s
     restart: unless-stopped
-
-  # В продакшене — три контейнера из одного образа:
-  #   chain-consumer:    MODE=consumer    (подпись, единственный, у кого ключ)
-  #   chain-broadcaster: MODE=broadcaster (ходит в toncenter, ключа нет)
-  #   chain-watcher:     MODE=watcher     (строго один экземпляр)
 
 volumes:
   rabbitmq-data:

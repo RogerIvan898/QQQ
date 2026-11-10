@@ -9,18 +9,15 @@ Go-сервис между ядром покер-рума и сетью TON. Р�
 | `withdrawals.result` | вход | `WITHDRAW_RESULT` | Broadcaster → chain-service |
 | `deposits` | выход | `DEPOSIT_DETECTED` | chain-service (watcher) → ядро |
 
-Режимы (`MODE`):
+Один процесс делает всё сразу, в независимых горутинах:
 
-| Режим | Что делает | Нужна MySQL |
-|---|---|---|
-| `consumer` | `withdrawals` → подпись → `withdrawals.signed`; приём `withdrawals.result` | да |
-| `broadcaster` | `withdrawals.signed` → отправка в TON (toncenter) → `withdrawals.result`: `sent`, затем `confirmed` / `failed` | да |
-| `watcher` | транзакции кошелька депозитов (toncenter) → `deposits` | да |
-| `all` | всё сразу, в независимых горутинах (для локального стенда) | да |
+- **подпись**: `withdrawals` → подпись → `withdrawals.signed`, плюс приём `withdrawals.result`;
+- **broadcaster**: `withdrawals.signed` → отправка в TON (toncenter) → `withdrawals.result`: `sent`, затем `confirmed` / `failed`;
+- **watcher**: транзакции кошелька депозитов (toncenter) → `deposits`.
 
-В продакшене это три контейнера из одного образа. Приватный ключ нужен только `consumer`; `broadcaster` ходит в интернет и ключа не видит.
+Задавать ничего не нужно. Если позже понадобится вынести подпись (единственную часть, которой нужен приватный ключ) в отдельный контейнер, есть необязательная переменная `MODE`: `consumer`, `broadcaster` или `watcher` (по умолчанию `all`).
 
-> **Подпись сейчас заглушка.** `StubSigner` не подписывает ничего по-настоящему. Чтобы никто случайно не выкатил заглушку, режим consumer не стартует без `ALLOW_STUB_SIGNER=true`. Настоящая подпись подключается через интерфейс `handler.Signer` (tonutils-go, ключ из KMS/Vault). Broadcaster и watcher уже умеют работать с настоящим toncenter (`TON_CLIENT=toncenter`), но BOC от заглушки сеть отвергнет — поэтому в compose стоит `TON_CLIENT=stub`.
+> **Подпись сейчас заглушка.** `StubSigner` не подписывает ничего по-настоящему. Чтобы никто случайно не выкатил заглушку, сервис не стартует без `ALLOW_STUB_SIGNER=true`. Настоящая подпись подключается через интерфейс `handler.Signer` (tonutils-go, ключ из KMS/Vault). Broadcaster и watcher уже умеют работать с настоящим toncenter (`TON_CLIENT=toncenter`), но BOC от заглушки сеть отвергнет — поэтому в compose стоит `TON_CLIENT=stub`.
 
 ## Запуск
 
