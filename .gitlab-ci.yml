@@ -117,6 +117,8 @@ frontend:docker:
   before_script:
     - '[ -n "$VITE_APP_URL" ] || { echo "VITE_APP_URL is not set (Settings > CI/CD > Variables)"; exit 1; }'
     - !reference [.docker, before_script]
+  script:
+    - docker build --build-arg VITE_APP_URL=$VITE_APP_URL --build-arg VITE_API_URL=$VITE_API_URL $BUILD_ARGS $TAGS $APP
   rules:
     - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG)
       changes: [frontend/**/*]
@@ -124,6 +126,13 @@ frontend:docker:
 backend:docker:
   extends: .docker
   variables: { APP: backend }
+  script:
+    - IMAGE=$CI_REGISTRY_IMAGE/$APP
+    - TAGS="-t $IMAGE:$CI_COMMIT_SHORT_SHA -t $IMAGE:latest"
+    - if [ -n "$CI_COMMIT_TAG" ]; then TAGS="$TAGS -t $IMAGE:$CI_COMMIT_TAG"; fi
+    - docker build $BUILD_ARGS $TAGS $APP
+    - docker push --all-tags $IMAGE
+    - docker run -p 8080:8080 -e BOT_TOKEN=$BOT_TOKEN poker-backend
   rules:
     - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG)
       exists: [backend/Dockerfile]
