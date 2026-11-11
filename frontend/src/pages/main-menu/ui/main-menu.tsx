@@ -210,7 +210,7 @@ export const MenuPage = () => {
                 </div>
               ) : rooms.length === 0 && roomsStatus !== 'ready' ? (
                 <div className={styles.roomsState} role="status">
-                  <Preloader label={t`Loading tables…`} />
+                  <Preloader inline label={t`Loading tables…`} />
                 </div>
               ) : visibleRooms.length === 0 ? (
                 <div className={styles.roomsState}>{t`No tables here yet`}</div>

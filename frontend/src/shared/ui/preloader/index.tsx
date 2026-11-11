@@ -7,11 +7,16 @@ import styles from './preloader.module.css';
 interface Props {
   label?: string;
   progress?: number;
+  inline?: boolean;
 }
 
-export const Preloader = ({ label = 'Loading…', progress }: Props) => {
+export const Preloader = ({
+  label = 'Loading…',
+  progress,
+  inline = false,
+}: Props) => {
   return (
-    <div className={styles.container}>
+    <div className={inline ? styles.inline : styles.container}>
       <div className={styles.content}>
         <div className={styles.iconWrapper}>
           <Spade className={styles.centerIcon} size={32} />
