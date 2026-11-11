@@ -6,7 +6,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: var(--color-bg-header);
+  background: color-mix(in srgb, var(--color-bg-elevated) 92%, transparent);
+  box-shadow: 0 6px 20px color-mix(in srgb, #000 35%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
