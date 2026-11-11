@@ -9,7 +9,7 @@ import { createSocket } from 'shared/lib/websocket';
 
 import { pokerSoundEngine } from '../lib';
 
-import { GAME_SOUNDS } from './constants';
+import { GAME_SOUNDS, SERVER_EVENTS } from './constants';
 import {
   enqueueServerEvent,
   markGameQueueLive,
@@ -77,6 +77,41 @@ export const prepareGameAudio = async () => {
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 15000;
 const CONNECT_TIMEOUT_MS = 10000;
+const STALE_GRACE_MS = 10000;
+
+let staleTimer: number | undefined;
+
+const clearStaleWatch = () => {
+  window.clearTimeout(staleTimer);
+  staleTimer = undefined;
+};
+
+const watchForStale = (
+  event: ServerGameEvent,
+  socket: WebSocket,
+  onStale: () => void
+) => {
+  clearStaleWatch();
+
+  if (event.type !== SERVER_EVENTS.TURN_CHANGED) {
+    return;
+  }
+
+  const { turnMs, timeBankMs } = event.payload;
+
+  if (turnMs == null) {
+    return;
+  }
+
+  staleTimer = window.setTimeout(
+    () => {
+      if (openSocket === socket) {
+        onStale();
+      }
+    },
+    turnMs + (timeBankMs ?? 0) + STALE_GRACE_MS
+  );
+};
 
 let reconnectAttempt = 0;
 let reconnectTimer: number | undefined;
@@ -85,6 +120,7 @@ let waitingForNetwork: (() => void) | null = null;
 export const connectionLost = createEvent<boolean>();
 
 const stopReconnecting = () => {
+  clearStaleWatch();
   window.clearTimeout(reconnectTimer);
   reconnectTimer = undefined;
 
@@ -136,6 +172,11 @@ const createGameSocket = (wsUrl: string, id: number): WebSocket => {
     },
     onMessage: data => {
       if (isServerGameEvent(data)) {
+        watchForStale(data, socket, () => {
+          openSocket = null;
+          socket.close();
+          scheduleReconnect(wsUrl, id);
+        });
         enqueueServerEvent(data);
       } else {
         console.warn('[WS] Received non-game event:', data);
@@ -143,6 +184,10 @@ const createGameSocket = (wsUrl: string, id: number): WebSocket => {
     },
     onClose: () => {
       window.clearTimeout(connectTimer);
+
+      if (openSocket === socket) {
+        clearStaleWatch();
+      }
 
       if (id === connectionId && openSocket === socket) {
         openSocket = null;
