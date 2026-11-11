@@ -3,7 +3,7 @@ import { createEvent, createStore } from 'effector';
 import { MOCK_SERVER_AVAILABLE } from 'shared/config/mock';
 import { readStorage, writeStorage } from 'shared/lib/storage';
 
-const STORAGE_KEY = 'poker:mock-server';
+const STORAGE_KEY = 'poker:mock-server:v2';
 
 const DEFAULT_ENABLED = MOCK_SERVER_AVAILABLE;
 
