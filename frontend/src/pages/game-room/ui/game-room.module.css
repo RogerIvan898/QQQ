@@ -275,3 +275,17 @@
     transform: translate(-50%, -6px);
   }
 }
+
+/* Inside Telegram the native Back button replaces ours, so the table name
+   moves up into the row with the icons and the top stays one row tall. */
+.container[data-tg] .backBtn {
+  display: none;
+}
+
+.container[data-tg] .tableInfo {
+  top: calc(27px + var(--tg-safe-area-top));
+  max-width: calc(100vw - 140px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

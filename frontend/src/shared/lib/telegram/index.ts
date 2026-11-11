@@ -5,6 +5,9 @@ const webApp = () => window.Telegram?.WebApp;
 const supports = (version: string) =>
   webApp()?.isVersionAtLeast?.(version) ?? false;
 
+export const hasTelegramBackButton = () =>
+  Boolean(webApp()?.initData) && supports('6.1');
+
 export interface TelegramUser {
   name: string;
   photoUrl?: string;

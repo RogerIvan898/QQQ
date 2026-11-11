@@ -23,6 +23,7 @@ import {
 import { PlayerActions } from 'features/player-actions';
 import { MOCK_SERVER_AVAILABLE } from 'shared/config/mock';
 import {
+  hasTelegramBackButton,
   useTelegramBackButton,
   useTelegramClosingConfirmation,
 } from 'shared/lib/telegram';
@@ -58,6 +59,7 @@ export const GameRoomPage = () => {
   useGate(GamePageGate, { roomId });
 
   const navigate = useNavigate();
+  const [inTelegram] = React.useState(hasTelegramBackButton);
   const [isLoading, connectionLost] = useUnit([
     gameModel.$isGameLoading,
     gameModel.$connectionLost,
@@ -99,7 +101,7 @@ export const GameRoomPage = () => {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-tg={inTelegram || undefined}>
       {connectionLost && (
         <div className={styles.connectionBanner} role="status">
           <Loader2 size={16} />
