@@ -104,9 +104,6 @@ msgstr "Cash out"
 msgid "Change nickname"
 msgstr "Change nickname"
 
-msgid "Change wallet"
-msgstr "Change wallet"
-
 msgid "Check"
 msgstr "Check"
 

@@ -105,9 +105,6 @@ msgstr "Кэш-аут"
 msgid "Change nickname"
 msgstr "Изменить ник"
 
-msgid "Change wallet"
-msgstr "Сменить кошелёк"
-
 msgid "Check"
 msgstr "Чек"
 

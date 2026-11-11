@@ -6,7 +6,6 @@ import {
   Check,
   Copy,
   Loader2,
-  RefreshCw,
   Coins,
   Palette,
   Volume2,
@@ -157,15 +156,18 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
         <Setting label={t`Wallet`}>
           {walletAddress ? (
             <div className={styles.walletCard}>
-              <div className={styles.walletMeta}>
-                <span className={styles.walletBadge}>{t`Connected`}</span>
-
-                <span className={styles.walletAddress} title={walletAddress}>
-                  {truncateMiddle(walletAddress)}
+              <div className={styles.walletRow}>
+                <span className={styles.walletIcon} aria-hidden="true">
+                  <Wallet size={18} />
                 </span>
-              </div>
 
-              <div className={styles.walletActions}>
+                <span className={styles.walletInfo}>
+                  <span className={styles.walletStatus}>{t`Connected`}</span>
+                  <span className={styles.walletAddress} title={walletAddress}>
+                    {truncateMiddle(walletAddress, 6)}
+                  </span>
+                </span>
+
                 <button
                   type="button"
                   className={cn(styles.iconBtn, styles.actionBtn)}
@@ -181,20 +183,6 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
                   ) : (
                     <Copy size={15} />
                   )}
-                </button>
-
-                <button
-                  type="button"
-                  className={cn(styles.iconBtn, styles.actionBtn)}
-                  onClick={() => void runWalletAction('disconnect')}
-                  disabled={walletPending}
-                  aria-label={t`Change wallet`}
-                  title={t`Change wallet`}
-                >
-                  <RefreshCw
-                    size={15}
-                    className={cn(walletAction === 'disconnect' && styles.spin)}
-                  />
                 </button>
               </div>
 
