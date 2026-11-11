@@ -59,3 +59,13 @@ export const initTelegramWebApp = () => {
   tg.onEvent('contentSafeAreaChanged', syncTelegramSafeArea);
   tg.onEvent('fullscreenChanged', syncTelegramSafeArea);
 };
+
+export const MENU_HEADER_BG = '#0f141f';
+
+export const setTelegramHeaderColor = (color: string = APP_BG) => {
+  try {
+    window.Telegram?.WebApp?.setHeaderColor(color);
+  } catch {
+    void 0;
+  }
+};

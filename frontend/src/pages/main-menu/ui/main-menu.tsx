@@ -11,6 +11,10 @@ import { walletModel } from 'entities/wallet';
 import { $joinFailure, JoinRoomButton, useJoinRoom } from 'features/join-room';
 import { $mockServerEnabled } from 'features/mock-server/model';
 import { MOCK_SERVER_AVAILABLE } from 'shared/config/mock';
+import {
+  MENU_HEADER_BG,
+  setTelegramHeaderColor,
+} from 'shared/config/telegram-webapp';
 import { getTelegramUser } from 'shared/lib/telegram';
 import { Preloader } from 'shared/ui/preloader';
 import { Snackbar } from 'shared/ui/snackbar';
@@ -85,6 +89,12 @@ export const MenuPage = () => {
     $roomsStatus,
     roomsRequested,
   ]);
+
+  React.useEffect(() => {
+    setTelegramHeaderColor(MENU_HEADER_BG);
+
+    return () => setTelegramHeaderColor();
+  }, []);
 
   React.useEffect(() => {
     requestRooms();
