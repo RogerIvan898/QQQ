@@ -6,13 +6,13 @@ import type { GameStreet } from './types';
 const BADGE_MS = 500;
 const GATHER_MS = 450;
 
-const TENSION_MS = 1400;
+const TENSION_MS = 1100;
 
-const STREET_MS = 1800;
+const STREET_MS = 1500;
 
 const CARD_GAP_MS = 280;
 
-const RIVER_HOLD_MS = 1500;
+const RIVER_HOLD_MS = 1000;
 
 const WIN_MS = HAND_END_MS;
 

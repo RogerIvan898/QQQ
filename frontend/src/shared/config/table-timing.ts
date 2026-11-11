@@ -1,13 +1,13 @@
-export const WINNER_REVEAL_MS = 900;
-export const POT_FLIGHT_MS = 750;
+export const WINNER_REVEAL_MS = 600;
+export const POT_FLIGHT_MS = 650;
 const STACK_COUNT_MS = 450;
-const WINNER_HOLD_MS = 1200;
+const WINNER_HOLD_MS = 1000;
 
 export const HAND_END_MS =
   WINNER_REVEAL_MS + POT_FLIGHT_MS + STACK_COUNT_MS + WINNER_HOLD_MS;
 
 export const MUCK_MS = 450;
-const INTRO_PAUSE_MS = 300;
+const INTRO_PAUSE_MS = 200;
 export const DEALER_MOVE_MS = 750;
 const BLIND_STEP_MS = 450;
 
@@ -19,4 +19,4 @@ export const SB_POST_MS = DEAL_START_MS + DEAL_SPREAD_MS + INTRO_PAUSE_MS;
 export const BB_POST_MS = SB_POST_MS + BLIND_STEP_MS;
 export const HAND_INTRO_MS = BB_POST_MS + BLIND_STEP_MS;
 
-export const WINNER_PAUSE_MS = 500;
+export const WINNER_PAUSE_MS = 250;

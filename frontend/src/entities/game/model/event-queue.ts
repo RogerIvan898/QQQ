@@ -84,7 +84,7 @@ const waitForBurst = async () => {
   }
 };
 
-const SHOWDOWN_PAUSE_MS = 500;
+const SHOWDOWN_PAUSE_MS = 600;
 
 const WIN_ANIMATION_MS = HAND_END_MS;
 
