@@ -8,10 +8,10 @@ const pressedScale = (el: HTMLElement) => {
   const { width } = el.getBoundingClientRect();
 
   if (width > 280) {
-    return 0.985;
+    return 0.99;
   }
 
-  return width > 120 ? 0.97 : 0.94;
+  return width > 120 ? 0.98 : 0.96;
 };
 
 let active: { el: HTMLElement; scale: number; anim: Animation } | null = null;
@@ -25,13 +25,10 @@ const release = () => {
 
   active = null;
   anim.cancel();
-  el.animate(
-    [
-      { scale: String(scale), filter: 'brightness(0.94)' },
-      { scale: '1', filter: 'brightness(1)' },
-    ],
-    { duration: 420, easing: SPRING }
-  );
+  el.animate([{ scale: String(scale) }, { scale: '1' }], {
+    duration: 420,
+    easing: SPRING,
+  });
 };
 
 const press = (event: PointerEvent) => {
@@ -48,13 +45,11 @@ const press = (event: PointerEvent) => {
   release();
 
   const scale = pressedScale(el);
-  const anim = el.animate(
-    [
-      { scale: '1', filter: 'brightness(1)' },
-      { scale: String(scale), filter: 'brightness(0.94)' },
-    ],
-    { duration: 110, easing: 'cubic-bezier(0.2, 0, 0, 1)', fill: 'forwards' }
-  );
+  const anim = el.animate([{ scale: '1' }, { scale: String(scale) }], {
+    duration: 110,
+    easing: 'cubic-bezier(0.2, 0, 0, 1)',
+    fill: 'forwards',
+  });
 
   active = { el, scale, anim };
   el.addEventListener('pointerleave', release, { once: true });

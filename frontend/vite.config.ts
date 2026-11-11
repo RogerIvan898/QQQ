@@ -4,6 +4,7 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
+import type { AtRule, Plugin as PostcssPlugin } from 'postcss';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
@@ -68,8 +69,49 @@ const tonConnectManifestPlugin = (): Plugin => ({
   },
 });
 
+const insideHoverMedia = (node: { parent?: unknown }) => {
+  let parent = node.parent as (AtRule & { parent?: unknown }) | undefined;
+
+  while (parent) {
+    if (parent.type === 'atrule' && parent.params.includes('hover: hover')) {
+      return true;
+    }
+
+    parent = parent.parent as typeof parent;
+  }
+
+  return false;
+};
+
+const hoverOnlyOnPointerDevices = (): PostcssPlugin => ({
+  postcssPlugin: 'hover-only-on-pointer-devices',
+  OnceExit(root, { AtRule }) {
+    root.walkRules(rule => {
+      if (!rule.selector.includes(':hover') || insideHoverMedia(rule)) {
+        return;
+      }
+
+      const hover = rule.selectors.filter(s => s.includes(':hover'));
+      const rest = rule.selectors.filter(s => !s.includes(':hover'));
+      const media = new AtRule({ name: 'media', params: '(hover: hover)' });
+
+      media.append(rule.clone({ selectors: hover }));
+      rule.after(media);
+
+      if (rest.length > 0) {
+        rule.selectors = rest;
+      } else {
+        rule.remove();
+      }
+    });
+  },
+});
+
 export default defineConfig(({ mode }) => ({
   base: process.env.VITE_BASE_PATH || '/',
+  css: {
+    postcss: { plugins: [hoverOnlyOnPointerDevices()] },
+  },
   plugins: [
     tanstackRouter({
       target: 'react',
