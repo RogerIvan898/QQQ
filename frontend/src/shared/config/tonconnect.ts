@@ -14,4 +14,4 @@ const getAppOrigin = () => {
 };
 
 export const getTonConnectManifestUrl = () =>
-  `${getAppOrigin()}/tonconnect-manifest.json`;
+  `${getAppOrigin()}${import.meta.env.BASE_URL}tonconnect-manifest.json`;

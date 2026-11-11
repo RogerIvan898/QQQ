@@ -127,9 +127,9 @@ export const MenuPage = () => {
       prefetchWalletDialogs();
       walletModel.depositAddressRequested();
 
-      router
-        .loadRouteChunk(router.routesById['/game/$roomId'])
-        ?.catch(() => undefined);
+      for (const route of ['/game/$roomId', '/history'] as const) {
+        router.loadRouteChunk(router.routesById[route])?.catch(() => undefined);
+      }
     };
 
     if (typeof window.requestIdleCallback !== 'function') {

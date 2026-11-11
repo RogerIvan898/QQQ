@@ -152,6 +152,13 @@ pages:
   script:
     - mkdir -p public
     - cp -r frontend/dist/* public/
+    # The manifest from the build points at VITE_APP_URL; on Pages it must point
+    # at the Pages address, otherwise TON Connect wallets reject it.
+    - |
+      APP_URL="${CI_PAGES_URL%/}"
+      cat > public/tonconnect-manifest.json <<EOF
+      {"url":"$APP_URL","name":"GRAM Poker","iconUrl":"$APP_URL/ton-icon.png"}
+      EOF
   artifacts:
     paths: [public]
   rules:

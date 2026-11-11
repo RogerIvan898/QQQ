@@ -55,9 +55,9 @@ const tonConnectManifestPlugin = (): Plugin => ({
       res.end(JSON.stringify(createTonConnectManifest(origin)));
     });
   },
-  closeBundle() {
+  generateBundle() {
     const origin = normalizeOrigin(
-      process.env.VITE_APP_URL ?? 'http://localhost:5000'
+      process.env.VITE_APP_URL || 'http://localhost:5000'
     );
 
     this.emitFile({
