@@ -19,8 +19,14 @@ const syncTelegramSafeArea = () => {
     '--tg-safe-area-bottom',
     `${(safe?.bottom ?? 0) + (content?.bottom ?? 0)}px`
   );
-  root.style.setProperty('--tg-safe-area-left', `${safe?.left ?? 0}px`);
-  root.style.setProperty('--tg-safe-area-right', `${safe?.right ?? 0}px`);
+  root.style.setProperty(
+    '--tg-safe-area-left',
+    `${(safe?.left ?? 0) + (content?.left ?? 0)}px`
+  );
+  root.style.setProperty(
+    '--tg-safe-area-right',
+    `${(safe?.right ?? 0) + (content?.right ?? 0)}px`
+  );
 };
 
 export const initTelegramWebApp = () => {
