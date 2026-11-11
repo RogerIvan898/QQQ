@@ -90,11 +90,17 @@
     background-color 0.15s ease;
 }
 
-.editName:hover:not(:disabled),
 .editName:focus-visible {
   color: var(--color-text);
   background: color-mix(in srgb, var(--color-text) 8%, transparent);
   outline: none;
+}
+
+@media (hover: hover) {
+  .editName:hover:not(:disabled) {
+    color: var(--color-text);
+    background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  }
 }
 
 .editName:disabled {
@@ -167,10 +173,16 @@
     background-color 0.15s ease;
 }
 
-.walletBtn:hover,
 .walletOpen {
   border-color: var(--color-border-hover);
   background: color-mix(in srgb, var(--color-text) 10%, var(--color-border));
+}
+
+@media (hover: hover) {
+  .walletBtn:hover {
+    border-color: var(--color-border-hover);
+    background: color-mix(in srgb, var(--color-text) 10%, var(--color-border));
+  }
 }
 
 .walletBtn:focus-visible {

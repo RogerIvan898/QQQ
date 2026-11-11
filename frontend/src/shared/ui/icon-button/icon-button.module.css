@@ -15,8 +15,10 @@
     border-color 0.15s ease;
 }
 
-.base:hover {
-  color: var(--color-text);
+@media (hover: hover) {
+  .base:hover {
+    color: var(--color-text);
+  }
 }
 
 .base:focus-visible {
@@ -39,8 +41,10 @@
   backdrop-filter: blur(10px);
 }
 
-.floating:hover {
-  border-color: var(--color-border-hover);
+@media (hover: hover) {
+  .floating:hover {
+    border-color: var(--color-border-hover);
+  }
 }
 
 .round {
@@ -50,8 +54,10 @@
   border-radius: 50%;
 }
 
-.round:hover {
-  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+@media (hover: hover) {
+  .round:hover {
+    background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  }
 }
 
 .close {
@@ -63,6 +69,8 @@
   color: var(--color-text-muted);
 }
 
-.close:hover {
-  background: color-mix(in srgb, var(--color-bg-muted) 85%, white);
+@media (hover: hover) {
+  .close:hover {
+    background: color-mix(in srgb, var(--color-bg-muted) 85%, white);
+  }
 }
