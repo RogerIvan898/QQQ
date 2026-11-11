@@ -139,34 +139,32 @@
 
 .connectionBanner {
   position: fixed;
-  top: calc(64px + var(--tg-safe-area-top));
-  left: 50%;
+  inset: 0;
   z-index: 900;
   display: flex;
   align-items: center;
-  gap: 8px;
-  max-width: calc(100vw - 32px);
-  padding: 10px 14px;
-  border: 1px solid
-    color-mix(in srgb, var(--color-warning) 30%, var(--color-border));
-  border-radius: var(--radius-md);
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--color-warning) 14%, transparent),
-      transparent 60%
-    ),
-    color-mix(in srgb, var(--color-bg-elevated) 94%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-text) 6%, transparent),
-    0 16px 40px rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-bg) 55%, transparent);
+  pointer-events: none;
+  animation: bannerFade var(--dur-base) var(--ease-out);
+}
+
+.connectionCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 64px);
+  padding: 16px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-bg-elevated) 92%, transparent);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
   color: var(--color-text);
   font-size: 14px;
   font-weight: 500;
-  white-space: nowrap;
-  transform: translateX(-50%);
-  pointer-events: none;
+  text-align: center;
   animation: bannerIn var(--dur-slow) var(--ease-spring);
 }
 
@@ -179,7 +177,13 @@
 @keyframes bannerIn {
   from {
     opacity: 0;
-    transform: translate(-50%, -12px) scale(0.96);
+    transform: scale(0.94);
+  }
+}
+
+@keyframes bannerFade {
+  from {
+    opacity: 0;
   }
 }
 
@@ -191,6 +195,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .connectionBanner,
+  .connectionCard,
   .connectionBanner svg {
     animation: none;
   }

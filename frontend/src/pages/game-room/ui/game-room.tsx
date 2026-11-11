@@ -104,8 +104,10 @@ export const GameRoomPage = () => {
     <div className={styles.container} data-tg={inTelegram || undefined}>
       {connectionLost && (
         <div className={styles.connectionBanner} role="status">
-          <Loader2 size={16} />
-          {t`Connection lost, reconnecting…`}
+          <div className={styles.connectionCard}>
+            <Loader2 size={22} />
+            {t`Connection lost, reconnecting…`}
+          </div>
         </div>
       )}
 
