@@ -1,5 +1,8 @@
 .page {
-  height: 100%;
+  position: fixed;
+  inset: 0;
+  padding: 0 var(--tg-safe-area-right) var(--tg-safe-area-bottom)
+    var(--tg-safe-area-left);
 }
 
 .appLayout {
