@@ -182,7 +182,7 @@
       calc(
         100dvh - var(--tg-safe-area-top) - var(--tg-safe-area-bottom) - 200px
       ),
-      52dvh,
+      70dvh,
       calc((100vw - 2 * var(--seat-gutter)) * 7 / 5)
     );
     width: auto;
