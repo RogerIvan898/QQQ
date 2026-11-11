@@ -257,6 +257,10 @@
     height: 38px;
   }
 
+  .cardFull {
+    background: color-mix(in srgb, var(--color-bg-elevated) 55%, transparent);
+  }
+
   .card::before {
     content: '';
     position: absolute;
