@@ -4,7 +4,10 @@ import { useStoreMap } from 'effector-react';
 import { ChevronLeft } from 'lucide-react';
 
 import { gameSessionsModel } from 'features/game-sessions';
-import { useTelegramBackButton } from 'shared/lib/telegram';
+import {
+  hasTelegramBackButton,
+  useTelegramBackButton,
+} from 'shared/lib/telegram';
 import { cn } from 'shared/utils/cn';
 
 import { formatSessionTime, formatSignedTon, formatTon } from '../lib/format';
@@ -27,9 +30,11 @@ export const SessionDetailsPage = () => {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <Link to="/history" className={styles.backBtn} aria-label={t`Back`}>
-          <ChevronLeft size={26} />
-        </Link>
+        {!hasTelegramBackButton() && (
+          <Link to="/history" className={styles.backBtn} aria-label={t`Back`}>
+            <ChevronLeft size={26} />
+          </Link>
+        )}
         <h1 className={styles.title}>{t`Session Details`}</h1>
       </header>
 

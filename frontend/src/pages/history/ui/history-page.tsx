@@ -12,7 +12,10 @@ import {
   type GameSession,
   type SessionPeriod,
 } from 'features/game-sessions';
-import { useTelegramBackButton } from 'shared/lib/telegram';
+import {
+  hasTelegramBackButton,
+  useTelegramBackButton,
+} from 'shared/lib/telegram';
 import { ChipGroup } from 'shared/ui/chip-group';
 import { cn } from 'shared/utils/cn';
 
@@ -103,9 +106,11 @@ export const HistoryPage = () => {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <Link to="/" className={styles.backBtn} aria-label={t`Back`}>
-          <ChevronLeft size={26} />
-        </Link>
+        {!hasTelegramBackButton() && (
+          <Link to="/" className={styles.backBtn} aria-label={t`Back`}>
+            <ChevronLeft size={26} />
+          </Link>
+        )}
         <h1 className={styles.title}>{t`Game History`}</h1>
       </header>
 
