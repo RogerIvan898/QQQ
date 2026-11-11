@@ -1,6 +1,8 @@
 .container {
   position: fixed;
   inset: 0;
+  padding: var(--tg-safe-area-top) var(--tg-safe-area-right)
+    var(--tg-safe-area-bottom) var(--tg-safe-area-left);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -103,8 +105,8 @@
   .container {
     justify-content: center;
     align-items: center;
-    padding-top: 48px;
-    padding-bottom: 88px;
+    padding-top: calc(48px + var(--tg-safe-area-top));
+    padding-bottom: calc(88px + var(--tg-safe-area-bottom));
 
     background-image:
       radial-gradient(
