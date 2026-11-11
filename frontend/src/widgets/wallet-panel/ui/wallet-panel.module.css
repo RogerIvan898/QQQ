@@ -78,10 +78,14 @@
   }
 
   .transactions {
+    --sheet-bottom: max(32px, calc(20px + var(--tg-safe-area-bottom)));
+
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
+    margin-bottom: calc(-1 * var(--sheet-bottom));
+    padding-bottom: var(--sheet-bottom);
   }
 }
 
