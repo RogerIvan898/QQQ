@@ -12,11 +12,15 @@ export const createSocket = (
   socket.onopen = () => handlers?.onOpen?.();
 
   socket.onmessage = event => {
+    let data: unknown = event.data;
+
     try {
-      handlers?.onMessage?.(JSON.parse(String(event.data)));
+      data = JSON.parse(String(event.data));
     } catch {
-      handlers?.onMessage?.(event.data);
+      void 0;
     }
+
+    handlers?.onMessage?.(data);
   };
 
   socket.onerror = error => handlers?.onError?.(error);
