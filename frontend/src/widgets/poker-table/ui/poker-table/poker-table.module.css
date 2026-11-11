@@ -183,12 +183,12 @@
         100dvh - var(--tg-safe-area-top) - var(--tg-safe-area-bottom) - 180px
       ),
       70dvh,
-      calc((100vw - 2 * var(--seat-gutter)) * 7 / 5)
+      calc((100vw - 2 * var(--seat-gutter)) * 8 / 5)
     );
     width: auto;
     max-width: calc(100vw - 2 * var(--seat-gutter));
     max-height: none;
-    aspect-ratio: 5 / 7;
+    aspect-ratio: 5 / 8;
   }
 
   .tableRail {
