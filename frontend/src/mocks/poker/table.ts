@@ -104,13 +104,21 @@ export class PokerTable {
         this.createSeat(`bot-${index + 1}`, name, index + 1, stack)
       ),
     ];
-    this.button = this.seats.length - 1;
+    const awayName = BOT_NAMES[room.botCount];
 
-    const away = this.seats[this.seats.length - 1];
+    if (!this.allInScenario && room.botCount >= 3 && awayName) {
+      const away = this.createSeat(
+        `bot-${room.botCount + 1}`,
+        awayName,
+        this.seats.length,
+        stack
+      );
 
-    if (!this.allInScenario && this.seats.length > 3 && away) {
       away.sittingOut = true;
+      this.seats.push(away);
     }
+
+    this.button = this.seats.length - 1;
   }
 
   start() {

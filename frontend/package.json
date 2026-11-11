@@ -46,6 +46,7 @@
     "@lingui/cli": "^6.10.0",
     "@lingui/format-po": "6.10.1",
     "@lingui/vite-plugin": "^6.10.0",
+    "@mswjs/interceptors": "0.41.9",
     "@rolldown/plugin-babel": "^0.3.0",
     "@tanstack/router-plugin": "^1.168.27",
     "@types/babel__core": "^7.20.5",
