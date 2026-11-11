@@ -14,8 +14,9 @@
 }
 
 .info {
-  background: var(--color-bg-elevated);
-  color: var(--color-text-disabled);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 32%, transparent);
+  color: color-mix(in srgb, var(--color-text) 78%, transparent);
 }
 
 .info strong {

@@ -97,7 +97,7 @@
   padding-bottom: 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent);
   font-size: 13px;
-  color: var(--color-text-secondary);
+  color: color-mix(in srgb, var(--color-text) 82%, transparent);
 }
 
 .walletCard {
@@ -125,7 +125,7 @@
 }
 
 .statusConnected {
-  color: var(--color-success);
+  color: var(--color-primary-light);
 }
 
 .address {
