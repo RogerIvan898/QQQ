@@ -7,6 +7,7 @@ import { bootstrapMockServer } from 'features/mock-server/model';
 import { appStarted } from 'shared/config/init';
 import { initTelegramWebApp } from 'shared/config/telegram-webapp';
 import { prepareI18n } from 'shared/lib/i18n';
+import { initPressFeedback } from 'shared/lib/press-feedback';
 import { preloadTonConnect } from 'shared/lib/ton-connect';
 
 import './index.css';
@@ -19,6 +20,7 @@ if (!root) {
 
 void (async () => {
   initTelegramWebApp();
+  initPressFeedback();
   await bootstrapMockServer().catch((error: unknown) => {
     console.error('[MockServer] Failed to start', error);
   });
