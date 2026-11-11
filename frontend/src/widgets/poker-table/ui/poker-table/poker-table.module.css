@@ -180,9 +180,10 @@
     height: min(
       calc(100% - 152px),
       calc(
-        100dvh - var(--tg-safe-area-top) - var(--tg-safe-area-bottom) - 152px
+        100dvh - var(--tg-safe-area-top) - var(--tg-safe-area-bottom) - 200px
       ),
-      58dvh
+      52dvh,
+      calc((100vw - 2 * var(--seat-gutter)) * 7 / 5)
     );
     width: auto;
     max-width: calc(100vw - 2 * var(--seat-gutter));
