@@ -134,19 +134,62 @@
 }
 
 .connectionBanner {
-  position: absolute;
-  top: 12px;
+  position: fixed;
+  top: calc(64px + var(--tg-safe-area-top));
   left: 50%;
-  z-index: 60;
-  transform: translateX(-50%);
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--color-danger) 85%, black);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 14px;
+  border: 1px solid
+    color-mix(in srgb, var(--color-warning) 30%, var(--color-border));
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-warning) 14%, transparent),
+      transparent 60%
+    ),
+    color-mix(in srgb, var(--color-bg-elevated) 94%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-text) 6%, transparent),
+    0 16px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
   white-space: nowrap;
+  transform: translateX(-50%);
   pointer-events: none;
+  animation: bannerIn var(--dur-slow) var(--ease-spring);
+}
+
+.connectionBanner svg {
+  flex-shrink: 0;
+  color: var(--color-warning);
+  animation: bannerSpin 1s linear infinite;
+}
+
+@keyframes bannerIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -12px) scale(0.96);
+  }
+}
+
+@keyframes bannerSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .connectionBanner,
+  .connectionBanner svg {
+    animation: none;
+  }
 }
 
 .replayPaused {

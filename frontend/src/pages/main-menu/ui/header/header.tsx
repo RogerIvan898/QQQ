@@ -5,6 +5,7 @@ import { Link } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
 import { ChevronDown, History, Settings } from 'lucide-react';
 
+import { useMediaQuery } from 'shared/hooks/use-media-query';
 import { $currentLocale } from 'shared/lib/i18n';
 import { $tonWallet } from 'shared/lib/ton-connect';
 import { GramBadge } from 'shared/ui/gram';
@@ -48,6 +49,26 @@ export const Header = ({
   const formattedBalance =
     balance === null ? '—' : formatBalance(balance, i18n.locale);
 
+  const isPhone = useMediaQuery('(max-width: 600px)');
+  const walletBlock = (
+    <div className={styles.walletAnchor}>
+      <button
+        ref={walletButtonRef}
+        type="button"
+        className={cn(styles.walletBtn, isWalletOpen && styles.walletOpen)}
+        onClick={onWalletClick}
+        aria-haspopup="dialog"
+        aria-expanded={isWalletOpen}
+        aria-label={t`My Wallet`}
+      >
+        <GramBadge className={styles.tonIcon} />
+        <span className={styles.balanceValue}>{formattedBalance}</span>
+        <ChevronDown size={16} className={styles.walletChevron} />
+      </button>
+      {walletPanel}
+    </div>
+  );
+
   return (
     <header className={styles.header} lang={locale ?? undefined}>
       <div className={styles.headerLeft}>
@@ -72,26 +93,12 @@ export const Header = ({
 
         <div className={styles.userInfo}>
           <Nickname name={userName} onSave={onRename} />
+          {isPhone ? walletBlock : null}
         </div>
       </div>
 
       <div className={styles.headerRight}>
-        <div className={styles.walletAnchor}>
-          <button
-            ref={walletButtonRef}
-            type="button"
-            className={cn(styles.walletBtn, isWalletOpen && styles.walletOpen)}
-            onClick={onWalletClick}
-            aria-haspopup="dialog"
-            aria-expanded={isWalletOpen}
-            aria-label={t`My Wallet`}
-          >
-            <GramBadge className={styles.tonIcon} />
-            <span className={styles.balanceValue}>{formattedBalance}</span>
-            <ChevronDown size={16} className={styles.walletChevron} />
-          </button>
-          {walletPanel}
-        </div>
+        {isPhone ? null : walletBlock}
         <Tooltip label={t`History`}>
           <Link
             to="/history"

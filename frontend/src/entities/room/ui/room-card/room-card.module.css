@@ -162,8 +162,8 @@
 }
 
 .seatTaken {
-  background: var(--tier);
-  box-shadow: 0 0 6px color-mix(in srgb, var(--tier) 55%, transparent);
+  background: var(--color-danger);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 55%, transparent);
 }
 
 .players {

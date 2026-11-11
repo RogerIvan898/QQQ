@@ -222,6 +222,13 @@
   height: 32px;
 }
 
+@media (max-width: 600px) {
+  .userInfo .walletAnchor {
+    margin-right: 0;
+    align-self: flex-start;
+  }
+}
+
 @media (max-width: 360px) {
   .header {
     padding-left: 12px;

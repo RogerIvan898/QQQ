@@ -3,7 +3,15 @@ import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useGate, useUnit } from 'effector-react';
-import { ArrowLeft, History, Pause, Play, Settings, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  History,
+  Loader2,
+  Pause,
+  Play,
+  Settings,
+  X,
+} from 'lucide-react';
 
 import { gameModel } from 'entities/game';
 import { $rooms, findRoom, roomsRequested } from 'entities/room';
@@ -94,6 +102,7 @@ export const GameRoomPage = () => {
     <div className={styles.container}>
       {connectionLost && (
         <div className={styles.connectionBanner} role="status">
+          <Loader2 size={16} />
           {t`Connection lost, reconnecting…`}
         </div>
       )}
