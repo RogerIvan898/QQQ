@@ -63,6 +63,8 @@ interface Props {
   handStartedAt?: number;
 
   dealOrder?: number;
+
+  onWinningChange?: (winning: boolean) => void;
 }
 
 const DEAL_STEP_MS = 70;
@@ -87,6 +89,7 @@ const PlayerView = ({
   handNumber = 0,
   handStartedAt = 0,
   dealOrder = 0,
+  onWinningChange,
 }: Props) => {
   const { status, stack, name } = player;
   const hand = handOverride === undefined ? player.hand : handOverride;
@@ -114,6 +117,14 @@ const PlayerView = ({
   const wonThisHand = winHand !== null && winHand.hand === handNumber;
 
   const showWinner = winning && wonThisHand;
+
+  const reportWinning = React.useEffectEvent((value: boolean) => {
+    onWinningChange?.(value);
+  });
+
+  React.useEffect(() => {
+    reportWinning(showWinner);
+  }, [showWinner]);
 
   const { showTimer, usingBank, phaseDurationMs } = useTurnTimer({
     isTurn: turn,

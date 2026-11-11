@@ -129,3 +129,28 @@
 .settled {
   will-change: auto;
 }
+
+.card {
+  transition:
+    filter var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out),
+    translate var(--dur-base) var(--ease-spring),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+
+.highlighted {
+  translate: 0 -6%;
+  box-shadow:
+    0 0 0 2px var(--color-warning),
+    0 6px 18px color-mix(in srgb, var(--color-warning) 45%, transparent);
+}
+
+.dimmed {
+  filter: brightness(0.55) saturate(0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlighted {
+    translate: none;
+  }
+}

@@ -1,8 +1,10 @@
 import React from 'react';
 
+import { useStoreMap } from 'effector-react';
+
 import { cn } from 'shared/utils/cn';
 
-import type { Card as CardType } from '../model';
+import { $highlightedKeys, cardKey, type Card as CardType } from '../model';
 
 import { CardFace } from './card-face';
 import styles from './card.module.css';
@@ -46,8 +48,29 @@ export const Card = ({ card, flat = false, onReveal }: Props) => {
     };
   }, [flat]);
 
+  const highlight = useStoreMap({
+    store: $highlightedKeys,
+    keys: [card ? cardKey(card) : null],
+    fn: (keys, [key]) => {
+      if (!keys || !key) {
+        return null;
+      }
+
+      return keys.has(key) ? 'on' : 'off';
+    },
+  });
+
   return (
-    <div ref={ref} className={cn(styles.card, card && styles.face)} role="img">
+    <div
+      ref={ref}
+      className={cn(
+        styles.card,
+        card && styles.face,
+        highlight === 'on' && styles.highlighted,
+        highlight === 'off' && styles.dimmed
+      )}
+      role="img"
+    >
       {card ? <CardFace card={card} /> : <div className={styles.cardBack} />}
     </div>
   );

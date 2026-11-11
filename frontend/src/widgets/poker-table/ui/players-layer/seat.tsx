@@ -2,8 +2,10 @@ import React from 'react';
 
 import { useStoreMap, useUnit } from 'effector-react';
 
+import { highlightHidden, highlightShown } from 'entities/card';
 import { gameModel } from 'entities/game';
 import { Player, type SeatDirection } from 'entities/player';
+import { bestFiveCards } from 'features/equity';
 import { BB_POST_MS, SB_POST_MS } from 'shared/config/table-timing';
 import { useElapsed } from 'shared/hooks/use-elapsed';
 
@@ -94,6 +96,13 @@ const SeatView = ({
   const postAt = blindSeat ? SB_POST_MS : bigBlindSeat ? BB_POST_MS : null;
   const blindShown = useElapsed(handStartedAt, postAt ?? 0);
 
+  React.useEffect(
+    () => () => {
+      highlightHidden(seat);
+    },
+    [seat]
+  );
+
   if (!player) return null;
 
   const hand = isViewer && myCards ? myCards : (revealed ?? player.hand);
@@ -114,6 +123,19 @@ const SeatView = ({
       : bigBlindSeat
         ? 'bb'
         : null;
+
+  const onWinningChange = (winning: boolean) => {
+    const best =
+      winning && hand
+        ? bestFiveCards(hand, gameModel.$community.getState())
+        : null;
+
+    if (best) {
+      highlightShown({ owner: seat, cards: best });
+    } else {
+      highlightHidden(seat);
+    }
+  };
 
   return (
     <div
@@ -146,6 +168,7 @@ const SeatView = ({
         })}
         dealOrder={dealOrderFrom(seat, dealerSeat, seatCount)}
         combinationSlot={<SeatCombination hand={hand} />}
+        onWinningChange={onWinningChange}
       />
     </div>
   );

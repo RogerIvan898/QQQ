@@ -32,3 +32,39 @@ export const handCategoryLabel = (
 
   return CATEGORY_LABELS[score >> CATEGORY_SHIFT] ?? null;
 };
+
+export const bestFiveCards = (
+  hole: readonly Card[],
+  board: readonly Card[]
+): Card[] | null => {
+  const cards = [...hole, ...board];
+
+  if (hole.length < 2 || cards.length < 5) {
+    return null;
+  }
+
+  const ints = cards.map(cardToInt);
+  let best: number[] | null = null;
+  let bestScore = -1;
+
+  for (let a = 0; a < cards.length; a += 1)
+    for (let b = a + 1; b < cards.length; b += 1)
+      for (let c = b + 1; c < cards.length; c += 1)
+        for (let d = c + 1; d < cards.length; d += 1)
+          for (let e = d + 1; e < cards.length; e += 1) {
+            const score = evaluateHand([
+              ints[a],
+              ints[b],
+              ints[c],
+              ints[d],
+              ints[e],
+            ]);
+
+            if (score > bestScore) {
+              bestScore = score;
+              best = [a, b, c, d, e];
+            }
+          }
+
+  return best ? best.map(index => cards[index]) : null;
+};

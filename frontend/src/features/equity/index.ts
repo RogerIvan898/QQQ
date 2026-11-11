@@ -1,2 +1,2 @@
 export * as equityModel from './model';
-export { handCategoryLabel } from './lib/hand-category';
+export { bestFiveCards, handCategoryLabel } from './lib/hand-category';
