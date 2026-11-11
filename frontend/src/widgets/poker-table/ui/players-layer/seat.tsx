@@ -96,7 +96,10 @@ const SeatView = ({
   const postAt = blindSeat ? SB_POST_MS : bigBlindSeat ? BB_POST_MS : null;
   const blindShown = useElapsed(handStartedAt, postAt ?? 0);
 
-  const community = useUnit(gameModel.$community);
+  const [community, showdown] = useUnit([
+    gameModel.$community,
+    gameModel.$showdownThisHand,
+  ]);
   const liveHand = isViewer ? myCards : null;
   const folded = player?.status === PlayerStatus.FOLDED;
 
@@ -188,6 +191,7 @@ const SeatView = ({
         dealOrder={dealOrderFrom(seat, dealerSeat, seatCount)}
         combinationSlot={<SeatCombination hand={hand} />}
         onWinningChange={onWinningChange}
+        showdown={showdown}
       />
     </div>
   );

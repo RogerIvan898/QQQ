@@ -65,6 +65,8 @@ interface Props {
   dealOrder?: number;
 
   onWinningChange?: (winning: boolean) => void;
+
+  showdown?: boolean;
 }
 
 const DEAL_STEP_MS = 70;
@@ -90,6 +92,7 @@ const PlayerView = ({
   handStartedAt = 0,
   dealOrder = 0,
   onWinningChange,
+  showdown = true,
 }: Props) => {
   const { status, stack, name } = player;
   const hand = handOverride === undefined ? player.hand : handOverride;
@@ -103,7 +106,7 @@ const PlayerView = ({
     blindRole
   );
 
-  const winning = useWinFlash(winId, winAmount);
+  const winning = useWinFlash(winId, winAmount, showdown);
 
   const [winHand, setWinHand] = React.useState<{
     winId: number;
@@ -227,6 +230,7 @@ const PlayerView = ({
             winAmount={winAmount}
             winId={winId}
             winning={showWinner}
+            showdown={showdown}
             hero={currentPlayer}
           />
 

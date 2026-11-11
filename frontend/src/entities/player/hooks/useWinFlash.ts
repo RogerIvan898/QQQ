@@ -1,10 +1,12 @@
 import React from 'react';
 
-import { HAND_END_MS } from 'shared/config/table-timing';
+import { handEndMs } from 'shared/config/table-timing';
 
-const WIN_FLASH_MS = HAND_END_MS;
-
-export const useWinFlash = (winId?: number, winAmount?: number) => {
+export const useWinFlash = (
+  winId?: number,
+  winAmount?: number,
+  showdown = true
+) => {
   const [doneId, setDoneId] = React.useState<number | null>(null);
   const winning = Boolean(winId && winAmount && winId !== doneId);
 
@@ -13,10 +15,13 @@ export const useWinFlash = (winId?: number, winAmount?: number) => {
       return;
     }
 
-    const timer = window.setTimeout(() => setDoneId(winId), WIN_FLASH_MS);
+    const timer = window.setTimeout(
+      () => setDoneId(winId),
+      handEndMs(showdown)
+    );
 
     return () => window.clearTimeout(timer);
-  }, [winning, winId]);
+  }, [winning, winId, showdown]);
 
   return winning;
 };

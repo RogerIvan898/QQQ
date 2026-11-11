@@ -130,6 +130,15 @@ export const $turnTiming = createStore<{
   })
   .reset(disconnectGame);
 
+export const $showdownThisHand = createStore(false)
+  .on(incomingEvent, (seen, event) => {
+    if (event.type === SERVER_EVENTS.HAND_STARTED) return false;
+    if (event.type === SERVER_EVENTS.SHOWDOWN) return true;
+
+    return seen;
+  })
+  .reset(disconnectGame);
+
 export const $handNumber = createStore(0)
   .on(incomingEvent, (count, event) =>
     event.type === SERVER_EVENTS.HAND_STARTED ? count + 1 : count

@@ -3,8 +3,15 @@ export const POT_FLIGHT_MS = 650;
 const STACK_COUNT_MS = 450;
 const WINNER_HOLD_MS = 1000;
 
-export const HAND_END_MS =
-  WINNER_REVEAL_MS + POT_FLIGHT_MS + STACK_COUNT_MS + WINNER_HOLD_MS;
+const FOLD_REVEAL_MS = 150;
+
+export const winRevealMs = (showdown: boolean) =>
+  showdown ? WINNER_REVEAL_MS : FOLD_REVEAL_MS;
+
+export const handEndMs = (showdown: boolean) =>
+  winRevealMs(showdown) + POT_FLIGHT_MS + STACK_COUNT_MS + WINNER_HOLD_MS;
+
+export const HAND_END_MS = handEndMs(true);
 
 export const MUCK_MS = 450;
 const INTRO_PAUSE_MS = 200;

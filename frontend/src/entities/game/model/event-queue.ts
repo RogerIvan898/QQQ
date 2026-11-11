@@ -2,7 +2,7 @@ import { createEvent } from 'effector';
 
 import { Sound } from 'shared/assets/sounds';
 import {
-  HAND_END_MS,
+  handEndMs,
   HAND_INTRO_MS,
   WINNER_PAUSE_MS,
 } from 'shared/config/table-timing';
@@ -86,7 +86,7 @@ const waitForBurst = async () => {
 
 const SHOWDOWN_PAUSE_MS = 600;
 
-const WIN_ANIMATION_MS = HAND_END_MS;
+let showdownSeen = false;
 
 const BACKLOG_HARD_LIMIT = 80;
 
@@ -176,6 +176,7 @@ const run = async (gen: number) => {
       const showdown = queue.shift();
 
       if (showdown) {
+        showdownSeen = true;
         emit(showdown);
         playBuffered(Sound.CARD_REVEAL);
       }
@@ -189,6 +190,8 @@ const run = async (gen: number) => {
 
     if (queue[0]?.type === SERVER_EVENTS.HAND_STARTED) {
       const started = queue.shift();
+
+      showdownSeen = false;
 
       if (started) {
         emit(started);
@@ -234,7 +237,7 @@ const run = async (gen: number) => {
       }
 
       if (!shouldFastForward()) {
-        await delay(WIN_ANIMATION_MS);
+        await delay(handEndMs(showdownSeen));
       }
 
       continue;

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { POT_FLIGHT_MS, WINNER_REVEAL_MS } from 'shared/config/table-timing';
+import { POT_FLIGHT_MS, winRevealMs } from 'shared/config/table-timing';
 import { useAnimatedNumber } from 'shared/hooks/use-animated-number';
 import { usePresence } from 'shared/hooks/use-presence';
 import { useChipFormatter } from 'shared/lib/display-settings';
@@ -8,8 +8,6 @@ import { GramBadge } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 
 import styles from './stack-badge.module.css';
-
-const WIN_MS = WINNER_REVEAL_MS + POT_FLIGHT_MS;
 
 const URGENT_MS = 5000;
 
@@ -76,6 +74,7 @@ interface Props {
   winAmount?: number;
   winId?: number;
   winning?: boolean;
+  showdown?: boolean;
   hero?: boolean;
 }
 
@@ -91,6 +90,7 @@ export const StackBadge = ({
   winAmount,
   winId,
   winning = false,
+  showdown = true,
   hero = false,
 }: Props) => {
   const formatChips = useChipFormatter(false);
@@ -107,10 +107,13 @@ export const StackBadge = ({
       return;
     }
 
-    const timer = window.setTimeout(() => setSettledWinId(winId), WIN_MS);
+    const timer = window.setTimeout(
+      () => setSettledWinId(winId),
+      winRevealMs(showdown) + POT_FLIGHT_MS
+    );
 
     return () => window.clearTimeout(timer);
-  }, [isHoldingWin, winId]);
+  }, [isHoldingWin, winId, showdown]);
 
   return (
     <div className={styles.wrap}>

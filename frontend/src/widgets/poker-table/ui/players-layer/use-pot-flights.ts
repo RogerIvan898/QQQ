@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { SERVER_EVENTS, gameModel, type ServerGameEvent } from 'entities/game';
-import { POT_FLIGHT_MS, WINNER_REVEAL_MS } from 'shared/config/table-timing';
+import { POT_FLIGHT_MS, winRevealMs } from 'shared/config/table-timing';
 import { afterNextPaint } from 'shared/utils/after-next-paint';
 
 import { getPotCenter } from './get-pot-center';
@@ -87,7 +87,7 @@ export const usePotFlights = (
       setAtWinner(false);
       setFlightId(id => id + 1);
       onHidePot(true);
-    }, WINNER_REVEAL_MS);
+    }, winRevealMs(gameModel.$showdownThisHand.getState()));
   });
 
   React.useEffect(() => clearReveal, []);

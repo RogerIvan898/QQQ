@@ -15,6 +15,7 @@ export {
   $players,
   $pot,
   $round,
+  $showdownThisHand,
   $handNumber,
   $handStartedAt,
   $turnTiming,
