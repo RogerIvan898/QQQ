@@ -168,7 +168,7 @@
 
 @media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .tableContainer {
-    --seat-gutter: 52px;
+    --seat-gutter: 60px;
 
     justify-content: center;
     align-items: center;

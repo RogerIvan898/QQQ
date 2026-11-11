@@ -105,8 +105,8 @@
   .container {
     justify-content: center;
     align-items: center;
-    padding-top: calc(64px + var(--tg-safe-area-top));
-    padding-bottom: calc(64px + var(--tg-safe-area-bottom));
+    padding-top: calc(56px + var(--tg-safe-area-top));
+    padding-bottom: calc(104px + var(--tg-safe-area-bottom));
 
     background-image:
       radial-gradient(
