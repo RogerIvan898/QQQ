@@ -12,25 +12,33 @@ stages:
   - scan
 
 # Compute-minute budget (free tier, 400 min/month):
-#   push to main  -> frontend:build (format, lint, audit, test, build in one job),
-#                    secret detection, docker image
+#   push to main    -> build only: frontend build, docker images, pages
+#   push to release -> everything: format, lint, audit, tests, secret detection,
+#                      SAST, dependency and container scanning
+#   schedule / tag  -> everything as well
 #   dev, other branches, merge requests -> no pipeline;
-#                    run one by hand via Build > Pipelines > Run pipeline
-#   schedule / tag -> heavy scanners: SAST, dependency and container scanning
+#                      run one by hand via Build > Pipelines > Run pipeline
+#                      (set FULL_CHECKS to "true" in the form for all checks)
 workflow:
   auto_cancel:
     on_new_commit: interruptible
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
-      variables: { SAST_DISABLED: "false", DEPENDENCY_SCANNING_DISABLED: "false" }
+      variables: &full_checks
+        FULL_CHECKS: "true"
+        SAST_DISABLED: "false"
+        DEPENDENCY_SCANNING_DISABLED: "false"
     - if: $CI_COMMIT_TAG
-      variables: { SAST_DISABLED: "false", DEPENDENCY_SCANNING_DISABLED: "false" }
+      variables: *full_checks
+    - if: $CI_COMMIT_BRANCH == $RELEASE_BRANCH
+      variables: *full_checks
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_PIPELINE_SOURCE == "web"
 
 variables:
-  # Turned back on for schedules and tags by workflow:rules above
-  # (or by hand: set them to "false" in the Run pipeline form).
+  RELEASE_BRANCH: release
+  # Switched on for release, schedules and tags by workflow:rules above.
+  FULL_CHECKS: "false"
   SAST_DISABLED: "true"
   DEPENDENCY_SCANNING_DISABLED: "true"
 
@@ -40,6 +48,8 @@ default:
 # The template puts this job into the "test" stage; move it to our own stage.
 secret_detection:
   stage: secret-detection
+  rules:
+    - if: $FULL_CHECKS == "true"
 
 # Scan the frontend image: the one just pushed on a tag, :latest on a schedule.
 container_scanning:
@@ -50,12 +60,13 @@ container_scanning:
   variables:
     CS_IMAGE: $CI_REGISTRY_IMAGE/frontend:latest
   rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
     - if: $CI_COMMIT_TAG
       variables: { CS_IMAGE: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_TAG }
+    - if: $FULL_CHECKS == "true"
 
 # ---------- frontend ----------
 # One job instead of lint/build/test/audit: dependencies are installed once.
+# On main it only builds; with FULL_CHECKS it also runs format, lint, audit, tests.
 frontend:build:
   image: oven/bun:1.4.4
   stage: build
@@ -70,11 +81,14 @@ frontend:build:
     - cd frontend
     - bun install --frozen-lockfile
   script:
-    - bun run format:check
-    - bun run lint
-    # GitLab's dependency scanner may not read bun.lock, so audit with bun itself.
-    - bun audit --prod --audit-level=high
-    - bun run test
+    - |
+      if [ "$FULL_CHECKS" = "true" ]; then
+        bun run format:check
+        bun run lint
+        # GitLab's dependency scanner may not read bun.lock, so audit with bun itself.
+        bun audit --prod --audit-level=high
+        bun run test
+      fi
     - bun run i18n:compile
     - bun run build
   artifacts:
