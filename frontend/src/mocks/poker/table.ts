@@ -30,6 +30,8 @@ const BOT_NAMES = [
   'Mia',
 ] as const;
 
+const AWAY_BOTS = 2;
+
 const TURN_MS = 15_000;
 const TIME_BANK_MS = 10_000;
 
@@ -104,18 +106,20 @@ export class PokerTable {
         this.createSeat(`bot-${index + 1}`, name, index + 1, stack)
       ),
     ];
-    const awayName = BOT_NAMES[room.botCount];
+    if (!this.allInScenario && room.botCount >= 3) {
+      BOT_NAMES.slice(room.botCount, room.botCount + AWAY_BOTS).forEach(
+        (name, index) => {
+          const away = this.createSeat(
+            `bot-${room.botCount + index + 1}`,
+            name,
+            this.seats.length,
+            stack
+          );
 
-    if (!this.allInScenario && room.botCount >= 3 && awayName) {
-      const away = this.createSeat(
-        `bot-${room.botCount + 1}`,
-        awayName,
-        this.seats.length,
-        stack
+          away.sittingOut = true;
+          this.seats.push(away);
+        }
       );
-
-      away.sittingOut = true;
-      this.seats.push(away);
     }
 
     this.button = this.seats.length - 1;
