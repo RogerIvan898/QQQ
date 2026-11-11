@@ -154,3 +154,9 @@
     translate: none;
   }
 }
+
+.live {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--color-warning) 80%, transparent),
+    0 0 14px color-mix(in srgb, var(--color-warning) 35%, transparent);
+}

@@ -68,3 +68,30 @@ export const bestFiveCards = (
 
   return best ? best.map(index => cards[index]) : null;
 };
+
+const WHOLE_HAND_CATEGORIES = new Set([4, 5, 6, 8]);
+
+export const madeHandCards = (
+  hole: readonly Card[],
+  board: readonly Card[]
+): Card[] | null => {
+  const best = bestFiveCards(hole, board);
+
+  if (!best) {
+    return null;
+  }
+
+  const category = evaluateHand(best.map(cardToInt)) >> CATEGORY_SHIFT;
+
+  if (category === 0) {
+    return null;
+  }
+
+  const core = WHOLE_HAND_CATEGORIES.has(category)
+    ? best
+    : best.filter(
+        card => best.filter(other => other.rank === card.rank).length >= 2
+      );
+
+  return core.some(card => hole.includes(card)) ? core : null;
+};

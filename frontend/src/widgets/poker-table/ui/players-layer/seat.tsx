@@ -4,8 +4,8 @@ import { useStoreMap, useUnit } from 'effector-react';
 
 import { highlightHidden, highlightShown } from 'entities/card';
 import { gameModel } from 'entities/game';
-import { Player, type SeatDirection } from 'entities/player';
-import { bestFiveCards } from 'features/equity';
+import { Player, PlayerStatus, type SeatDirection } from 'entities/player';
+import { bestFiveCards, madeHandCards } from 'features/equity';
 import { BB_POST_MS, SB_POST_MS } from 'shared/config/table-timing';
 import { useElapsed } from 'shared/hooks/use-elapsed';
 
@@ -96,9 +96,28 @@ const SeatView = ({
   const postAt = blindSeat ? SB_POST_MS : bigBlindSeat ? BB_POST_MS : null;
   const blindShown = useElapsed(handStartedAt, postAt ?? 0);
 
+  const community = useUnit(gameModel.$community);
+  const liveHand = isViewer ? myCards : null;
+  const folded = player?.status === PlayerStatus.FOLDED;
+
+  React.useEffect(() => {
+    const owner = `live-${seat}`;
+    const made =
+      liveHand && !folded && community.length >= 3
+        ? madeHandCards(liveHand, community)
+        : null;
+
+    if (made) {
+      highlightShown({ owner, cards: made, mode: 'live' });
+    } else {
+      highlightHidden(owner);
+    }
+  }, [seat, liveHand, folded, community]);
+
   React.useEffect(
     () => () => {
-      highlightHidden(seat);
+      highlightHidden(`win-${seat}`);
+      highlightHidden(`live-${seat}`);
     },
     [seat]
   );
@@ -131,9 +150,9 @@ const SeatView = ({
         : null;
 
     if (best) {
-      highlightShown({ owner: seat, cards: best });
+      highlightShown({ owner: `win-${seat}`, cards: best, mode: 'win' });
     } else {
-      highlightHidden(seat);
+      highlightHidden(`win-${seat}`);
     }
   };
 

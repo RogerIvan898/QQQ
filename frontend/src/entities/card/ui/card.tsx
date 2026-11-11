@@ -4,7 +4,7 @@ import { useStoreMap } from 'effector-react';
 
 import { cn } from 'shared/utils/cn';
 
-import { $highlightedKeys, cardKey, type Card as CardType } from '../model';
+import { $highlightView, cardKey, type Card as CardType } from '../model';
 
 import { CardFace } from './card-face';
 import styles from './card.module.css';
@@ -49,14 +49,18 @@ export const Card = ({ card, flat = false, onReveal }: Props) => {
   }, [flat]);
 
   const highlight = useStoreMap({
-    store: $highlightedKeys,
+    store: $highlightView,
     keys: [card ? cardKey(card) : null],
-    fn: (keys, [key]) => {
+    fn: ({ keys, dimOthers }, [key]) => {
       if (!keys || !key) {
         return null;
       }
 
-      return keys.has(key) ? 'on' : 'off';
+      if (keys.has(key)) {
+        return dimOthers ? 'on' : 'live';
+      }
+
+      return dimOthers ? 'off' : null;
     },
   });
 
@@ -67,6 +71,7 @@ export const Card = ({ card, flat = false, onReveal }: Props) => {
         styles.card,
         card && styles.face,
         highlight === 'on' && styles.highlighted,
+        highlight === 'live' && styles.live,
         highlight === 'off' && styles.dimmed
       )}
       role="img"
