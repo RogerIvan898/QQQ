@@ -14,7 +14,6 @@ const pickOther = (count: number, current: number) => {
   return next >= current ? next + 1 : next;
 };
 
-/** Game-room loader that cycles through playful table-setup phrases. */
 export const GameLoader = () => {
   const { t } = useLingui();
 

@@ -1,6 +1,5 @@
 import { formatCompactNumber } from 'shared/utils/format';
 
-/** Signed chip amount: "+120" / "−40" / "0". */
 export const formatNet = (net: number) =>
   net === 0
     ? '0'

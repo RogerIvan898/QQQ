@@ -1,8 +1,15 @@
-export type { JoinRoomResponse, RoomCardInfo, RoomMode } from './types';
+export type {
+  JoinRoomResponse,
+  RoomCardInfo,
+  RoomGame,
+  RoomMode,
+} from './types';
 export {
   findRoom,
   roomBigBlind,
   roomFormat,
-  ROOMS,
+  roomTier,
   type RoomListItem,
+  type RoomTier,
 } from './catalog';
+export { $rooms, $roomsStatus, fetchRoomsFx, roomsRequested } from './rooms';

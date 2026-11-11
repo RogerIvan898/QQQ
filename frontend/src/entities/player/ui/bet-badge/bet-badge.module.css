@@ -5,12 +5,8 @@
     var(--bet-base-distance) + var(--to-center-abs-y) *
       var(--bet-vertical-extra)
   );
-  --bet-slide: 40px;
-  /* Side seats sit level with the board, so their chips would land on the
-     cards: drop them below the board. 1 for a purely horizontal seat, 0 once
-     the seat is more than ~30° above or below the centre line. */
-  /* Half a board card (cards are ~25cqw tall, capped at 121px) + the badge. */
-  --bet-side-drop: calc(min(76px, 16cqw) + 22px);
+
+  --bet-side-drop: 0px;
   --bet-side: max(0, 1 - var(--to-center-abs-y) * 2);
   --bet-drop: calc(var(--bet-side) * var(--bet-side-drop));
 
@@ -25,7 +21,7 @@
       calc(var(--to-center-y) * var(--bet-distance))
     )
     translateY(var(--bet-drop));
-  animation: chipSlideOut 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: chipSlideOut 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .amountBadge {
@@ -38,7 +34,7 @@
   height: 40px;
   padding: 0 18px;
   border-radius: 100px;
-  /* Quiet translucent pill (what the pot used to look like). */
+
   background: color-mix(in srgb, var(--color-bg) 72%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-text) 18%, transparent);
   box-shadow: 0 6px 16px var(--color-shadow);
@@ -83,9 +79,6 @@
   color: var(--color-primary-light);
 }
 
-/* Glow as a plain background on a wrapper: a drop-shadow filter would be
-   re-rasterized every frame of the scale animation, and rounding the SVG
-   itself clips the logo. */
 .amountLogoGlow {
   display: flex;
   flex-shrink: 0;
@@ -100,12 +93,12 @@
     opacity: 0;
     transform: translate(-50%, -50%)
       translate(
-        calc(var(--to-center-x) * (var(--bet-distance) - var(--bet-slide))),
-        calc(var(--to-center-y) * (var(--bet-distance) - var(--bet-slide)))
+        calc(var(--to-center-x) * var(--bet-distance) * 0.35),
+        calc(var(--to-center-y) * var(--bet-distance) * 0.35)
       )
-      translateY(var(--bet-drop)) scale(0.65);
+      scale(0.6);
   }
-  40% {
+  25% {
     opacity: 1;
   }
   100% {
@@ -126,7 +119,11 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
+  .betArea {
+    --bet-side-drop: calc(min(76px, 16cqw) + 22px);
+  }
+
   .amountBadge {
     min-width: 0;
     height: 26px;
@@ -146,6 +143,26 @@
   .betArea {
     --bet-base-distance: clamp(56px, 18cqmin, 84px);
     --bet-vertical-extra: 34px;
-    --bet-slide: 24px;
+  }
+}
+
+@media (orientation: portrait) and (min-width: 769px) and (max-width: 1100px) {
+  .amountBadge {
+    height: 34px;
+    padding: 0 14px;
+    gap: 6px;
+  }
+
+  .amountValue {
+    font-size: 17px;
+  }
+
+  .amountLogo {
+    width: 18px;
+    height: 18px;
+  }
+
+  .betArea {
+    --bet-base-distance: clamp(72px, 18cqmin, 110px);
   }
 }

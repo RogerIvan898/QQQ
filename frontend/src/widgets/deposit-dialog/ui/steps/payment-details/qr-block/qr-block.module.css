@@ -14,6 +14,7 @@
   padding: 10px;
   background: #ffffff;
   border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .qrHint {

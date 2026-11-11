@@ -6,21 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + React + TS</title>
     <style>
-      /* Boot screen: a static copy of shared/ui/preloader, painted before any
-       JS so slow networks never show a blank page. React replaces it when
-       the app mounts into #root, so the hand-off looks seamless. */
       html,
       body {
         margin: 0;
-        background: #0d1117;
+        background: #0a0e17;
       }
 
       .boot {
         display: flex;
         align-items: center;
         justify-content: center;
-        /* dvh = the visible screen on phones; plain vh includes the area under
-         the browser bars and causes a scrollbar. vh is the fallback. */
         min-height: 100vh;
         min-height: 100dvh;
         color: #f0f6fc;
@@ -112,23 +107,9 @@
         </div>
       </div>
     </div>
-    <script>
-      // Same order as detectLocale(): saved choice, then browser language.
-      // (Telegram's language isn't available yet: its script loads below.)
-      (function () {
-        var locale = '';
-        try {
-          locale = localStorage.getItem('poker:locale') || '';
-        } catch (e) {}
-        if (!locale) locale = (navigator.language || '').slice(0, 2);
-        if (locale === 'ru') {
-          document.getElementById('boot-label').textContent = 'Загрузка…';
-          document.documentElement.lang = 'ru';
-        }
-      })();
-    </script>
-    <!-- Kept synchronous (the app reads window.Telegram on start) but placed
-       after the boot screen so a slow telegram.org doesn't block first paint. -->
+
+    <script src="/boot-locale.js"></script>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>

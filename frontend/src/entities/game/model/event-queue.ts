@@ -1,6 +1,11 @@
 import { createEvent } from 'effector';
 
 import { Sound } from 'shared/assets/sounds';
+import {
+  HAND_END_MS,
+  HAND_INTRO_MS,
+  WINNER_PAUSE_MS,
+} from 'shared/config/table-timing';
 import { playBuffered } from 'shared/lib/audio';
 import { delay } from 'shared/utils/delay';
 
@@ -22,6 +27,7 @@ export const clearActiveSeat = createEvent();
 
 let emit: (event: ServerGameEvent) => void = () => undefined;
 let readState: () => Pick<GameState, 'players'> = () => ({ players: {} });
+let readHandStartedAt: () => number = () => performance.now();
 
 const queue: ServerGameEvent[] = [];
 let generation = 0;
@@ -31,9 +37,11 @@ let live = false;
 export const bindGameQueue = (api: {
   emit: (event: ServerGameEvent) => void;
   readState: () => Pick<GameState, 'players'>;
+  readHandStartedAt: () => number;
 }) => {
   emit = api.emit;
   readState = api.readState;
+  readHandStartedAt = api.readHandStartedAt;
 };
 
 export const resetEventQueue = () => {
@@ -55,22 +63,70 @@ export const enqueueServerEvent = (event: ServerGameEvent) => {
   }
 
   queue.push(event);
+  lastEnqueuedAt = performance.now();
   void run(generation);
 };
 
+let lastEnqueuedAt = 0;
+
+const BURST_GAP_MS = 120;
+
+const BURST_MAX_WAIT_MS = 500;
+
+const waitForBurst = async () => {
+  const started = performance.now();
+
+  while (
+    performance.now() - lastEnqueuedAt < BURST_GAP_MS &&
+    performance.now() - started < BURST_MAX_WAIT_MS
+  ) {
+    await delay(40);
+  }
+};
+
 const SHOWDOWN_PAUSE_MS = 500;
-const WIN_ANIMATION_MS = 1000;
 
-// Animations are paced with timers, which a hidden WebView throttles to one
-// per second (one per minute after a while). Without this the queue would keep
-// growing in the background and replay minutes of old hands on return.
-const BACKLOG_LIMIT = 12;
+const WIN_ANIMATION_MS = HAND_END_MS;
 
-const shouldFastForward = () =>
-  (typeof document !== 'undefined' && document.hidden) ||
-  queue.length > BACKLOG_LIMIT;
+const BACKLOG_HARD_LIMIT = 80;
 
-/** Applies everything queued at once, without pauses, animations or sounds. */
+const queuedHandStarts = () =>
+  queue.reduce(
+    (count, event) =>
+      event.type === SERVER_EVENTS.HAND_STARTED ? count + 1 : count,
+    0
+  );
+
+const debug = import.meta.env.DEV
+  ? ((
+      window as unknown as { __queueDebug?: Record<string, number> }
+    ).__queueDebug ??= {})
+  : null;
+const count = (key: string) => {
+  if (debug) {
+    debug[key] = (debug[key] ?? 0) + 1;
+  }
+};
+
+const shouldFastForward = () => {
+  if (typeof document !== 'undefined' && document.hidden) {
+    count('ffHidden');
+    return true;
+  }
+
+  if (queuedHandStarts() >= 2) {
+    count('ffTwoHandsBehind');
+    return true;
+  }
+
+  if (queue.length > BACKLOG_HARD_LIMIT) {
+    count('ffHardLimit');
+    return true;
+  }
+
+  return false;
+};
+
 const flushQueue = () => {
   collectingBets(false);
 
@@ -101,7 +157,7 @@ const run = async (gen: number) => {
     }
 
     if (isStreetEvent(queue[0])) {
-      await delay(0);
+      await waitForBurst();
 
       if (gen !== generation) {
         break;
@@ -131,7 +187,46 @@ const run = async (gen: number) => {
       continue;
     }
 
+    if (queue[0]?.type === SERVER_EVENTS.HAND_STARTED) {
+      const started = queue.shift();
+
+      if (started) {
+        emit(started);
+      }
+
+      const introEnds = readHandStartedAt() + HAND_INTRO_MS;
+
+      while (
+        performance.now() < introEnds &&
+        gen === generation &&
+        !shouldFastForward()
+      ) {
+        const nextHandAt = queue.findIndex(
+          event => event.type === SERVER_EVENTS.HAND_STARTED
+        );
+        const cardsAt = queue.findIndex(
+          event => event.type === SERVER_EVENTS.YOUR_CARDS
+        );
+
+        if (cardsAt !== -1 && (nextHandAt === -1 || cardsAt < nextHandAt)) {
+          const [cards] = queue.splice(cardsAt, 1);
+
+          if (cards) {
+            emit(cards);
+          }
+        }
+
+        await delay(40);
+      }
+
+      continue;
+    }
+
     if (queue[0]?.type === SERVER_EVENTS.HAND_COMPLETED) {
+      if (!shouldFastForward()) {
+        await delay(WINNER_PAUSE_MS);
+      }
+
       const completed = queue.shift();
 
       if (completed) {
@@ -159,15 +254,27 @@ const run = async (gen: number) => {
   }
 };
 
-const isAllInRunout = (events: ServerGameEvent[]) =>
-  events.some(event => event.type === SERVER_EVENTS.SHOWDOWN) &&
-  events.some(event => event.type === SERVER_EVENTS.BOARD_DEALT);
-
 const isRunoutEvent = (event: ServerGameEvent | undefined) =>
   event?.type === SERVER_EVENTS.STREET_CONCLUDED ||
   event?.type === SERVER_EVENTS.BOARD_DEALT ||
   event?.type === SERVER_EVENTS.SHOWDOWN ||
   event?.type === SERVER_EVENTS.HAND_COMPLETED;
+
+const isAllInRunout = (events: ServerGameEvent[]) => {
+  let showdown = false;
+  let board = false;
+
+  for (const event of events) {
+    if (!isRunoutEvent(event)) {
+      break;
+    }
+
+    showdown ||= event.type === SERVER_EVENTS.SHOWDOWN;
+    board ||= event.type === SERVER_EVENTS.BOARD_DEALT;
+  }
+
+  return showdown && board;
+};
 
 const hasCommittedBets = () =>
   Object.values(readState().players).some(player => player.committed > 0);
@@ -259,13 +366,12 @@ const playRunout = async (gen: number) => {
 
   collectingBets(false);
   applyStreet();
+  count(finished ? 'runoutPlayed' : 'runoutCut');
 
   if (finished) {
     return;
   }
 
-  // Fast-forwarded: apply whatever the script did not get to. Board events
-  // are idempotent, showdown and the result must not be emitted twice.
   if (showdown && !handsRevealed) {
     emit(showdown);
   }

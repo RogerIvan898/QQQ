@@ -59,12 +59,7 @@ export const readPlayerAction = (data: unknown): ChosenAction | null => {
     return null;
   }
 
-  const outer = message.payload as { payload?: unknown };
-  const inner = outer.payload;
-
-  if (typeof inner !== 'object' || inner === null) {
-    return null;
-  }
+  const inner = message.payload;
 
   const action = (inner as { action?: unknown }).action;
   const rawAmount = (inner as { amount?: unknown }).amount;
@@ -79,3 +74,6 @@ export const readPlayerAction = (data: unknown): ChosenAction | null => {
     amount: Number.isFinite(amount) ? amount : undefined,
   };
 };
+
+export const readSitIn = (data: unknown) =>
+  parseMessage(data)?.type === CLIENT_COMMANDS.SIT_IN;

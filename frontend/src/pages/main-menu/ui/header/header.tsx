@@ -7,27 +7,32 @@ import { ChevronDown, History, Settings } from 'lucide-react';
 
 import { $currentLocale } from 'shared/lib/i18n';
 import { $tonWallet } from 'shared/lib/ton-connect';
-import { Logo } from 'shared/ui/logo';
+import { GramBadge } from 'shared/ui/gram';
+import { Tooltip } from 'shared/ui/tooltip';
 import { cn } from 'shared/utils/cn';
 import { formatBalance, getInitialLetter } from 'shared/utils/format';
 import { SettingsDialog } from 'widgets/settings';
 
 import styles from './header.module.css';
+import { Nickname } from './nickname';
 
 interface Props {
   userName: string;
-  /** `null` while loading. */
+
+  onRename: (nickname: string) => void;
+
   balance: number | null;
   avatarUrl?: string;
   isWalletOpen: boolean;
   onWalletClick: () => void;
   walletButtonRef: React.RefObject<HTMLButtonElement | null>;
-  /** Wallet Panel, anchored under the wallet button. */
+
   walletPanel?: React.ReactNode;
 }
 
 export const Header = ({
   userName,
+  onRename,
   balance,
   avatarUrl,
   isWalletOpen,
@@ -46,64 +51,67 @@ export const Header = ({
   return (
     <header className={styles.header} lang={locale ?? undefined}>
       <div className={styles.headerLeft}>
-        <button
-          type="button"
-          className={styles.avatarPlaceholder}
-          disabled={Boolean(wallet)}
-          aria-label={wallet ? t`Wallet connected` : t`Connect wallet`}
-          title={walletAddress ?? t`Connect wallet`}
-        >
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={userName} className={styles.avatarImg} />
-          ) : (
-            getInitialLetter(userName, '?')
-          )}
-        </button>
+        <Tooltip label={walletAddress ?? t`Connect wallet`} align="start">
+          <button
+            type="button"
+            className={styles.avatarPlaceholder}
+            disabled={Boolean(wallet)}
+            aria-label={wallet ? t`Wallet connected` : t`Connect wallet`}
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={userName}
+                className={styles.avatarImg}
+              />
+            ) : (
+              getInitialLetter(userName, '?')
+            )}
+          </button>
+        </Tooltip>
 
         <div className={styles.userInfo}>
-          <span className={styles.userName}>{userName}</span>
-
-          <div className={styles.walletAnchor}>
-            <button
-              ref={walletButtonRef}
-              type="button"
-              className={cn(
-                styles.walletBtn,
-                isWalletOpen && styles.walletOpen
-              )}
-              onClick={onWalletClick}
-              aria-haspopup="dialog"
-              aria-expanded={isWalletOpen}
-              aria-label={t`My Wallet`}
-            >
-              <Logo className={styles.tonIcon} />
-              <span className={styles.balanceValue}>{formattedBalance}</span>
-              <ChevronDown size={16} className={styles.walletChevron} />
-            </button>
-            {walletPanel}
-          </div>
+          <Nickname name={userName} onSave={onRename} />
         </div>
       </div>
 
       <div className={styles.headerRight}>
-        <Link
-          to="/history"
-          className={styles.historyBtn}
-          aria-label={t`History`}
-          title={t`History`}
-        >
-          <History size={26} />
-        </Link>
+        <div className={styles.walletAnchor}>
+          <button
+            ref={walletButtonRef}
+            type="button"
+            className={cn(styles.walletBtn, isWalletOpen && styles.walletOpen)}
+            onClick={onWalletClick}
+            aria-haspopup="dialog"
+            aria-expanded={isWalletOpen}
+            aria-label={t`My Wallet`}
+          >
+            <GramBadge className={styles.tonIcon} />
+            <span className={styles.balanceValue}>{formattedBalance}</span>
+            <ChevronDown size={16} className={styles.walletChevron} />
+          </button>
+          {walletPanel}
+        </div>
+        <Tooltip label={t`History`}>
+          <Link
+            to="/history"
+            className={styles.historyBtn}
+            aria-label={t`History`}
+          >
+            <History size={26} />
+          </Link>
+        </Tooltip>
 
-        <button
-          type="button"
-          className={styles.settingsBtn}
-          onClick={() => setIsSettingsOpened(true)}
-          aria-label={t`Settings`}
-          title={t`Settings`}
-        >
-          <Settings size={28} />
-        </button>
+        <Tooltip label={t`Settings`}>
+          <button
+            type="button"
+            className={styles.settingsBtn}
+            onClick={() => setIsSettingsOpened(true)}
+            aria-label={t`Settings`}
+          >
+            <Settings size={28} />
+          </button>
+        </Tooltip>
       </div>
 
       <SettingsDialog

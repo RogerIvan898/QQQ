@@ -1,16 +1,18 @@
 import { useState } from 'react';
 
 import { useLingui } from '@lingui/react/macro';
+import { useUnit } from 'effector-react';
 import { ChevronRight } from 'lucide-react';
 
-import { Alert } from 'shared/ui/alert';
-import { Logo } from 'shared/ui/logo';
+import { walletModel } from 'entities/wallet';
+import { GramBadge } from 'shared/ui/gram';
 import { NumberField } from 'shared/ui/number-field';
-import { parseNumericInput } from 'shared/utils/format';
+import { formatBalance, parseNumericInput } from 'shared/utils/format';
 import { toDepositInputValue } from 'widgets/deposit-dialog/utils';
 
-import styles from '../../deposit-dialog.module.css';
+import shared from '../../deposit-dialog.module.css';
 
+import styles from './amount-step.module.css';
 import { QUICK_ADD_OPTIONS } from './constants';
 import { QuickAddOptions } from './quick-add-options';
 import { parseInput } from './utils';
@@ -22,7 +24,8 @@ interface Props {
 }
 
 export const AmountStep = ({ amount, onChangeAmount, onNext }: Props) => {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
+  const balance = useUnit(walletModel.$balance);
 
   const [draft, setDraft] = useState(() => toDepositInputValue(amount));
   const [prevAmount, setPrevAmount] = useState(amount);
@@ -46,36 +49,50 @@ export const AmountStep = ({ amount, onChangeAmount, onNext }: Props) => {
     onChangeAmount(amount + value);
   };
 
-  return (
-    <div className={styles.content}>
-      <Alert variant="info" title={t`Deposit TON`}>
-        {t`Enter the amount you want to deposit`}
-      </Alert>
+  const after =
+    balance === null ? null : formatBalance(balance + amount, i18n.locale);
+  const current = balance === null ? null : formatBalance(balance, i18n.locale);
 
-      <label className={styles.label} htmlFor="deposit-amount">
-        {t`Amount`}
+  return (
+    <div className={styles.step}>
+      <label className={styles.amountBox} htmlFor="deposit-amount">
+        <span className={styles.caption}>{t`You deposit`}</span>
+        <span className={styles.amountRow}>
+          <NumberField
+            id="deposit-amount"
+            className={styles.input}
+            value={draft}
+            onChange={handleInputChange}
+            placeholder="0"
+            inputMode="decimal"
+            autoComplete="off"
+            aria-invalid={!isValid && draft !== ''}
+            style={{ width: `${Math.max(1, draft.length || 1) + 0.5}ch` }}
+          />
+          <span className={styles.currency}>
+            <GramBadge size={20} />
+            TON
+          </span>
+        </span>
       </label>
 
-      <div className={styles.amountBox}>
-        <NumberField
-          id="deposit-amount"
-          value={draft}
-          onChange={handleInputChange}
-          placeholder="0.00"
-          inputMode="decimal"
-          autoComplete="off"
-          aria-invalid={!isValid && draft !== ''}
-        />
-        <span className={styles.amountCurrency}>
-          <Logo /> TON
-        </span>
-      </div>
+      {current !== null ? (
+        <p className={styles.balance}>
+          {t`Balance`} <b>{current} TON</b>
+          {isValid ? (
+            <>
+              <ChevronRight size={14} className={styles.arrow} />
+              <b className={styles.after}>{after} TON</b>
+            </>
+          ) : null}
+        </p>
+      ) : null}
 
       <QuickAddOptions options={QUICK_ADD_OPTIONS} onAdd={handleQuickAdd} />
 
       <button
         type="button"
-        className={styles.primaryBtn}
+        className={shared.primaryBtn}
         disabled={!isValid}
         onClick={onNext}
       >

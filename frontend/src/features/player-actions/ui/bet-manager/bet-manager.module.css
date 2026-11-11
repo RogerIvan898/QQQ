@@ -1,83 +1,96 @@
 .wrapper {
-  display: grid;
-  grid-template-columns: 1fr;
-  justify-items: center;
+  --control-radius: var(--radius-md);
+  --row-gap: 12px;
+  --field-height: 44px;
+  --thumb: 24px;
+
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  gap: 16px;
+  gap: var(--row-gap);
+  padding: 16px;
   background: var(--color-bg-elevated);
-  padding: 18px;
-  border-radius: var(--radius-xl);
   border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: var(--radius-xl);
   box-shadow: 0 16px 40px var(--color-shadow);
   animation: panelAppear 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
 }
 
 .shortcuts {
-  display: flex;
-  width: 100%;
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
   gap: 8px;
 }
 
 .shortcut {
-  flex: 1 1 0;
   min-width: 0;
   height: 36px;
   padding: 0 6px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--color-text) 16%, transparent);
-  background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  background: color-mix(in srgb, var(--color-text) 5%, transparent);
   color: var(--color-text);
   font-family: var(--font-family);
   font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
     transform 0.12s ease,
     background-color 0.15s ease,
     border-color 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease;
+    color 0.15s ease;
+}
+
+.shortcut:not(:disabled):hover,
+.step:not(:disabled):hover {
+  border-color: var(--color-border-hover);
+  background: color-mix(in srgb, var(--color-text) 9%, transparent);
 }
 
 .shortcut:not(:disabled):active,
 .step:not(:disabled):active {
-  transform: scale(0.92);
-  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  transform: scale(0.95);
+  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
   border-color: var(--color-primary-light);
   transition-duration: 0.05s;
 }
 
-.shortcut:disabled {
-  opacity: 0.4;
+.shortcut:disabled,
+.step:disabled {
+  opacity: 0.35;
   cursor: default;
 }
 
-.shortcutActive {
-  border-color: var(--color-primary);
-  color: var(--color-primary-light);
-  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--color-primary) 35%, transparent);
+.shortcutAllIn {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .inputRow {
-  display: flex;
-  align-items: center;
+  display: grid;
+
+  grid-template-columns: var(--field-height) minmax(0, 180px) var(
+      --field-height
+    );
   justify-content: center;
-  width: 100%;
   gap: 8px;
 }
 
 .step {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 auto;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
-  background: var(--color-bg-input);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--field-height);
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  background: color-mix(in srgb, var(--color-text) 5%, transparent);
   color: var(--color-text);
-  font-size: 22px;
-  line-height: 1;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
@@ -86,29 +99,26 @@
     border-color 0.15s ease;
 }
 
-.step:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
 .inputContainer {
   position: relative;
-  width: 100%;
-  max-width: 180px;
+  min-width: 0;
 }
 
 .input {
+  box-sizing: border-box;
   width: 100%;
+  height: var(--field-height);
+  padding: 0 40px;
   background: var(--color-bg-input);
-  border: 1.5px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
-  border-radius: 14px;
-  padding: 10px 42px 10px 16px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  border-radius: var(--control-radius);
   color: var(--color-text);
-  font-size: 20px;
+  font-family: var(--font-family);
+  font-size: 18px;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   text-align: center;
   outline: none;
-  font-family: var(--font-family);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
@@ -116,20 +126,24 @@
 
 .input:focus {
   border-color: var(--color-primary-light);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
-.inputInvalid {
+.inputInvalid,
+.inputInvalid:focus {
   border-color: var(--color-danger);
 }
 
 .logo {
   position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: 40px;
   color: var(--color-primary);
   pointer-events: none;
 }
@@ -138,26 +152,39 @@
   color: inherit;
 }
 
+.unit {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-primary-light);
+}
+
+.input::-webkit-outer-spin-button,
+.input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .slider {
   -webkit-appearance: none;
   appearance: none;
+  display: block;
   width: 100%;
-  /* Tall hit area for fingers; the visible 6px track is drawn centered. */
-  height: 36px;
+
+  height: 32px;
   margin: 0;
   background:
     linear-gradient(var(--color-primary), var(--color-primary)) left center /
-      var(--fill, 0%) 6px no-repeat,
+      calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--fill, 0)) 6px
+      no-repeat,
     linear-gradient(
-        color-mix(in srgb, var(--color-text) 8%, transparent),
-        color-mix(in srgb, var(--color-text) 8%, transparent)
+        color-mix(in srgb, var(--color-text) 10%, transparent),
+        color-mix(in srgb, var(--color-text) 10%, transparent)
       )
       center / 100% 6px no-repeat;
   border-radius: 999px;
   outline: none;
   cursor: pointer;
-  /* Keep horizontal drags on the slider instead of scrolling the page or
-     triggering app swipe gestures. */
+
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -165,59 +192,45 @@
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 28px;
-  height: 28px;
+  box-sizing: border-box;
+  width: var(--thumb);
+  height: var(--thumb);
+  border: 3px solid var(--color-primary);
   border-radius: 50%;
   background: var(--color-text);
-  border: 4px solid var(--color-primary);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 60%, transparent);
-  transition:
-    transform 0.1s ease,
-    background-color 0.1s ease,
-    border-color 0.1s ease;
-}
-
-.slider::-webkit-slider-thumb:active {
-  transform: scale(1.2);
-  background: var(--color-primary-light);
-  border-color: var(--color-primary-light);
+  box-shadow: 0 2px 6px var(--color-shadow);
+  transition: transform 0.1s ease;
 }
 
 .slider::-moz-range-thumb {
   box-sizing: border-box;
-  width: 28px;
-  height: 28px;
+  width: var(--thumb);
+  height: var(--thumb);
+  border: 3px solid var(--color-primary);
   border-radius: 50%;
   background: var(--color-text);
-  border: 4px solid var(--color-primary);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 60%, transparent);
-  transition:
-    transform 0.1s ease,
-    background-color 0.1s ease,
-    border-color 0.1s ease;
+  box-shadow: 0 2px 6px var(--color-shadow);
+  transition: transform 0.1s ease;
   cursor: pointer;
 }
 
-.slider::-moz-range-thumb:active {
-  transform: scale(1.2);
-  background: var(--color-primary-light);
-  border-color: var(--color-primary-light);
+.slider:active::-webkit-slider-thumb {
+  transform: scale(1.12);
+}
+
+.slider:active::-moz-range-thumb {
+  transform: scale(1.12);
+}
+
+.slider:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px
+    color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 
 .buttonRow {
-  display: flex;
-  width: 100%;
-  gap: 10px;
-}
-
-.buttonRow > button {
-  flex: 1;
-}
-
-.input::-webkit-outer-spin-button,
-.input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 @keyframes panelAppear {
@@ -231,12 +244,12 @@
   }
 }
 
-/* Phones: the action container already draws the card, so drop the inner
-   frame and tighten rows to keep the hero's cards visible above the panel. */
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .wrapper {
-    gap: 10px;
-    padding: 2px;
+    --row-gap: 10px;
+    --field-height: 40px;
+
+    padding: 0;
     background: none;
     border: none;
     box-shadow: none;
@@ -246,28 +259,11 @@
     height: 34px;
   }
 
-  .step {
-    width: 38px;
-    height: 38px;
-  }
-
-  .input {
-    padding-top: 7px;
-    padding-bottom: 7px;
-    font-size: 18px;
-  }
-
   .slider {
-    height: 30px;
+    height: 28px;
   }
 
   .buttonRow > button {
     --action-button-height: 46px;
   }
-}
-
-.unit {
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--color-primary-light);
 }

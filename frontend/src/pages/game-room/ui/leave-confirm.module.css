@@ -1,0 +1,70 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.text {
+  margin: 0;
+  max-width: 320px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.stay,
+.leave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    filter var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.stay {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-muted);
+  color: var(--color-text);
+}
+
+.leave {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 50%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 16%, transparent);
+  color: var(--color-danger);
+}
+
+@media (hover: hover) {
+  .stay:hover,
+  .leave:hover {
+    filter: brightness(1.15);
+  }
+}
+
+.stay:active,
+.leave:active {
+  transform: scale(0.97);
+}
+
+.stay:focus-visible,
+.leave:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

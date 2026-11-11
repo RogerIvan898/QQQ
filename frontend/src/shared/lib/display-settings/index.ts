@@ -1,58 +1,60 @@
 import { createEvent, createStore } from 'effector';
 import { useUnit } from 'effector-react';
 
+import { readFlag, writeFlag } from 'shared/lib/storage';
 import { formatCompactNumber } from 'shared/utils/format';
 
 const STORAGE_KEY = 'poker:amounts-in-bb';
 
-const readStored = () => {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === 'on';
-  } catch {
-    return false;
-  }
-};
-
 export const setAmountsInBb = createEvent<boolean>();
 
-/** Show table amounts in big blinds instead of chips. Per device, off by default. */
-export const $amountsInBb = createStore(readStored()).on(
+export const $amountsInBb = createStore(readFlag(STORAGE_KEY, false)).on(
   setAmountsInBb,
   (_, enabled) => enabled
 );
 
-$amountsInBb.updates.watch(enabled => {
-  try {
-    localStorage.setItem(STORAGE_KEY, enabled ? 'on' : 'off');
-  } catch {
-    // Storage blocked (private mode); the setting just won't persist.
-  }
+$amountsInBb.updates.watch(enabled => writeFlag(STORAGE_KEY, enabled));
+
+const FOUR_COLOR_KEY = 'poker:four-color-deck';
+
+export const setFourColorDeck = createEvent<boolean>();
+
+export const $fourColorDeck = createStore(readFlag(FOUR_COLOR_KEY, false)).on(
+  setFourColorDeck,
+  (_, enabled) => enabled
+);
+
+const applyFourColor = (enabled: boolean) => {
+  document.documentElement.toggleAttribute('data-four-color', enabled);
+};
+
+applyFourColor($fourColorDeck.getState());
+
+$fourColorDeck.updates.watch(enabled => {
+  applyFourColor(enabled);
+  writeFlag(FOUR_COLOR_KEY, enabled);
 });
 
 export const displayBigBlindChanged = createEvent<number>();
 
-/** Big blind of the table on screen, fed by the game model. */
 export const $displayBigBlind = createStore(0).on(
   displayBigBlindChanged,
   (_, bigBlind) => bigBlind
 );
 
-/** "12.5 BB" / "2 BB": one decimal, no trailing ".0". */
 export const formatBigBlinds = (amount: number, bigBlind: number) => {
   const value = Math.round((amount / bigBlind) * 10) / 10;
 
   return `${Number.isInteger(value) ? value : value.toFixed(1)} BB`;
 };
 
-/**
- * Formats a chip amount for the table: big blinds when the setting is on and
- * the big blind is known, compact chips otherwise.
- */
-export const useChipFormatter = () => {
+export const useChipFormatter = (withUnit = true) => {
   const [inBb, bigBlind] = useUnit([$amountsInBb, $displayBigBlind]);
 
   return (amount: number) =>
     inBb && bigBlind > 0
       ? formatBigBlinds(amount, bigBlind)
-      : formatCompactNumber(amount);
+      : withUnit
+        ? `${formatCompactNumber(amount)} TON`
+        : formatCompactNumber(amount);
 };

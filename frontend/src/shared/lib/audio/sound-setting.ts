@@ -1,29 +1,16 @@
 import { createEvent, createStore } from 'effector';
 
-const STORAGE_KEY = 'poker:sound';
+import { readFlag, writeFlag } from 'shared/lib/storage';
 
-const readStored = () => {
-  try {
-    return localStorage.getItem(STORAGE_KEY) !== 'off';
-  } catch {
-    return true;
-  }
-};
+const STORAGE_KEY = 'poker:sound';
 
 export const setSoundEnabled = createEvent<boolean>();
 
-/** Whether game sounds play. Persisted per device; on by default. */
-export const $soundEnabled = createStore(readStored()).on(
+export const $soundEnabled = createStore(readFlag(STORAGE_KEY, true)).on(
   setSoundEnabled,
   (_, enabled) => enabled
 );
 
-$soundEnabled.updates.watch(enabled => {
-  try {
-    localStorage.setItem(STORAGE_KEY, enabled ? 'on' : 'off');
-  } catch {
-    // Storage blocked (private mode); the setting just won't persist.
-  }
-});
+$soundEnabled.updates.watch(enabled => writeFlag(STORAGE_KEY, enabled));
 
 export const isSoundEnabled = () => $soundEnabled.getState();

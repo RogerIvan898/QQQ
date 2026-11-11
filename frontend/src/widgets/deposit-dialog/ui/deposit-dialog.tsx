@@ -20,6 +20,7 @@ interface Props {
   memo?: string;
   onCopyText?: (text: string, type: 'address' | 'memo' | 'amount') => void;
   onSuccess?: () => void;
+  skipEnter?: boolean;
 }
 
 export const DepositDialog = ({
@@ -29,14 +30,13 @@ export const DepositDialog = ({
   memo,
   onCopyText,
   onSuccess,
+  skipEnter,
 }: Props) => {
   const { t } = useLingui();
 
   const [step, setStep] = useState<DepositStep>(DEPOSIT_STEP.Amount);
   const [amount, setAmount] = useState(0);
 
-  // Сброс при открытии: диалог всегда открывается с первого шага и пустой суммы.
-  // Сброс при закрытии тоже работал бы, но давал лишний setState при первом монтировании.
   useEffect(() => {
     if (open) {
       setStep(DEPOSIT_STEP.Amount);
@@ -54,6 +54,7 @@ export const DepositDialog = ({
       open={open}
       onClose={onClose}
       variant="bottom"
+      skipEnter={skipEnter}
       title={stepTitle}
       titleAddon={
         <span className={styles.stepper}>

@@ -1,10 +1,150 @@
+.panel {
+  position: fixed;
+  top: calc(60px + var(--tg-safe-area-top));
+  right: calc(16px + var(--tg-safe-area-right));
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  width: 340px;
+  max-height: min(60vh, 520px);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px var(--color-shadow);
+  overflow: hidden;
+  animation: panelIn var(--dur-fast) var(--ease-out);
+  transform-origin: top right;
+}
+
+.closing {
+  animation: panelOut var(--dur-exit) var(--ease-in) forwards;
+  pointer-events: none;
+}
+
+@keyframes panelOut {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 8px 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.heading {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.close {
+  composes: close from '../../../shared/ui/icon-button/icon-button.module.css';
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
+  .panel {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 950;
+    width: auto;
+    max-height: 50vh;
+    padding-bottom: var(--tg-safe-area-bottom);
+    border-bottom: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+
+    animation: sheetIn var(--dur-slow) var(--ease-out);
+  }
+}
+
+.grabber {
+  display: none;
+}
+
+.grabberBar {
+  width: 40px;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text) 22%, transparent);
+}
+
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
+  .grabber {
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 8px 0 2px;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .header {
+    touch-action: none;
+  }
+
+  .panel {
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+
+  .dragging {
+    transition: none;
+  }
+
+  .closing {
+    animation: sheetOut var(--dur-exit) var(--ease-in) forwards;
+  }
+}
+
+@keyframes sheetOut {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheetIn {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
 .list {
   margin: 0;
   padding: 0;
   list-style: none;
-  background: var(--color-bg-muted);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
 }
 
 .row {
@@ -25,7 +165,11 @@
 .row:hover,
 .row:focus-visible {
   background: color-mix(in srgb, var(--color-text) 5%, transparent);
-  outline: none;
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
 }
 
 li + li .row {

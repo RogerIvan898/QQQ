@@ -1,5 +1,7 @@
 import { i18n } from '@lingui/core';
 
+import { readStorage, writeStorage } from 'shared/lib/storage';
+
 import { catalogLoaders } from './catalogs';
 import {
   DEFAULT_LOCALE,
@@ -12,7 +14,7 @@ const isLocale = (value: string | null): value is Locale =>
   Boolean(value && supportedLocales.includes(value as Locale));
 
 export const detectLocale = (): Locale => {
-  const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+  const stored = readStorage(LOCALE_STORAGE_KEY);
 
   if (isLocale(stored)) {
     return stored;
@@ -34,7 +36,6 @@ export const detectLocale = (): Locale => {
   return DEFAULT_LOCALE;
 };
 
-// Shown while the catalog itself is still loading, so it can't come from it.
 const BOOT_LOADING_LABELS: Record<Locale, string> = {
   en: 'Loading…',
   ru: 'Загрузка…',
@@ -47,7 +48,7 @@ export const activateLocale = async (locale: Locale) => {
 
   i18n.loadAndActivate({ locale, messages });
   document.documentElement.lang = locale;
-  localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  writeStorage(LOCALE_STORAGE_KEY, locale);
 
   return locale;
 };

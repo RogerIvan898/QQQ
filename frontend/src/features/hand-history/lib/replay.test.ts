@@ -69,7 +69,6 @@ const hand: HandRecord = {
 
 const timeline = buildTimeline(hand);
 
-// start, 4 preflop actions, flop deal, 2 flop actions, turn + river run out, showdown
 assert.deepEqual(
   timeline.map(step =>
     step.kind === 'action'
@@ -93,33 +92,28 @@ assert.deepEqual(
   ]
 );
 
-// Before anything: full stacks, empty board, opponent cards hidden.
 const start = replayState(hand, timeline, 0);
 assert.equal(start.pot, 0);
 assert.equal(start.board.length, 0);
 assert.equal(start.seats[0].stack, 100);
 assert.equal(start.seats[1].cards, null);
 
-// After the blinds: chips sit in front of the players, not in the pot yet.
 const blinds = replayState(hand, timeline, 2);
 assert.equal(blinds.seats[0].bet, 1);
 assert.equal(blinds.seats[1].bet, 2);
 assert.equal(blinds.seats[1].isActing, true);
 assert.equal(blinds.pot, 0);
 
-// Flop dealt: preflop bets swept into the pot, three board cards shown.
 const flop = replayState(hand, timeline, 5);
 assert.equal(flop.pot, 4);
 assert.equal(flop.board.length, 3);
 assert.equal(flop.seats[0].bet, 0);
 assert.equal(flop.seats[0].stack, 98);
 
-// River run out without betting.
 const river = replayState(hand, timeline, 9);
 assert.equal(river.board.length, 5);
 assert.equal(river.pot, 12);
 
-// Showdown: opponent cards revealed, winner paid, pot emptied.
 const showdown = replayState(hand, timeline, timeline.length - 1);
 assert.equal(showdown.street, 'SHOWDOWN');
 assert.equal(showdown.pot, 0);
@@ -128,5 +122,4 @@ assert.equal(showdown.seats[1].stack, 94 + 12);
 assert.equal(showdown.seats[1].isWinner, true);
 assert.equal(showdown.seats[0].stack, 94);
 
-// Out-of-range steps are clamped.
 assert.equal(replayState(hand, timeline, 999).street, 'SHOWDOWN');

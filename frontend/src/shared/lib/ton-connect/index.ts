@@ -3,18 +3,13 @@ import { createEvent, createStore } from 'effector';
 
 import { getTonConnectManifestUrl } from 'shared/config/tonconnect';
 
-// TON Connect UI is heavy (UI kit + crypto), so it is loaded on demand instead
-// of wrapping the whole app in TonConnectUIProvider. Components read the
-// wallet from $tonWallet and get the instance via getTonConnectUI().
-
 export interface TonWalletInfo {
-  /** Raw address as reported by the wallet. */
   address: string;
-  /** User-friendly address, same as useTonAddress() returned. */
+
   friendlyAddress: string;
-  /** Wallet app name, e.g. "Tonkeeper", when known. */
+
   name?: string;
-  /** Wallet app icon URL, when known. */
+
   imageUrl?: string;
 }
 
@@ -47,7 +42,7 @@ export const getTonConnectUI = (): Promise<TonConnectUI> => {
                   wallet.account.address,
                   wallet.account.chain === (CHAIN.TESTNET as string)
                 ),
-                // Present when connected through the TON Connect UI modal.
+
                 name:
                   ('name' in wallet && typeof wallet.name === 'string'
                     ? wallet.name
@@ -81,7 +76,6 @@ export const getTonConnectUI = (): Promise<TonConnectUI> => {
   return promise;
 };
 
-/** Restores a saved wallet connection once the app is idle. */
 export const preloadTonConnect = () => {
   const start = () => {
     getTonConnectUI().catch((error: unknown) =>
@@ -96,10 +90,6 @@ export const preloadTonConnect = () => {
   }
 };
 
-/**
- * A restored wallet session keeps an SSE connection to the wallet bridge open.
- * Nothing at the poker table needs it, so it is paused there.
- */
 export const setTonConnectPaused = (paused: boolean) => {
   if (bridgePaused === paused) return;
 

@@ -4,8 +4,12 @@ import { useStoreMap, useUnit } from 'effector-react';
 
 import { gameModel } from 'entities/game';
 import { Player, type SeatDirection } from 'entities/player';
+import { BB_POST_MS, SB_POST_MS } from 'shared/config/table-timing';
+import { useElapsed } from 'shared/hooks/use-elapsed';
 
 import styles from './players-layer.module.css';
+import { SeatCombination } from './seat-combination';
+import { SeatEquity } from './seat-equity';
 
 interface Props {
   seat: number;
@@ -20,10 +24,16 @@ interface Props {
   ref?: React.Ref<HTMLDivElement>;
 }
 
-/**
- * One seat subscribes only to its own slice of the game state, so an event
- * that touches one player re-renders one seat instead of the whole layer.
- */
+const dealOrderFrom = (
+  seat: number,
+  dealerSeat: number | null,
+  seatCount: number
+) => {
+  const span = Math.max(seatCount, seat + 1, (dealerSeat ?? 0) + 1);
+
+  return dealerSeat == null ? seat : (seat - dealerSeat - 1 + span) % span;
+};
+
 const SeatView = ({
   seat,
   x,
@@ -66,12 +76,37 @@ const SeatView = ({
     keys: [seat],
     fn: (holes, [index]) => holes[index] ?? null,
   });
-  const [round, myCards] = useUnit([gameModel.$round, gameModel.$myCards]);
+  const [round, myCards, handNumber, handStartedAt, dealerSeat, turnTiming] =
+    useUnit([
+      gameModel.$round,
+      gameModel.$myCards,
+      gameModel.$handNumber,
+      gameModel.$handStartedAt,
+      gameModel.$dealerSeat,
+      gameModel.$turnTiming,
+    ]);
+  const seatCount = useStoreMap(
+    gameModel.$players,
+    players => Object.keys(players).length
+  );
+  const equitySlot = React.useMemo(() => <SeatEquity seat={seat} />, [seat]);
+
+  const postAt = blindSeat ? SB_POST_MS : bigBlindSeat ? BB_POST_MS : null;
+  const blindShown = useElapsed(handStartedAt, postAt ?? 0);
 
   if (!player) return null;
 
   const hand = isViewer && myCards ? myCards : (revealed ?? player.hand);
-  const blindPosted = round === 'PREFLOP' && player.committed > 0;
+  const blindHidden =
+    postAt !== null &&
+    !blindShown &&
+    round === 'PREFLOP' &&
+    player.committed > 0;
+  const shownPlayer = blindHidden
+    ? { ...player, committed: 0, stack: player.stack + player.committed }
+    : player;
+  const blindPosted =
+    !blindHidden && round === 'PREFLOP' && player.committed > 0;
   const blindRole = !blindPosted
     ? null
     : blindSeat
@@ -91,7 +126,7 @@ const SeatView = ({
       }}
     >
       <Player
-        player={player}
+        player={shownPlayer}
         hand={hand}
         dealer={dealer}
         blindRole={blindRole}
@@ -102,6 +137,15 @@ const SeatView = ({
         winAmount={winAmount}
         winId={winId}
         collecting={collecting}
+        equitySlot={equitySlot}
+        handNumber={handNumber}
+        handStartedAt={handStartedAt}
+        {...(turnTiming && {
+          turnDurationSec: turnTiming.turnMs / 1000,
+          timeBankSec: turnTiming.timeBankMs / 1000,
+        })}
+        dealOrder={dealOrderFrom(seat, dealerSeat, seatCount)}
+        combinationSlot={<SeatCombination hand={hand} />}
       />
     </div>
   );

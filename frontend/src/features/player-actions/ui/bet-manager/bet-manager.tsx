@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 
 import { useLingui } from '@lingui/react/macro';
 import { useUnit } from 'effector-react';
+import { Minus, Plus } from 'lucide-react';
 
 import { $amountsInBb } from 'shared/lib/display-settings';
 import { Button } from 'shared/ui/button';
-import { Logo } from 'shared/ui/logo';
+import { GramBadge } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 import { parseNumericInput } from 'shared/utils/format';
 import { clamp } from 'shared/utils/math';
@@ -14,13 +15,11 @@ import { potRaiseTo, raise, type BetPreset } from '../../model';
 
 import styles from './bet-manager.module.css';
 
-// Blinds can be fractional (e.g. 0.1/0.2), so round to cents, not integers.
 const CHIP_PRECISION = 100;
 const roundChips = (value: number) =>
   Math.round(value * CHIP_PRECISION) / CHIP_PRECISION;
 
 interface Props {
-  playerId: string;
   minAmount: number;
   maxAmount: number;
   bigBlind: number;
@@ -33,7 +32,6 @@ interface Props {
 }
 
 export const BetManager = ({
-  playerId,
   minAmount,
   maxAmount,
   bigBlind,
@@ -49,8 +47,7 @@ export const BetManager = ({
   const [draft, setDraft] = useState<string | null>(null);
 
   const step = bigBlind > 0 ? bigBlind : 1;
-  // Settings → Display amounts in BB: the field shows and accepts big blinds,
-  // everything else (state, limits, the raise itself) stays in chips.
+
   const inBb = useUnit($amountsInBb) && bigBlind > 0;
   const toField = (chips: number) =>
     inBb ? Math.round((chips / bigBlind) * 10) / 10 : chips;
@@ -71,7 +68,6 @@ export const BetManager = ({
 
   const handleConfirm = () => {
     raise({
-      playerId,
       amount: legal(draftValue ?? amount),
     });
     onCancel();
@@ -101,9 +97,6 @@ export const BetManager = ({
   const range = maxAmount - minAmount;
   const fillPercent = range > 0 ? ((amount - minAmount) / range) * 100 : 100;
 
-  // Mobile WebViews often cancel the native range drag (pointercancel) or
-  // only move it when the thumb itself is grabbed. Map the finger position
-  // to a value directly so dragging anywhere on the track updates the bet.
   const setFromTouch = (event: React.TouchEvent<HTMLInputElement>) => {
     const touch = event.touches[0];
 
@@ -128,8 +121,6 @@ export const BetManager = ({
   const raiseLabel = t`Raise`;
   const cancelLabel = t`Cancel`;
 
-  // Facing a preflop raise, fixed BB sizes fall below the minimum raise,
-  // so size relative to the bet being called instead.
   const currentBet = committed + callAmount;
   const facingRaise = currentBet > bigBlind;
   const presets: BetPreset[] = preflop
@@ -170,11 +161,12 @@ export const BetManager = ({
               type="button"
               className={cn(
                 styles.shortcut,
-                preset.label === maxLabel &&
-                  amount === value &&
-                  styles.shortcutActive
+                preset.label === maxLabel && styles.shortcutAllIn
               )}
-              disabled={preset.value < minAmount}
+              disabled={
+                preset.value < minAmount ||
+                (preset.label === maxLabel && amount >= maxAmount)
+              }
               onClick={() => commit(value)}
             >
               {preset.label}
@@ -191,7 +183,7 @@ export const BetManager = ({
           disabled={amount <= minAmount}
           onClick={() => commit(amount - step)}
         >
-          −
+          <Minus size={18} strokeWidth={2.5} />
         </button>
         <div className={styles.inputContainer}>
           <input
@@ -209,7 +201,7 @@ export const BetManager = ({
             {inBb ? (
               <span className={styles.unit}>BB</span>
             ) : (
-              <Logo size={14} className={styles.logoIcon} />
+              <GramBadge size={20} className={styles.logoIcon} />
             )}
           </div>
         </div>
@@ -220,7 +212,7 @@ export const BetManager = ({
           disabled={amount >= maxAmount}
           onClick={() => commit(amount + step)}
         >
-          +
+          <Plus size={18} strokeWidth={2.5} />
         </button>
       </div>
 
@@ -230,7 +222,7 @@ export const BetManager = ({
         onChange={event => commit(Number(event.target.value))}
         onTouchStart={setFromTouch}
         onTouchMove={setFromTouch}
-        style={{ '--fill': `${fillPercent}%` } as React.CSSProperties}
+        style={{ '--fill': fillPercent / 100 } as React.CSSProperties}
         min={minAmount}
         max={maxAmount}
         step={1 / CHIP_PRECISION}

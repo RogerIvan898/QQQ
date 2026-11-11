@@ -17,6 +17,7 @@ RUN bun run i18n:compile && bun run build
 # --- serve ---
 FROM nginx:1.27-alpine AS serve
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY security-headers.conf /etc/nginx/snippets/security-headers.conf
 EXPOSE 80
 
 FROM serve AS prebuilt

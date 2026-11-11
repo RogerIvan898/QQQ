@@ -3,38 +3,38 @@ import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { useRouter } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
-import { Coins, Swords } from 'lucide-react';
+import { BookmarkPlus, Coins, Swords, Wallet, WifiOff } from 'lucide-react';
 
-import { RoomCard } from 'entities/room';
+import { $rooms, $roomsStatus, RoomCard, roomsRequested } from 'entities/room';
+import { sessionModel } from 'entities/session';
 import { walletModel } from 'entities/wallet';
-import { JoinRoomButton } from 'features/join-room';
+import { $joinFailure, JoinRoomButton, useJoinRoom } from 'features/join-room';
 import { getTelegramUser } from 'shared/lib/telegram';
+import { Preloader } from 'shared/ui/preloader';
+import { Snackbar } from 'shared/ui/snackbar';
 import { cn } from 'shared/utils/cn';
+import { formatBalance, truncateMiddle } from 'shared/utils/format';
 import { WalletPanel } from 'widgets/wallet-panel';
 
 import {
   filterRooms,
   ROOM_FILTERS,
-  ROOMS,
   roomFilterLabel,
   type RoomFilter,
 } from '../model';
 
+import { DepositEntry } from './deposit-entry';
 import { Header } from './header';
 import styles from './main-menu.module.css';
 
 const loadDepositDialog = () => import('widgets/deposit-dialog');
 const loadWithdrawModal = () => import('widgets/withdraw');
 
-const DepositDialog = React.lazy(() =>
-  loadDepositDialog().then(module => ({ default: module.DepositDialog }))
-);
 const WithdrawModal = React.lazy(() =>
   loadWithdrawModal().then(module => ({ default: module.WithdrawModal }))
 );
 
 const prefetchWalletDialogs = () => {
-  // Prefetch is best-effort; React.lazy retries the import on open.
   loadDepositDialog().catch(() => {});
   loadWithdrawModal().catch(() => {});
 };
@@ -62,7 +62,16 @@ const Filters = ({ active, onChange }: FiltersProps) => {
 
   return (
     <div className={styles.tabsContainer}>
-      <div className={styles.tabsScroll}>
+      <div
+        className={styles.tabsScroll}
+        style={
+          {
+            '--tab-index': Math.max(0, ROOM_FILTERS.indexOf(active)),
+            '--tab-count': ROOM_FILTERS.length,
+          } as React.CSSProperties
+        }
+      >
+        <span className={styles.tabIndicator} aria-hidden="true" />
         {ROOM_FILTERS.map(filter => {
           const Icon = filter === 'all' ? null : FILTER_ICONS[filter];
 
@@ -87,7 +96,26 @@ const Filters = ({ active, onChange }: FiltersProps) => {
 };
 
 export const MenuPage = () => {
-  const { i18n, t } = useLingui();
+  const { t, i18n } = useLingui();
+  const [snackOpen, setSnackOpen] = React.useState(false);
+  const joinFailure = useUnit($joinFailure);
+  const { joinRoom } = useJoinRoom();
+  const [seenFailure, setSeenFailure] = React.useState(joinFailure?.count ?? 0);
+  const [joinErrorOpen, setJoinErrorOpen] = React.useState(false);
+
+  if (joinFailure && joinFailure.count !== seenFailure) {
+    setSeenFailure(joinFailure.count);
+    setJoinErrorOpen(true);
+  }
+  const [snackMissing, setSnackMissing] = React.useState(0);
+  const [saveOpen, setSaveOpen] = React.useState(false);
+  const [saveCandidate, setSaveCandidate] = React.useState('');
+  const [saveId, setSaveId] = React.useState(0);
+  const [savedAddress, saveAddress] = useUnit([
+    walletModel.$savedWithdrawAddress,
+    walletModel.withdrawAddressSaved,
+  ]);
+  const [snackId, setSnackId] = React.useState(0);
   const [roomFilter, setRoomFilter] = React.useState<RoomFilter>('all');
   const [isDepositOpen, setIsDepositOpen] = React.useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false);
@@ -100,7 +128,44 @@ export const MenuPage = () => {
   ]);
   const closeWallet = React.useCallback(() => setIsWalletOpen(false), []);
   const [telegramUser] = React.useState(getTelegramUser);
-  const visibleRooms = filterRooms(ROOMS, roomFilter);
+
+  const nickname = useUnit(sessionModel.$nickname);
+  const [rooms, roomsStatus, requestRooms] = useUnit([
+    $rooms,
+    $roomsStatus,
+    roomsRequested,
+  ]);
+
+  React.useEffect(() => {
+    requestRooms();
+  }, [requestRooms]);
+
+  const visibleRooms = filterRooms(rooms, roomFilter);
+
+  const showShortfall = (missing: number) => {
+    setSnackMissing(missing);
+    setSnackId(id => id + 1);
+    setSnackOpen(true);
+  };
+
+  const openTopUp = () => {
+    setSnackOpen(false);
+    setIsDepositOpen(true);
+  };
+
+  const offerSaveAddress = (address: string) => {
+    if (address === savedAddress) {
+      return;
+    }
+
+    setSaveCandidate(address);
+    setSaveId(id => id + 1);
+    setSaveOpen(true);
+  };
+
+  const shortAddress = truncateMiddle(saveCandidate, 4);
+
+  const missingLabel = `${formatBalance(snackMissing, i18n.locale)} TON`;
   const router = useRouter();
 
   React.useEffect(() => {
@@ -110,8 +175,8 @@ export const MenuPage = () => {
   React.useEffect(() => {
     const prefetch = () => {
       prefetchWalletDialogs();
-      // The game route is code-split; without this, the first "Play" shows
-      // the router's generic loader while its chunk downloads.
+      walletModel.depositAddressRequested();
+
       router
         .loadRouteChunk(router.routesById['/game/$roomId'])
         ?.catch(() => undefined);
@@ -133,7 +198,8 @@ export const MenuPage = () => {
       <div className={styles.appLayout}>
         <div className={styles.mainContainer}>
           <Header
-            userName={telegramUser?.name ?? 'User'}
+            userName={nickname ?? telegramUser?.name ?? 'User'}
+            onRename={sessionModel.saveNickname}
             avatarUrl={telegramUser?.photoUrl}
             balance={balance}
             isWalletOpen={isWalletOpen}
@@ -145,37 +211,79 @@ export const MenuPage = () => {
                 onClose={closeWallet}
                 anchorRef={walletButtonRef}
                 suspended={isDepositOpen || isWithdrawOpen}
-                onDeposit={() => setIsDepositOpen(true)}
-                onWithdraw={() => setIsWithdrawOpen(true)}
+                onDeposit={() => {
+                  setIsWalletOpen(false);
+                  setIsDepositOpen(true);
+                }}
+                onWithdraw={() => {
+                  setIsWalletOpen(false);
+                  setIsWithdrawOpen(true);
+                }}
               />
             }
           />
 
           <main className={styles.contentArea}>
-            <div className={styles.stickyHeader}>
-              <Filters active={roomFilter} onChange={setRoomFilter} />
-            </div>
-
             <div className={styles.roomScroll}>
               {DevServerSwitch ? (
                 <React.Suspense fallback={null}>
                   <DevServerSwitch />
                 </React.Suspense>
               ) : null}
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>{t`Available tables`}</h2>
+              {import.meta.env.DEV ? (
+                <div className={styles.devTable}>
+                  <span>All-in test · 9 players (mock)</span>
+                  <JoinRoomButton roomId="allin" isFull={false} />
+                </div>
+              ) : null}
+              <div className={styles.listBar}>
+                <div className={styles.sectionHeader}>
+                  <h2 className={styles.sectionTitle}>{t`Available tables`}</h2>
+                  {visibleRooms.length > 0 ? (
+                    <span className={styles.sectionCount}>
+                      {visibleRooms.length}
+                    </span>
+                  ) : null}
+                </div>
+                <Filters active={roomFilter} onChange={setRoomFilter} />
               </div>
+              {roomsStatus === 'failed' ? (
+                <div className={styles.roomsState} role="alert">
+                  <span>{t`Couldn't load tables`}</span>
+                  <button
+                    type="button"
+                    className={styles.roomsRetry}
+                    onClick={() => requestRooms()}
+                  >
+                    {t`Retry`}
+                  </button>
+                </div>
+              ) : rooms.length === 0 && roomsStatus !== 'ready' ? (
+                <div className={styles.roomsState} role="status">
+                  <Preloader label={t`Loading tables…`} />
+                </div>
+              ) : visibleRooms.length === 0 ? (
+                <div className={styles.roomsState}>{t`No tables here yet`}</div>
+              ) : null}
               <div className={styles.roomGrid}>
-                {visibleRooms.map(room => {
+                <div className={styles.roomHead} aria-hidden="true">
+                  <span>{t`Table`}</span>
+                  <span>{t`Blinds`}</span>
+                  <span>{t`Buy-in`}</span>
+                  <span>{t`Players`}</span>
+                  <span />
+                </div>
+                {visibleRooms.map((room, index) => {
                   const shortfall =
                     balance === null ? 0 : Math.max(0, room.minBuy - balance);
 
                   return (
                     <RoomCard
                       key={room.id}
-                      shortfall={shortfall}
+                      index={index}
                       room={{
-                        name: i18n._(room.name),
+                        name: room.name,
+                        game: room.game,
                         mode: room.mode,
                         blinds: room.blinds,
                         players: room.players,
@@ -187,9 +295,9 @@ export const MenuPage = () => {
                         <JoinRoomButton
                           roomId={String(room.id)}
                           isFull={room.players >= room.max}
-                          onTopUp={
+                          onBlocked={
                             shortfall > 0
-                              ? () => setIsDepositOpen(true)
+                              ? () => showShortfall(shortfall)
                               : undefined
                           }
                         />
@@ -204,17 +312,61 @@ export const MenuPage = () => {
           </main>
         </div>
 
+        <Snackbar
+          open={snackOpen}
+          onClose={() => setSnackOpen(false)}
+          tone="warning"
+          showId={snackId}
+          icon={<Wallet size={18} />}
+          message={
+            <>
+              {t`Not enough balance.`} <b>{t`Top up ${missingLabel}`}</b>
+            </>
+          }
+          actionLabel={t`Top up`}
+          onAction={openTopUp}
+        />
+
+        <Snackbar
+          open={joinErrorOpen}
+          onClose={() => setJoinErrorOpen(false)}
+          tone="warning"
+          showId={joinFailure?.count ?? 0}
+          icon={<WifiOff size={18} />}
+          message={t`Couldn't join the table`}
+          actionLabel={t`Retry`}
+          onAction={() => {
+            setJoinErrorOpen(false);
+
+            if (joinFailure) {
+              void joinRoom(joinFailure.roomId);
+            }
+          }}
+        />
+
+        <Snackbar
+          open={saveOpen}
+          onClose={() => setSaveOpen(false)}
+          showId={saveId}
+          durationMs={8000}
+          icon={<BookmarkPlus size={18} />}
+          message={t`Save ${shortAddress} for next withdrawals?`}
+          actionLabel={t`Save`}
+          onAction={() => {
+            saveAddress(saveCandidate);
+            setSaveOpen(false);
+          }}
+        />
+
         <React.Suspense fallback={null}>
           {isDepositOpen && (
-            <DepositDialog
-              open
+            <DepositEntry
               onClose={() => setIsDepositOpen(false)}
               onSuccess={() => {
                 setIsDepositOpen(false);
+                setIsWalletOpen(false);
                 refreshWallet();
               }}
-              depositAddress="UQA-hgA0arLRETGFy5ccxv11acPYBUpU49X8RyqfIju3tGci"
-              memo="1049285"
             />
           )}
 
@@ -223,9 +375,13 @@ export const MenuPage = () => {
               open
               onClose={() => setIsWithdrawOpen(false)}
               balance={balance ?? 0}
-              onSubmit={payload => {
-                console.log('Withdraw request', payload);
-                refreshWallet();
+              onSubmit={async ({ address, amount, destination }) => {
+                await walletModel.withdrawFx({ address, amount });
+                setIsWalletOpen(false);
+
+                if (destination === 'address') {
+                  offerSaveAddress(address);
+                }
               }}
             />
           )}

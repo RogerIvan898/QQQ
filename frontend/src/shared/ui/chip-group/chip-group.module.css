@@ -1,0 +1,123 @@
+.root {
+
+  --chip-group-bg: var(--color-bg-subtle);
+
+  position: relative;
+}
+
+.track {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 40px;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-muted);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.chip:hover {
+  color: var(--color-text);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.chipActive,
+.chipActive:hover {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.arrow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  width: 44px;
+  padding: 0;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  animation: arrowIn 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.arrowLeft {
+  left: 0;
+  justify-content: flex-start;
+  background: linear-gradient(
+    90deg,
+    var(--chip-group-bg) 35%,
+    transparent 100%
+  );
+}
+
+.arrowRight {
+  right: 0;
+  justify-content: flex-end;
+  background: linear-gradient(
+    270deg,
+    var(--chip-group-bg) 35%,
+    transparent 100%
+  );
+}
+
+.arrow svg {
+  transition: transform 0.15s ease;
+}
+
+.arrowLeft:hover svg {
+  transform: translateX(-2px);
+}
+
+.arrowRight:hover svg {
+  transform: translateX(2px);
+}
+
+.arrow:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes arrowIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    scroll-behavior: auto;
+  }
+
+  .arrow {
+    animation: none;
+  }
+}

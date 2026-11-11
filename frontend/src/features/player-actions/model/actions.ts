@@ -2,7 +2,6 @@ import { createEvent, merge, sample } from 'effector';
 
 import { CLIENT_COMMANDS, gameModel } from 'entities/game';
 import { PlayerAction } from 'entities/player';
-import { sessionModel } from 'entities/session';
 
 import type { RaisePayload } from './types';
 
@@ -10,6 +9,7 @@ export const fold = createEvent();
 export const call = createEvent();
 export const check = createEvent();
 export const raise = createEvent<RaisePayload>();
+export const sitIn = createEvent();
 
 const action = (type: string, amount?: number) => ({
   action: type,
@@ -30,11 +30,15 @@ const playerAction = merge([simpleActionTriggered, raiseActionTriggered]);
 
 sample({
   clock: playerAction,
-  source: sessionModel.$currentUserId,
-  filter: (playerId): playerId is string => Boolean(playerId),
-  fn: (playerId, payload) => ({
+  fn: payload => ({
     type: CLIENT_COMMANDS.PLAYER_ACTION,
-    payload: { playerId, payload },
+    payload,
   }),
+  target: gameModel.sendClientCommand,
+});
+
+sample({
+  clock: sitIn,
+  fn: () => ({ type: CLIENT_COMMANDS.SIT_IN, payload: {} }),
   target: gameModel.sendClientCommand,
 });

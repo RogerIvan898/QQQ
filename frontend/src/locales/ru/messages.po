@@ -8,8 +8,14 @@ msgstr ""
 "Language: ru\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-msgid "— or scan with Tonkeeper —"
-msgstr "— или отсканируйте в Tonkeeper —"
+#. placeholder {0}: session.hands
+msgid "{0, plural, one {# hand} other {# hands}}"
+msgstr "{0, plural, one {# раздача} few {# раздачи} many {# раздач} other {# раздачи}}"
+
+#. placeholder {0}: room.players
+#. placeholder {1}: room.max
+msgid "{0} of {1} seats taken"
+msgstr "Занято мест: {0} из {1}"
 
 msgid "30 Days"
 msgstr "30 дней"
@@ -41,6 +47,12 @@ msgstr "Сумма"
 msgid "Amount (TON)"
 msgstr "Сумма (TON)"
 
+msgid "At least {NICKNAME_MIN} characters"
+msgstr "Минимум {NICKNAME_MIN} символа"
+
+msgid "At most {NICKNAME_MAX} characters"
+msgstr "Максимум {NICKNAME_MAX} символов"
+
 msgid "Available balance"
 msgstr "Доступный баланс"
 
@@ -71,6 +83,10 @@ msgstr "Бай-ин"
 msgid "Call"
 msgstr "Колл"
 
+#. placeholder {0}: formatChips(callAmount)
+msgid "Call {0}"
+msgstr "Колл {0}"
+
 msgid "Call {callAmount}"
 msgstr "Колл {callAmount}"
 
@@ -85,6 +101,9 @@ msgstr "Кеш"
 
 msgid "Cash out"
 msgstr "Кэш-аут"
+
+msgid "Change nickname"
+msgstr "Изменить ник"
 
 msgid "Change wallet"
 msgstr "Сменить кошелёк"
@@ -110,6 +129,9 @@ msgstr "Проверяем готовность дилера..."
 msgid "Close"
 msgstr "Закрыть"
 
+msgid "Close replay"
+msgstr "Закрыть повтор"
+
 msgid "Completed"
 msgstr "Выполнено"
 
@@ -125,8 +147,9 @@ msgstr "Подключите кошелёк, чтобы выводить в од
 msgid "Connect wallet"
 msgstr "Подключить кошелёк"
 
-msgid "Connect wallet to pay"
-msgstr "Подключить кошелёк для оплаты"
+#. js-lingui-explicit-id
+msgid "Connect wallet and pay {amount, number} TON"
+msgstr "Подключить кошелёк и оплатить {amount, number} TON"
 
 msgid "Connect wallet to withdraw"
 msgstr "Подключить кошелёк для вывода"
@@ -146,17 +169,29 @@ msgstr "Продолжить"
 msgid "Copied"
 msgstr "Скопировано"
 
+msgid "Copy"
+msgstr "Копировать"
+
 msgid "Copy address"
 msgstr "Скопировать адрес"
 
+msgid "Couldn't join the table"
+msgstr "Не удалось сесть за стол"
+
 msgid "Couldn't load more. Try again"
 msgstr "Не удалось загрузить. Повторить"
+
+msgid "Couldn't load tables"
+msgstr "Не удалось загрузить столы"
 
 msgid "Couldn't load the page"
 msgstr "Не удалось загрузить страницу"
 
 msgid "Couldn't load transactions"
 msgstr "Не удалось загрузить транзакции"
+
+msgid "Couldn't load your deposit address"
+msgstr "Не удалось загрузить адрес для пополнения"
 
 msgid "Custom"
 msgstr "Период"
@@ -167,9 +202,6 @@ msgstr "Пополнить"
 msgctxt "transaction"
 msgid "Deposit"
 msgstr "Пополнение"
-
-msgid "Deposit address is missing"
-msgstr "Адрес для пополнения не указан"
 
 msgid "Deposit TON"
 msgstr "Пополнение TON"
@@ -187,7 +219,7 @@ msgid "Display"
 msgstr "Отображение"
 
 msgid "Display amounts in BB"
-msgstr "Суммы в больших блайндах (BB)"
+msgstr "Суммы в больших блайндах"
 
 msgid "Double-check the TON address"
 msgstr "Проверьте TON-адрес"
@@ -200,9 +232,6 @@ msgstr "Введите корректный TON-адрес"
 
 msgid "Enter amount to continue"
 msgstr "Введите сумму для продолжения"
-
-msgid "Enter the amount you want to deposit"
-msgstr "Введите сумму пополнения"
 
 msgid "Exceeds available balance"
 msgstr "Превышает доступный баланс"
@@ -222,14 +251,26 @@ msgstr "Комиссия"
 msgid "Flop"
 msgstr "Флоп"
 
+msgid "Flush"
+msgstr "Флеш"
+
 msgid "Fold"
 msgstr "Фолд"
 
 msgid "Format"
 msgstr "Формат"
 
+msgid "Four of a kind"
+msgstr "Каре"
+
+msgid "Four-color deck"
+msgstr "Четырёхцветная колода"
+
 msgid "From"
 msgstr "С"
+
+msgid "Full house"
+msgstr "Фулл-хаус"
 
 msgid "Full transfer link with address and amount."
 msgstr "Полная ссылка для перевода с адресом и суммой."
@@ -258,26 +299,23 @@ msgstr "Шаг раздачи"
 msgid "Hands"
 msgstr "Раздачи"
 
-msgid "Hands played"
-msgstr "Раздач сыграно"
-
 msgid "Hands Played"
 msgstr "Раздач сыграно"
 
 msgid "Heads-Up"
 msgstr "Хедз-ап"
 
-msgid "High"
-msgstr "High"
+msgid "Hide QR code"
+msgstr "Скрыть QR-код"
+
+msgid "High card"
+msgstr "Старшая карта"
 
 msgid "History"
 msgstr "История"
 
-msgid "HU Classic"
-msgstr "HU Classic"
-
-msgid "HU High Roller"
-msgstr "HU High Roller"
+msgid "If you are in a hand, your cards will be folded."
+msgstr "Если вы в раздаче, ваши карты будут сброшены."
 
 msgid "Invalid amount"
 msgstr "Некорректная сумма"
@@ -288,8 +326,20 @@ msgstr "Подключение к столу…"
 msgid "Language"
 msgstr "Язык"
 
+msgid "Leave"
+msgstr "Покинуть"
+
+msgid "Leave table?"
+msgstr "Покинуть стол?"
+
+msgid "Letters, digits, space, dot, dash and underscore only"
+msgstr "Только буквы, цифры, пробел, точка, дефис и подчёркивание"
+
 msgid "Loading"
 msgstr "Загрузка"
+
+msgid "Loading tables…"
+msgstr "Загружаем столы…"
 
 msgid "Loading transactions…"
 msgstr "Загружаем транзакции…"
@@ -297,26 +347,11 @@ msgstr "Загружаем транзакции…"
 msgid "Loading…"
 msgstr "Загрузка…"
 
-msgid "Low"
-msgstr "Low"
-
-msgid "Low+"
-msgstr "Low+"
-
 msgid "Making room for new players..."
 msgstr "Готовим места для новых игроков..."
 
-msgid "Medium"
-msgstr "Medium"
-
 msgid "Memo"
 msgstr "Memo"
-
-msgid "Micro"
-msgstr "Micro"
-
-msgid "Micro+"
-msgstr "Micro+"
 
 msgid "My wallet"
 msgstr "Мой кошелёк"
@@ -324,14 +359,17 @@ msgstr "Мой кошелёк"
 msgid "My Wallet"
 msgstr "Мой кошелёк"
 
-msgid "Need {missing} more"
-msgstr "Не хватает {missing}"
-
 msgid "Net Profit"
 msgstr "Чистая прибыль"
 
 msgid "Next step"
 msgstr "Следующий шаг"
+
+msgid "Nickname"
+msgstr "Ник"
+
+msgid "NL Hold'em"
+msgstr "NL Холдем"
 
 msgid "No game sessions yet. Sit at a table to start one."
 msgstr "Игровых сессий пока нет. Сядьте за стол, чтобы начать."
@@ -342,11 +380,23 @@ msgstr "За этим столом вы ещё не сыграли ни одно
 msgid "No sessions in this period"
 msgstr "За этот период сессий нет"
 
+msgid "No tables here yet"
+msgstr "Здесь пока нет столов"
+
 msgid "No transactions yet"
 msgstr "Операций пока нет"
 
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Недостаточно средств на сумму и комиссию сети."
+
+msgid "Not enough balance."
+msgstr "Недостаточно средств."
+
+msgid "or scan the QR code"
+msgstr "или отсканируйте QR-код"
+
+msgid "Pair"
+msgstr "Пара"
 
 msgid "Paste"
 msgstr "Вставить"
@@ -357,9 +407,6 @@ msgstr "Пауза"
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
 msgstr "Оплатить {amount, number} TON кошельком"
-
-msgid "Pay in one tap via TON Connect, or scan the QR with another phone."
-msgstr "Оплатите в один клик через TON Connect или отсканируйте QR с другого телефона."
 
 msgid "Payment details"
 msgstr "Реквизиты оплаты"
@@ -376,8 +423,14 @@ msgstr "Способ оплаты"
 msgid "Pending"
 msgstr "В обработке"
 
+msgid "Period"
+msgstr "Период"
+
 msgid "Play"
 msgstr "Играть"
+
+msgid "Players"
+msgstr "Игроки"
 
 msgid "Players are taking their positions..."
 msgstr "Игроки занимают свои позиции..."
@@ -391,9 +444,6 @@ msgstr "Префлоп"
 msgid "Previous step"
 msgstr "Предыдущий шаг"
 
-msgid "Profit"
-msgstr "Прибыль"
-
 msgid "Quick add amount"
 msgstr "Быстро добавить"
 
@@ -403,20 +453,44 @@ msgstr "Рейз"
 msgid "Recipient address"
 msgstr "Адрес получателя"
 
+msgid "Replay paused, your turn"
+msgstr "Повтор на паузе — ваш ход"
+
 msgid "Required"
 msgstr "Обязательно"
+
+msgid "Resume replay"
+msgstr "Продолжить повтор"
 
 msgid "Retry"
 msgstr "Повторить"
 
+msgid "Return to game"
+msgstr "Вернуться в игру"
+
 msgid "River"
 msgstr "Ривер"
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Save {shortAddress} for next withdrawals?"
+msgstr "Сохранить {shortAddress} для следующих выводов?"
 
 msgid "SB"
 msgstr "МБ"
 
+msgid "Scroll left"
+msgstr "Прокрутить влево"
+
+msgid "Scroll right"
+msgstr "Прокрутить вправо"
+
 msgid "Sender address"
 msgstr "Адрес отправителя"
+
+msgid "Sending…"
+msgstr "Отправляем…"
 
 msgid "Session Details"
 msgstr "Детали сессии"
@@ -436,8 +510,14 @@ msgstr "Подготавливаем стол..."
 msgid "Settings"
 msgstr "Настройки"
 
+msgid "Show QR code"
+msgstr "Показать QR-код"
+
 msgid "Showdown"
 msgstr "Вскрытие"
+
+msgid "Sitting out"
+msgstr "На паузе"
 
 msgid "Small blind"
 msgstr "Малый блайнд"
@@ -454,12 +534,21 @@ msgstr "Звук включён"
 msgid "Stakes"
 msgstr "Ставки"
 
+msgid "Stay"
+msgstr "Остаться"
+
+msgid "Straight"
+msgstr "Стрит"
+
+msgid "Straight flush"
+msgstr "Стрит-флеш"
+
+msgid "Table"
+msgstr "Стол"
+
 #. placeholder {0}: session.roomId
 msgid "Table #{0}"
 msgstr "Стол #{0}"
-
-msgid "Table format"
-msgstr "Формат стола"
 
 msgid "Table full"
 msgstr "Стол заполнен"
@@ -469,6 +558,9 @@ msgstr "ID стола"
 
 msgid "Tables"
 msgstr "Столы"
+
+msgid "Tap Fold again to fold anyway"
+msgstr "Нажмите «Фолд» ещё раз, чтобы сбросить"
 
 msgid "The dealer is counting the cards..."
 msgstr "Дилер пересчитывает карты..."
@@ -487,6 +579,12 @@ msgstr "Сеть отклонила перевод."
 
 msgid "The transfer was sent without the required memo. Contact support to get it credited."
 msgstr "Перевод отправлен без обязательного комментария (memo). Напишите в поддержку, чтобы его зачислили."
+
+msgid "The withdrawal didn't go through. Your balance is unchanged; try again."
+msgstr "Вывод не прошёл. Баланс не изменился, попробуйте ещё раз."
+
+msgid "Three of a kind"
+msgstr "Сет"
 
 msgid "Time Played"
 msgstr "Время игры"
@@ -509,11 +607,14 @@ msgstr "TON-адрес"
 msgid "TON wallet"
 msgstr "TON-кошелёк"
 
-msgid "Tonkeeper / Telegram Wallet"
-msgstr "Tonkeeper / Telegram Wallet"
+msgid "Tonkeeper, Telegram Wallet and other TON wallets"
+msgstr "Tonkeeper, Telegram Wallet и другие TON-кошельки"
 
 msgid "Top up"
 msgstr "Пополнить"
+
+msgid "Top up {missingLabel}"
+msgstr "Пополните на {missingLabel}"
 
 msgid "Total Buy-in"
 msgstr "Всего бай-инов"
@@ -530,8 +631,8 @@ msgstr "Повторить"
 msgid "Turn"
 msgstr "Тёрн"
 
-msgid "VIP"
-msgstr "VIP"
+msgid "Two pair"
+msgstr "Две пары"
 
 msgid "Waiting for next hand..."
 msgstr "Ожидание следующей раздачи..."
@@ -551,8 +652,14 @@ msgstr "Кошелёк не подключён"
 msgid "Web3 wallet"
 msgstr "Web3-кошелёк"
 
-msgid "When withdrawing from an exchange (Bybit, OKX, Binance), you must include the Memo. Without it the deposit will not be credited."
-msgstr "При выводе с биржи (Bybit, OKX, Binance) обязательно укажите Memo. Без него пополнение не будет зачислено."
+msgid "What is {label}?"
+msgstr "Что такое {label}?"
+
+msgid "When you send TON from an exchange, paste this memo into the “Memo” or “Comment” field. It tells us the deposit is yours, so it lands on your game balance automatically."
+msgstr "При отправке TON с биржи вставьте этот memo в поле «Memo» или «Комментарий». По нему мы узнаём, что депозит ваш, и сразу зачисляем его на игровой баланс."
+
+msgid "Winner"
+msgstr "Победа"
 
 msgid "Withdraw"
 msgstr "Вывести"
@@ -580,11 +687,29 @@ msgstr "Выводы необратимы. Отправляйте только �
 msgid "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
 msgstr "Вывод обрабатывается в течение нескольких минут. Сумма уже зарезервирована на балансе."
 
+msgid "Without the memo an exchange deposit will not be credited."
+msgstr "Без Memo пополнение с биржи не зачислится."
+
 msgid "Yesterday"
 msgstr "Вчера"
 
 msgid "You"
 msgstr "Вы"
 
+msgid "You are sitting out"
+msgstr "Вы на паузе"
+
+msgid "You can check for free"
+msgstr "Можно прочекать бесплатно"
+
+msgid "You deposit"
+msgstr "Вы пополняете"
+
 msgid "You folded"
 msgstr "Вы сбросили карты"
+
+msgid "You will be dealt in from the next hand"
+msgstr "Вернётесь со следующей раздачи"
+
+msgid "Your seat and stack are kept"
+msgstr "Место и стек сохранены"

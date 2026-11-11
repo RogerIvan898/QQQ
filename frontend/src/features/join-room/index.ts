@@ -1,1 +1,2 @@
-export { JoinRoomButton } from './ui';
+export { $joinFailure } from './model';
+export { JoinRoomButton, useJoinRoom } from './ui';

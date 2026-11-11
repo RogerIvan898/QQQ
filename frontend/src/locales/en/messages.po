@@ -7,8 +7,14 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
-msgid "— or scan with Tonkeeper —"
-msgstr "— or scan with Tonkeeper —"
+#. placeholder {0}: session.hands
+msgid "{0, plural, one {# hand} other {# hands}}"
+msgstr "{0, plural, one {# hand} other {# hands}}"
+
+#. placeholder {0}: room.players
+#. placeholder {1}: room.max
+msgid "{0} of {1} seats taken"
+msgstr "{0} of {1} seats taken"
 
 msgid "30 Days"
 msgstr "30 Days"
@@ -40,6 +46,12 @@ msgstr "Amount"
 msgid "Amount (TON)"
 msgstr "Amount (TON)"
 
+msgid "At least {NICKNAME_MIN} characters"
+msgstr "At least {NICKNAME_MIN} characters"
+
+msgid "At most {NICKNAME_MAX} characters"
+msgstr "At most {NICKNAME_MAX} characters"
+
 msgid "Available balance"
 msgstr "Available balance"
 
@@ -70,6 +82,10 @@ msgstr "Buy-in"
 msgid "Call"
 msgstr "Call"
 
+#. placeholder {0}: formatChips(callAmount)
+msgid "Call {0}"
+msgstr "Call {0}"
+
 msgid "Call {callAmount}"
 msgstr "Call {callAmount}"
 
@@ -84,6 +100,9 @@ msgstr "Cash Game"
 
 msgid "Cash out"
 msgstr "Cash out"
+
+msgid "Change nickname"
+msgstr "Change nickname"
 
 msgid "Change wallet"
 msgstr "Change wallet"
@@ -109,6 +128,9 @@ msgstr "Checking that the dealer is ready..."
 msgid "Close"
 msgstr "Close"
 
+msgid "Close replay"
+msgstr "Close replay"
+
 msgid "Completed"
 msgstr "Completed"
 
@@ -124,8 +146,9 @@ msgstr "Connect a wallet to withdraw in one tap"
 msgid "Connect wallet"
 msgstr "Connect wallet"
 
-msgid "Connect wallet to pay"
-msgstr "Connect wallet to pay"
+#. js-lingui-explicit-id
+msgid "Connect wallet and pay {amount, number} TON"
+msgstr "Connect wallet and pay {amount, number} TON"
 
 msgid "Connect wallet to withdraw"
 msgstr "Connect wallet to withdraw"
@@ -145,17 +168,29 @@ msgstr "Continue"
 msgid "Copied"
 msgstr "Copied"
 
+msgid "Copy"
+msgstr "Copy"
+
 msgid "Copy address"
 msgstr "Copy address"
 
+msgid "Couldn't join the table"
+msgstr "Couldn't join the table"
+
 msgid "Couldn't load more. Try again"
 msgstr "Couldn't load more. Try again"
+
+msgid "Couldn't load tables"
+msgstr "Couldn't load tables"
 
 msgid "Couldn't load the page"
 msgstr "Couldn't load the page"
 
 msgid "Couldn't load transactions"
 msgstr "Couldn't load transactions"
+
+msgid "Couldn't load your deposit address"
+msgstr "Couldn't load your deposit address"
 
 msgid "Custom"
 msgstr "Custom"
@@ -166,9 +201,6 @@ msgstr "Deposit"
 msgctxt "transaction"
 msgid "Deposit"
 msgstr "Deposit"
-
-msgid "Deposit address is missing"
-msgstr "Deposit address is missing"
 
 msgid "Deposit TON"
 msgstr "Deposit TON"
@@ -200,9 +232,6 @@ msgstr "Enter a valid TON address"
 msgid "Enter amount to continue"
 msgstr "Enter amount to continue"
 
-msgid "Enter the amount you want to deposit"
-msgstr "Enter the amount you want to deposit"
-
 msgid "Exceeds available balance"
 msgstr "Exceeds available balance"
 
@@ -221,14 +250,26 @@ msgstr "Fee"
 msgid "Flop"
 msgstr "Flop"
 
+msgid "Flush"
+msgstr "Flush"
+
 msgid "Fold"
 msgstr "Fold"
 
 msgid "Format"
 msgstr "Format"
 
+msgid "Four of a kind"
+msgstr "Four of a kind"
+
+msgid "Four-color deck"
+msgstr "Four-color deck"
+
 msgid "From"
 msgstr "From"
+
+msgid "Full house"
+msgstr "Full house"
 
 msgid "Full transfer link with address and amount."
 msgstr "Full transfer link with address and amount."
@@ -257,26 +298,23 @@ msgstr "Hand step"
 msgid "Hands"
 msgstr "Hands"
 
-msgid "Hands played"
-msgstr "Hands played"
-
 msgid "Hands Played"
 msgstr "Hands Played"
 
 msgid "Heads-Up"
 msgstr "Heads-Up"
 
-msgid "High"
-msgstr "High"
+msgid "Hide QR code"
+msgstr "Hide QR code"
+
+msgid "High card"
+msgstr "High card"
 
 msgid "History"
 msgstr "History"
 
-msgid "HU Classic"
-msgstr "HU Classic"
-
-msgid "HU High Roller"
-msgstr "HU High Roller"
+msgid "If you are in a hand, your cards will be folded."
+msgstr "If you are in a hand, your cards will be folded."
 
 msgid "Invalid amount"
 msgstr "Invalid amount"
@@ -287,8 +325,20 @@ msgstr "Joining…"
 msgid "Language"
 msgstr "Language"
 
+msgid "Leave"
+msgstr "Leave"
+
+msgid "Leave table?"
+msgstr "Leave table?"
+
+msgid "Letters, digits, space, dot, dash and underscore only"
+msgstr "Letters, digits, space, dot, dash and underscore only"
+
 msgid "Loading"
 msgstr "Loading"
+
+msgid "Loading tables…"
+msgstr "Loading tables…"
 
 msgid "Loading transactions…"
 msgstr "Loading transactions…"
@@ -296,26 +346,11 @@ msgstr "Loading transactions…"
 msgid "Loading…"
 msgstr "Loading…"
 
-msgid "Low"
-msgstr "Low"
-
-msgid "Low+"
-msgstr "Low+"
-
 msgid "Making room for new players..."
 msgstr "Making room for new players..."
 
-msgid "Medium"
-msgstr "Medium"
-
 msgid "Memo"
 msgstr "Memo"
-
-msgid "Micro"
-msgstr "Micro"
-
-msgid "Micro+"
-msgstr "Micro+"
 
 msgid "My wallet"
 msgstr "My wallet"
@@ -323,14 +358,17 @@ msgstr "My wallet"
 msgid "My Wallet"
 msgstr "My Wallet"
 
-msgid "Need {missing} more"
-msgstr "Need {missing} more"
-
 msgid "Net Profit"
 msgstr "Net Profit"
 
 msgid "Next step"
 msgstr "Next step"
+
+msgid "Nickname"
+msgstr "Nickname"
+
+msgid "NL Hold'em"
+msgstr "NL Hold'em"
 
 msgid "No game sessions yet. Sit at a table to start one."
 msgstr "No game sessions yet. Sit at a table to start one."
@@ -341,11 +379,23 @@ msgstr "No hands at this table yet"
 msgid "No sessions in this period"
 msgstr "No sessions in this period"
 
+msgid "No tables here yet"
+msgstr "No tables here yet"
+
 msgid "No transactions yet"
 msgstr "No transactions yet"
 
 msgid "Not enough balance to cover the amount and the network fee."
 msgstr "Not enough balance to cover the amount and the network fee."
+
+msgid "Not enough balance."
+msgstr "Not enough balance."
+
+msgid "or scan the QR code"
+msgstr "or scan the QR code"
+
+msgid "Pair"
+msgstr "Pair"
 
 msgid "Paste"
 msgstr "Paste"
@@ -356,9 +406,6 @@ msgstr "Pause"
 #. js-lingui-explicit-id
 msgid "Pay {amount, number} TON with wallet"
 msgstr "Pay {amount, number} TON with wallet"
-
-msgid "Pay in one tap via TON Connect, or scan the QR with another phone."
-msgstr "Pay in one tap via TON Connect, or scan the QR with another phone."
 
 msgid "Payment details"
 msgstr "Payment details"
@@ -375,8 +422,14 @@ msgstr "Payment method"
 msgid "Pending"
 msgstr "Pending"
 
+msgid "Period"
+msgstr "Period"
+
 msgid "Play"
 msgstr "Play"
+
+msgid "Players"
+msgstr "Players"
 
 msgid "Players are taking their positions..."
 msgstr "Players are taking their positions..."
@@ -390,9 +443,6 @@ msgstr "Preflop"
 msgid "Previous step"
 msgstr "Previous step"
 
-msgid "Profit"
-msgstr "Profit"
-
 msgid "Quick add amount"
 msgstr "Quick add amount"
 
@@ -402,20 +452,44 @@ msgstr "Raise"
 msgid "Recipient address"
 msgstr "Recipient address"
 
+msgid "Replay paused, your turn"
+msgstr "Replay paused, your turn"
+
 msgid "Required"
 msgstr "Required"
+
+msgid "Resume replay"
+msgstr "Resume replay"
 
 msgid "Retry"
 msgstr "Retry"
 
+msgid "Return to game"
+msgstr "Return to game"
+
 msgid "River"
 msgstr "River"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Save {shortAddress} for next withdrawals?"
+msgstr "Save {shortAddress} for next withdrawals?"
 
 msgid "SB"
 msgstr "SB"
 
+msgid "Scroll left"
+msgstr "Scroll left"
+
+msgid "Scroll right"
+msgstr "Scroll right"
+
 msgid "Sender address"
 msgstr "Sender address"
+
+msgid "Sending…"
+msgstr "Sending…"
 
 msgid "Session Details"
 msgstr "Session Details"
@@ -435,8 +509,14 @@ msgstr "Setting up the table..."
 msgid "Settings"
 msgstr "Settings"
 
+msgid "Show QR code"
+msgstr "Show QR code"
+
 msgid "Showdown"
 msgstr "Showdown"
+
+msgid "Sitting out"
+msgstr "Sitting out"
 
 msgid "Small blind"
 msgstr "Small blind"
@@ -453,12 +533,21 @@ msgstr "Sound on"
 msgid "Stakes"
 msgstr "Stakes"
 
+msgid "Stay"
+msgstr "Stay"
+
+msgid "Straight"
+msgstr "Straight"
+
+msgid "Straight flush"
+msgstr "Straight flush"
+
+msgid "Table"
+msgstr "Table"
+
 #. placeholder {0}: session.roomId
 msgid "Table #{0}"
 msgstr "Table #{0}"
-
-msgid "Table format"
-msgstr "Table format"
 
 msgid "Table full"
 msgstr "Table full"
@@ -468,6 +557,9 @@ msgstr "Table ID"
 
 msgid "Tables"
 msgstr "Tables"
+
+msgid "Tap Fold again to fold anyway"
+msgstr "Tap Fold again to fold anyway"
 
 msgid "The dealer is counting the cards..."
 msgstr "The dealer is counting the cards..."
@@ -486,6 +578,12 @@ msgstr "The transfer was rejected by the network."
 
 msgid "The transfer was sent without the required memo. Contact support to get it credited."
 msgstr "The transfer was sent without the required memo. Contact support to get it credited."
+
+msgid "The withdrawal didn't go through. Your balance is unchanged; try again."
+msgstr "The withdrawal didn't go through. Your balance is unchanged; try again."
+
+msgid "Three of a kind"
+msgstr "Three of a kind"
 
 msgid "Time Played"
 msgstr "Time Played"
@@ -508,11 +606,14 @@ msgstr "TON address"
 msgid "TON wallet"
 msgstr "TON wallet"
 
-msgid "Tonkeeper / Telegram Wallet"
-msgstr "Tonkeeper / Telegram Wallet"
+msgid "Tonkeeper, Telegram Wallet and other TON wallets"
+msgstr "Tonkeeper, Telegram Wallet and other TON wallets"
 
 msgid "Top up"
 msgstr "Top up"
+
+msgid "Top up {missingLabel}"
+msgstr "Top up {missingLabel}"
 
 msgid "Total Buy-in"
 msgstr "Total Buy-in"
@@ -529,8 +630,8 @@ msgstr "Try again"
 msgid "Turn"
 msgstr "Turn"
 
-msgid "VIP"
-msgstr "VIP"
+msgid "Two pair"
+msgstr "Two pair"
 
 msgid "Waiting for next hand..."
 msgstr "Waiting for next hand..."
@@ -550,8 +651,14 @@ msgstr "Wallet not connected"
 msgid "Web3 wallet"
 msgstr "Web3 wallet"
 
-msgid "When withdrawing from an exchange (Bybit, OKX, Binance), you must include the Memo. Without it the deposit will not be credited."
-msgstr "When withdrawing from an exchange (Bybit, OKX, Binance), you must include the Memo. Without it the deposit will not be credited."
+msgid "What is {label}?"
+msgstr "What is {label}?"
+
+msgid "When you send TON from an exchange, paste this memo into the “Memo” or “Comment” field. It tells us the deposit is yours, so it lands on your game balance automatically."
+msgstr "When you send TON from an exchange, paste this memo into the “Memo” or “Comment” field. It tells us the deposit is yours, so it lands on your game balance automatically."
+
+msgid "Winner"
+msgstr "Winner"
 
 msgid "Withdraw"
 msgstr "Withdraw"
@@ -579,11 +686,29 @@ msgstr "Withdrawals are irreversible. Send only to a TON address — a wrong net
 msgid "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
 msgstr "Withdrawals are processed within a few minutes. The amount is already reserved from your balance."
 
+msgid "Without the memo an exchange deposit will not be credited."
+msgstr "Without the memo an exchange deposit will not be credited."
+
 msgid "Yesterday"
 msgstr "Yesterday"
 
 msgid "You"
 msgstr "You"
 
+msgid "You are sitting out"
+msgstr "You are sitting out"
+
+msgid "You can check for free"
+msgstr "You can check for free"
+
+msgid "You deposit"
+msgstr "You deposit"
+
 msgid "You folded"
 msgstr "You folded"
+
+msgid "You will be dealt in from the next hand"
+msgstr "You will be dealt in from the next hand"
+
+msgid "Your seat and stack are kept"
+msgstr "Your seat and stack are kept"

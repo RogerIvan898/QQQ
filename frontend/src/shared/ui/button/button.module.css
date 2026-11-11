@@ -39,7 +39,7 @@
 }
 
 .button:focus-visible {
-  outline: 2px solid var(--color-primary-light);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -117,7 +117,7 @@
 }
 
 .warning:focus-visible {
-  outline-color: var(--color-danger);
+  outline-color: var(--color-warning);
 }
 
 .button.active {

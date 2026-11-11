@@ -1,7 +1,6 @@
 import { useLingui } from '@lingui/react/macro';
 
 import { PayViaWalletButton } from 'features/pay-via-wallet';
-import { Alert } from 'shared/ui/alert';
 import { buildTonTransferLink } from 'widgets/deposit-dialog/utils';
 
 import shared from '../../../deposit-dialog.module.css';
@@ -36,10 +35,6 @@ export const WalletPanel = ({
       tabIndex={0}
       className={styles.panel}
     >
-      <Alert variant="info" title={t`Tonkeeper / Telegram Wallet`}>
-        {t`Pay in one tap via TON Connect, or scan the QR with another phone.`}
-      </Alert>
-
       <PayViaWalletButton
         className={shared.primaryBtn}
         amount={amount}
@@ -49,7 +44,13 @@ export const WalletPanel = ({
         onError={() => onError(t`Payment failed or rejected in wallet`)}
       />
 
-      <div className={styles.orDivider}>{t`— or scan with Tonkeeper —`}</div>
+      <p className={styles.subtitle}>
+        {t`Tonkeeper, Telegram Wallet and other TON wallets`}
+      </p>
+
+      <div className={styles.orDivider}>
+        <span>{t`or scan the QR code`}</span>
+      </div>
 
       <QrBlock
         value={walletQrValue}

@@ -7,7 +7,7 @@ export interface HandAction {
   seat: number;
   name: string;
   action: PlayerActionType | 'SB' | 'BB';
-  /** Chips put in by this action, when any. */
+
   amount: number | null;
   isMe: boolean;
 }
@@ -24,9 +24,9 @@ export interface HandSeat {
   seat: number;
   name: string;
   isMe: boolean;
-  /** Stack at the start of the hand, before blinds. */
+
   stack: number;
-  /** Hole cards, when known (ours, or revealed at showdown). */
+
   cards: Card[] | null;
 }
 
@@ -37,7 +37,7 @@ export interface HandRecord {
   finishedAt: string;
   smallBlind: number;
   bigBlind: number;
-  /** Button and blind seats; missing on hands recorded before they were kept. */
+
   dealerSeat?: number | null;
   smallBlindSeat?: number | null;
   bigBlindSeat?: number | null;
@@ -46,7 +46,7 @@ export interface HandRecord {
   seats: HandSeat[];
   actions: HandAction[];
   winners: HandWinner[];
-  /** Our stack change over the hand, in chips (negative = lost). */
+
   net: number;
   pot: number;
 }

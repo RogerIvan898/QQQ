@@ -5,10 +5,6 @@ import type { HandRecord } from '../model/types';
 
 import type { ReplayState } from './replay';
 
-/**
- * Turns a replay step into the live game state shape, so the real table
- * widget can draw it exactly as it looked during play.
- */
 export const toGameState = (
   hand: HandRecord,
   replay: ReplayState,
@@ -20,7 +16,6 @@ export const toGameState = (
     const isBlind = seat.lastAction === 'SB' || seat.lastAction === 'BB';
 
     players[seat.seat] = {
-      // The table finds "you" by id; everyone else just needs a stable one.
       id: seat.isMe && viewerId ? viewerId : `replay-${seat.seat}`,
       name: seat.name,
       stack: seat.stack,
@@ -31,7 +26,6 @@ export const toGameState = (
           ? [seat.cards[0], seat.cards[1]]
           : null,
       committed: seat.bet,
-      // Blinds are shown by the table's own SB/BB badge, not as an action.
       lastAction:
         seat.lastAction === 'SB' || seat.lastAction === 'BB'
           ? null

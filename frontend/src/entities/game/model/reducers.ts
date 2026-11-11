@@ -25,6 +25,41 @@ const reducePlayerSeated = (
   },
 });
 
+const reducePlayerStatus = (
+  state: T.GameState,
+  payload: T.PlayerStatusEvent['payload']
+): T.GameState => {
+  const player = state.players[payload.seat];
+
+  if (!player) {
+    return state;
+  }
+
+  return {
+    ...state,
+    players: {
+      ...state.players,
+      [payload.seat]: {
+        ...player,
+        status: payload.status,
+        returning: Boolean(payload.returning),
+      },
+    },
+  };
+};
+
+const HAND_SCOPED_STATUSES = new Set<Player['status']>([
+  PlayerStatus.FOLDED,
+  PlayerStatus.ALL_IN,
+  PlayerStatus.RAISE,
+]);
+
+const statusForNewHand = (player: Player, blindPosted: number) =>
+  HAND_SCOPED_STATUSES.has(player.status) &&
+  (player.stack > 0 || blindPosted > 0)
+    ? PlayerStatus.IN_GAME
+    : player.status;
+
 const reduceHandStarted = (
   state: T.GameState,
   payload: T.HandStartedEvent['payload']
@@ -35,11 +70,10 @@ const reduceHandStarted = (
     (acc, key) => {
       acc[key] = {
         ...state.players[key],
-        // A fold only lasts for its hand.
-        status:
-          state.players[key].status === PlayerStatus.FOLDED
-            ? PlayerStatus.IN_GAME
-            : state.players[key].status,
+        status: statusForNewHand(
+          state.players[key],
+          initialBets[Number(key)] || 0
+        ),
         committed: initialBets[Number(key)] || 0,
         hand: null,
         lastAction: null,
@@ -226,6 +260,7 @@ const gameEventReducers: GameEventReducer = {
   [SERVER_EVENTS.BOARD_DEALT]: reduceBoardDealt,
   [SERVER_EVENTS.SHOWDOWN]: reduceShowdown,
   [SERVER_EVENTS.HAND_COMPLETED]: reduceHandCompleted,
+  [SERVER_EVENTS.PLAYER_STATUS]: reducePlayerStatus,
 };
 
 export const reduceGameEvent = (

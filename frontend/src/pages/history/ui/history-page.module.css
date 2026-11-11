@@ -18,21 +18,7 @@
 }
 
 .backBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  color: var(--color-text-secondary);
-  transition:
-    color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.backBtn:hover {
-  color: var(--color-text);
-  background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  composes: round from '../../../shared/ui/icon-button/icon-button.module.css';
 }
 
 .title {
@@ -55,45 +41,8 @@
   margin-right: auto;
 }
 
-/* ---------- Period filter ---------- */
-
 .periods {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
   margin-bottom: 12px;
-}
-
-.periods::-webkit-scrollbar {
-  display: none;
-}
-
-.period {
-  flex-shrink: 0;
-  height: 34px;
-  padding: 0 14px;
-  border: none;
-  border-radius: var(--radius-xl);
-  background: var(--color-bg-muted);
-  color: var(--color-text-secondary);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.period:hover {
-  color: var(--color-text);
-}
-
-.periodActive,
-.periodActive:hover {
-  background: var(--color-primary);
-  color: var(--color-text-on-primary);
 }
 
 .customRange {
@@ -123,8 +72,6 @@
   color-scheme: dark;
 }
 
-/* ---------- Summary ---------- */
-
 .stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -143,10 +90,6 @@
   border-radius: var(--radius-md);
 }
 
-.statWide {
-  grid-column: 1 / -1;
-}
-
 .metricLabel {
   font-size: 12px;
   color: var(--color-text-secondary);
@@ -161,10 +104,6 @@
   text-overflow: ellipsis;
 }
 
-.statWide .statValue {
-  font-size: 28px;
-}
-
 .positive {
   color: var(--color-success);
 }
@@ -173,22 +112,22 @@
   color: var(--color-danger);
 }
 
-/* ---------- Sessions ---------- */
-
 .list {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin: 0;
+
+  margin-top: 0;
+  margin-bottom: 0;
   padding: 0;
   list-style: none;
 }
 
 .card {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px 12px 14px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -202,27 +141,33 @@
 }
 
 .card:focus-visible {
-  outline: 2px solid var(--color-primary-light);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
-.cardHead {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.cardTitleBlock {
+.cardMain {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
 }
 
+.cardRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
 .cardTitle {
-  font-size: 16px;
+  min-width: 0;
+  font-size: 15px;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cardTime {
@@ -230,16 +175,26 @@
   color: var(--color-text-muted);
 }
 
-.profit {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+.cardMeta {
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardFlow {
   flex-shrink: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .profitValue {
-  font-size: 18px;
+  flex-shrink: 0;
+  font-size: 16px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -247,39 +202,7 @@
 
 .chevron {
   flex-shrink: 0;
-  margin-top: 10px;
   color: var(--color-text-muted);
-}
-
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px 8px;
-  margin: 0;
-  padding-top: 12px;
-  border-top: 1px solid var(--color-border);
-}
-
-.metrics div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.metrics dt {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-}
-
-.metrics dd {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .empty {
@@ -292,8 +215,6 @@
   font-size: 14px;
   text-align: center;
 }
-
-/* ---------- Session details ---------- */
 
 .hero {
   display: flex;
@@ -316,14 +237,17 @@
 }
 
 .sectionTitle {
-  margin: 0 0 8px 4px;
+  margin-top: 0;
+  margin-bottom: 8px;
+  padding-left: 4px;
   font-size: 13px;
   font-weight: 700;
   color: var(--color-text-secondary);
 }
 
 .overview {
-  margin: 0;
+  margin-top: 0;
+  margin-bottom: 0;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -350,11 +274,4 @@
   margin: 0;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-}
-
-@media (max-width: 380px) {
-  .stats,
-  .metrics {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }

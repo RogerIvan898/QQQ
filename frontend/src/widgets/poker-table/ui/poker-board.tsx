@@ -27,7 +27,7 @@ export const PokerBoard = () => {
         cards={community}
         pot={pot}
         showPot={showPot}
-        crowded={seatCount >= 7}
+        crowded={seatCount >= 7 || seatCount % 4 === 0}
         ref={setTableElement}
       />
 

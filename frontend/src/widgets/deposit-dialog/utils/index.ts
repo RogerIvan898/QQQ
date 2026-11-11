@@ -1,12 +1,7 @@
-import { toNano } from '@ton/core';
+import { formatTonAmount, toNanoSafe } from 'shared/lib/ton';
 
 import { DEPOSIT_STEPS } from '../constants';
 import type { DepositStep } from '../types';
-
-const TON_DECIMALS = 9;
-
-export const formatTonAmount = (value: number): string =>
-  String(Number(value.toFixed(TON_DECIMALS)));
 
 export const toDepositInputValue = (value: number): string => {
   if (!Number.isFinite(value) || value === 0) {
@@ -21,7 +16,7 @@ export const buildTonTransferLink = (
   amount: number,
   memo?: string
 ): string => {
-  const nanotons = toNano(amount.toFixed(TON_DECIMALS));
+  const nanotons = toNanoSafe(amount);
 
   const params = new URLSearchParams({ amount: nanotons.toString() });
 

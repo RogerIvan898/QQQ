@@ -1,7 +1,14 @@
-import { createEffect, createEvent, createStore, sample } from 'effector';
+import {
+  combine,
+  createEffect,
+  createEvent,
+  createStore,
+  sample,
+} from 'effector';
 
 import type { CardType as Card } from 'entities/card';
 import type { PlayerType as Player } from 'entities/player';
+import { DEAL_START_MS, DEALER_START_MS } from 'shared/config/table-timing';
 import { displayBigBlindChanged } from 'shared/lib/display-settings';
 
 import { watchPlayerActionSounds } from './action-sounds';
@@ -9,9 +16,10 @@ import {
   closeOpenGameSocket,
   connectionLost,
   openGameSocket,
+  prepareGameAudio,
   sendToGameSocket,
 } from './connection';
-import { INITIAL_GAME_STATE } from './constants';
+import { INITIAL_GAME_STATE, SERVER_EVENTS } from './constants';
 import {
   bindGameQueue,
   clearActiveSeat,
@@ -33,13 +41,25 @@ import type {
 
 export const incomingEvent = createEvent<ServerGameEvent>();
 
-const initializeGameFx = createEffect((params: GameConnectParams) =>
-  openGameSocket(params)
+const TABLE_WAIT_MS = 8000;
+
+const initializeGameFx = createEffect(async (params: GameConnectParams) => {
+  const audioReady = prepareGameAudio();
+  const socket = openGameSocket(params);
+
+  await audioReady;
+
+  return socket;
+});
+
+const waitForTableFx = createEffect(
+  (attempt: number) =>
+    new Promise<number>(resolve =>
+      window.setTimeout(() => resolve(attempt), TABLE_WAIT_MS)
+    )
 );
 
 const sendClientCommandFx = createEffect((command: unknown) => {
-  // Goes to the live socket, which changes on reconnect; sending to a closed
-  // one would drop the command silently.
   if (!sendToGameSocket(command)) {
     console.warn('[WS] Cannot send action: socket is not open');
   }
@@ -53,7 +73,38 @@ const $socketClient = createStore<WebSocket | null>(null)
   .on(initializeGameFx.doneData, (_, socket) => socket)
   .reset(disconnectGame);
 
-export const $isGameLoading = initializeGameFx.pending;
+const $connectAttempt = createStore(0).on(connectGame, n => n + 1);
+
+const $connecting = createStore(false)
+  .on(connectGame, () => true)
+  .reset(disconnectGame);
+
+const $tableReady = createStore(false)
+  .on(
+    incomingEvent,
+    (ready, event) =>
+      ready ||
+      event.type === SERVER_EVENTS.PLAYER_SEATED ||
+      event.type === SERVER_EVENTS.HAND_STARTED
+  )
+  .reset(connectGame, disconnectGame);
+
+sample({ clock: $connectAttempt, target: waitForTableFx });
+
+sample({
+  clock: waitForTableFx.doneData,
+  source: $connectAttempt,
+  filter: (current, attempt) => current === attempt,
+  fn: () => true,
+  target: $tableReady,
+});
+
+export const $isGameLoading = combine(
+  initializeGameFx.pending,
+  $connecting,
+  $tableReady,
+  (opening, connecting, ready) => opening || (connecting && !ready)
+);
 
 export const $connectionLost = createStore(false)
   .on(connectionLost, (_, lost) => lost)
@@ -62,6 +113,41 @@ export const $connectionLost = createStore(false)
 export const $gameState = createStore(INITIAL_GAME_STATE)
   .on(incomingEvent, reduceGameEvent)
   .on(clearActiveSeat, state => ({ ...state, activeSeat: null }))
+  .reset(disconnectGame);
+
+export const $turnTiming = createStore<{
+  turnMs: number;
+  timeBankMs: number;
+} | null>(null)
+  .on(incomingEvent, (timing, event) => {
+    if (event.type !== SERVER_EVENTS.TURN_CHANGED) {
+      return timing;
+    }
+
+    const { turnMs, timeBankMs } = event.payload;
+
+    return turnMs == null ? null : { turnMs, timeBankMs: timeBankMs ?? 0 };
+  })
+  .reset(disconnectGame);
+
+export const $handNumber = createStore(0)
+  .on(incomingEvent, (count, event) =>
+    event.type === SERVER_EVENTS.HAND_STARTED ? count + 1 : count
+  )
+  .reset(disconnectGame);
+
+const FIRST_DEAL_DELAY_MS = 250;
+
+export const $handStartedAt = createStore(0)
+  .on(incomingEvent, (at, event) => {
+    if (event.type !== SERVER_EVENTS.HAND_STARTED) {
+      return at;
+    }
+
+    const now = performance.now();
+
+    return at === 0 ? now - DEAL_START_MS + FIRST_DEAL_DELAY_MS : now;
+  })
   .reset(disconnectGame);
 
 export const $collectingBets = createStore(false)
@@ -82,7 +168,38 @@ export const $myAllowedActions = createStore<
   .on(incomingEvent, reduceAllowedActions)
   .reset(disconnectGame);
 
-export const $dealerSeat = $gameState.map(state => state.dealerSeat);
+const $actualDealerSeat = $gameState.map(state => state.dealerSeat);
+
+const moveDealerFx = createEffect(
+  (seat: number | null) =>
+    new Promise<number | null>(resolve =>
+      window.setTimeout(() => resolve(seat), DEALER_START_MS)
+    )
+);
+
+const placeDealer = createEvent<number | null>();
+
+export const $dealerSeat = createStore<number | null>(null)
+  .on(moveDealerFx.doneData, (_, seat) => seat)
+  .on(placeDealer, (_, seat) => seat)
+  .reset(disconnectGame);
+
+sample({
+  clock: $actualDealerSeat,
+  source: $dealerSeat,
+  filter: (shown, actual) => shown === null && actual !== null,
+  fn: (_, actual) => actual,
+  target: placeDealer,
+});
+
+sample({
+  clock: $actualDealerSeat,
+  source: $dealerSeat,
+  filter: (shown, actual) => shown !== null && shown !== actual,
+  fn: (_, actual) => actual,
+  target: moveDealerFx,
+});
+
 export const $players = $gameState.map(state => state.players);
 export const $activeSeat = $gameState.map(state => state.activeSeat);
 export const $smallBlindSeat = $gameState.map(state => state.smallBlindSeat);
@@ -93,7 +210,6 @@ export const $pot = $gameState.map(state => state.pot);
 export const $community = $gameState.map(state => state.community);
 export const $round = $gameState.map(state => state.round);
 
-// Lets table widgets show amounts in big blinds (Settings → Display amounts in BB).
 sample({ clock: $bigBlind, target: displayBigBlindChanged });
 
 sample({
@@ -120,6 +236,7 @@ sample({
 bindGameQueue({
   emit: incomingEvent,
   readState: () => $gameState.getState(),
+  readHandStartedAt: () => $handStartedAt.getState(),
 });
 
 watchPlayerActionSounds(incomingEvent);

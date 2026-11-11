@@ -13,9 +13,18 @@
 .pokerTable {
   position: relative;
   container-type: size;
-  width: min(96vw, 920px);
-  max-height: min(72dvh, 460px);
+  width: min(96vw, 100vw - 340px, 1160px, 128dvh);
+
+  max-height: min(64dvh, 580px, calc(100% - var(--table-reserve, 0px)));
   aspect-ratio: 2 / 1;
+  perspective: 1200px;
+  perspective-origin: 50% 30%;
+}
+
+.tableRail,
+.tableSurface {
+  transform: rotateX(var(--table-tilt, 16deg));
+  transform-origin: 50% 55%;
 }
 
 .tableRail {
@@ -77,7 +86,7 @@
 
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 53%;
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -87,9 +96,14 @@
 }
 
 .mainPotArea {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + clamp(6px, 2cqh, 14px));
   display: flex;
+  align-items: flex-end;
   justify-content: center;
-  min-height: 34px;
+  min-height: 44px;
+  transform: translateX(-50%);
   pointer-events: none;
 }
 
@@ -103,11 +117,13 @@
   min-height: calc(var(--card-width) * 92 / 64);
 }
 
-/* Full tables on phones: side seats reach into the board's row, so the five
-   board cards take ~12% less width to stay clear of them. */
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .crowded {
-    --card-width: min(84px, calc((76cqw - 4 * var(--board-gap)) / 5));
+    --card-width: min(
+      84px,
+      calc((76cqw - 4 * var(--board-gap)) / 5),
+      calc((108cqw - 126px - 4 * var(--board-gap)) / 5)
+    );
   }
 }
 
@@ -115,12 +131,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-width: 72px;
-  height: 34px;
-  padding: 0 14px;
+
+  gap: 8px;
+  min-width: 96px;
+  height: 44px;
+  padding: 0 20px;
   border-radius: 100px;
-  /* Highlighted chip pill (what bet badges used to look like). */
+
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--color-bg-elevated) 95%, white) 0%,
@@ -135,6 +152,8 @@
 }
 
 .potLogo {
+  width: 22px;
+  height: 22px;
   color: var(--color-primary-light);
   flex-shrink: 0;
 }
@@ -142,12 +161,12 @@
 .potValue {
   color: var(--color-text);
   font-weight: 800;
-  font-size: 16px;
+  font-size: 22px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .tableContainer {
     --seat-gutter: 52px;
 
@@ -195,9 +214,15 @@
   }
 
   .potBadge {
+    gap: 6px;
     min-width: 64px;
     height: 30px;
     padding: 0 12px;
+  }
+
+  .potLogo {
+    width: 16px;
+    height: 16px;
   }
 
   .potValue {

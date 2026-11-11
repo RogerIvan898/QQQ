@@ -31,7 +31,7 @@ export const WithdrawDestinationBlock = ({
   const { t } = useLingui();
   const addressInvalid =
     customAddress.trim().length > 0 && !isValidTonAddress(customAddress);
-  // Clipboard read needs a secure context; hide the button where it can't work.
+
   const canPaste = typeof navigator.clipboard?.readText === 'function';
 
   const paste = async () => {
@@ -40,7 +40,7 @@ export const WithdrawDestinationBlock = ({
 
       onCustomAddressChange(text.trim());
     } catch {
-      // Clipboard permission denied: the user can still paste by hand.
+      void 0;
     }
   };
 

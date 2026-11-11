@@ -1,15 +1,16 @@
 import { useLingui } from '@lingui/react/macro';
+import { useUnit } from 'effector-react';
 
-import { findRoom } from 'entities/room';
+import { $rooms, findRoom } from 'entities/room';
 import type { GameSession } from 'features/game-sessions';
 
-/** "Micro · 9-Max", falling back to the table id for unknown rooms. */
 export const useSessionTitle = () => {
-  const { i18n, t } = useLingui();
+  const { t } = useLingui();
+  const rooms = useUnit($rooms);
 
   return (session: GameSession) => {
-    const room = findRoom(session.roomId);
-    const name = room ? i18n._(room.name) : t`Table #${session.roomId}`;
+    const room = findRoom(rooms, session.roomId);
+    const name = room ? room.name : t`Table #${session.roomId}`;
 
     return session.format ? `${name} · ${session.format}` : name;
   };

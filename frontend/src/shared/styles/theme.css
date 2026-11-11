@@ -1,4 +1,8 @@
 :root {
+  --suit-spades: #16181d;
+  --suit-hearts: #e8262e;
+  --suit-diamonds: #e8262e;
+  --suit-clubs: #16181d;
   --color-primary: #0098ea;
   --color-primary-hover: #0082c8;
   --color-primary-active: #0084cf;
@@ -42,10 +46,27 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+
+  --focus-ring: var(--color-primary-light);
+
+  --action-fold: #94a3b8;
+  --action-check: #4fb3ff;
+  --action-call: #2dd4e0;
+  --action-bet: #34d399;
+  --action-raise: #f5b942;
+  --action-allin: #ff5c7a;
+  --action-blind: var(--color-primary-light);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.22, 1.2, 0.36, 1);
+  --ease-out-soft: var(--ease-out);
+  --dur-fast: 150ms;
+  --dur-base: 220ms;
+  --dur-slow: 320ms;
+  --dur-exit: 160ms;
   --font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
-  /* Selected / unselected look shared by option-like controls
-     (settings options, withdraw destination tabs). */
   --option-on-border: color-mix(in srgb, var(--color-primary) 45%, transparent);
   --option-on-bg: color-mix(
     in srgb,
@@ -59,4 +80,9 @@
   --option-off-text: color-mix(in srgb, var(--color-text) 55%, transparent);
   --option-off-icon: color-mix(in srgb, var(--color-text) 45%, transparent);
   --option-hover-border: var(--color-border-hover);
+}
+
+:root[data-four-color] {
+  --suit-diamonds: #1d6fe0;
+  --suit-clubs: #17924a;
 }

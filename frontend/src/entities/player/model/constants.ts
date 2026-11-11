@@ -15,9 +15,11 @@ export const PlayerStatus = {
   ALL_IN: 'ALL_IN',
 } as const;
 
-/** Seat badges that are not a player action. */
 export const SeatBadgeKind = {
   ALL_IN: 'ALL_IN',
   SB: 'SB',
   BB: 'BB',
+  SIT_OUT: 'SIT_OUT',
+
+  WIN: 'WIN',
 } as const;

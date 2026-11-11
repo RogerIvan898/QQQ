@@ -5,20 +5,34 @@ include:
   - template: Jobs/Container-Scanning.gitlab-ci.yml
 
 stages:
-  - lint
   - build
   - test
   - secret-detection
   - docker
   - scan
 
+# Compute-minute budget (free tier, 400 min/month):
+#   push to main  -> frontend:build (format, lint, audit, test, build in one job),
+#                    secret detection, docker image
+#   dev, other branches, merge requests -> no pipeline;
+#                    run one by hand via Build > Pipelines > Run pipeline
+#   schedule / tag -> heavy scanners: SAST, dependency and container scanning
 workflow:
+  auto_cancel:
+    on_new_commit: interruptible
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables: { SAST_DISABLED: "false", DEPENDENCY_SCANNING_DISABLED: "false" }
     - if: $CI_COMMIT_TAG
-    # Lint/tests also run in merge requests, not only after merging.
-    # Remove this line if you want pipelines only on the default branch and tags.
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      variables: { SAST_DISABLED: "false", DEPENDENCY_SCANNING_DISABLED: "false" }
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+variables:
+  # Turned back on for schedules and tags by workflow:rules above
+  # (or by hand: set them to "false" in the Run pipeline form).
+  SAST_DISABLED: "true"
+  DEPENDENCY_SCANNING_DISABLED: "true"
 
 default:
   interruptible: true
@@ -27,53 +41,53 @@ default:
 secret_detection:
   stage: secret-detection
 
-# Scan the freshly pushed frontend image (runs only when the image was built).
-# Rules MUST stay identical to frontend:docker, otherwise the pipeline fails to create.
+# Scan the frontend image: the one just pushed on a tag, :latest on a schedule.
 container_scanning:
   stage: scan
-  needs: [frontend:docker]
+  needs:
+    - job: frontend:docker
+      optional: true
   variables:
-    CS_IMAGE: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
+    CS_IMAGE: $CI_REGISTRY_IMAGE/frontend:latest
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG'
-      changes: [frontend/**/*]
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_COMMIT_TAG
+      variables: { CS_IMAGE: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_TAG }
 
 # ---------- frontend ----------
-.frontend:
+# One job instead of lint/build/test/audit: dependencies are installed once.
+frontend:build:
   image: oven/bun:1.4.4
-  before_script:
-    - cd frontend
-    - bun install --frozen-lockfile
+  stage: build
+  variables:
+    BUN_INSTALL_CACHE_DIR: $CI_PROJECT_DIR/.bun-cache
   cache:
     key:
       files: [frontend/bun.lock]
-    paths: [frontend/node_modules/]
-  rules:
-    - changes: [frontend/**/*, .gitlab-ci.yml]
-
-# Lint, tests and audit share one job so the image pull and bun install
-# happen once instead of three times (saves shared runner minutes).
-frontend:check:
-  extends: .frontend
-  stage: lint
+      prefix: bun
+    paths: [.bun-cache/]
+  before_script:
+    - cd frontend
+    - bun install --frozen-lockfile
   script:
     - bun run format:check
     - bun run lint
-    - bun run test
     # GitLab's dependency scanner may not read bun.lock, so audit with bun itself.
     - bun audit --prod --audit-level=high
-
-frontend:build:
-  extends: .frontend
-  stage: build
-  script:
+    - bun run test
     - bun run i18n:compile
     - bun run build
   artifacts:
     paths: [frontend/dist/]
-    expire_in: 1 week
+    expire_in: 1 day
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - changes: [frontend/**/*, .gitlab-ci.yml]
 
 # ---------- docker images (push to GitLab registry on default branch / tags) ----------
+# Only :latest (plus :<git-tag> for releases) is pushed, so the registry holds
+# one image per app; the previous :latest becomes untagged and is cleaned up.
 .docker:
   stage: docker
   image: docker:27
@@ -83,10 +97,10 @@ frontend:build:
     DOCKER_TLS_CERTDIR: "/certs"
   before_script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-    - IMAGE=$CI_REGISTRY_IMAGE/$APP
-    - TAGS="-t $IMAGE:$CI_COMMIT_SHORT_SHA -t $IMAGE:latest"
-    - if [ -n "$CI_COMMIT_TAG" ]; then TAGS="$TAGS -t $IMAGE:$CI_COMMIT_TAG"; fi
   script:
+    - IMAGE=$CI_REGISTRY_IMAGE/$APP
+    - TAGS="-t $IMAGE:latest"
+    - if [ -n "$CI_COMMIT_TAG" ]; then TAGS="$TAGS -t $IMAGE:$CI_COMMIT_TAG"; fi
     - docker build $BUILD_ARGS $TAGS $APP
     - docker push --all-tags $IMAGE
 
@@ -95,12 +109,12 @@ frontend:docker:
   variables:
     APP: frontend
     BUILD_ARGS: --target prebuilt --build-arg VITE_APP_URL=$VITE_APP_URL --build-arg VITE_API_URL=$VITE_API_URL
-  needs: [frontend:check, frontend:build]
+  needs: [frontend:build]
   before_script:
     - '[ -n "$VITE_APP_URL" ] || { echo "VITE_APP_URL is not set (Settings > CI/CD > Variables)"; exit 1; }'
     - !reference [.docker, before_script]
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG'
+    - if: $CI_PIPELINE_SOURCE != "schedule" && ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG)
       changes: [frontend/**/*]
 
 # Everything (deps, compile) happens inside backend/Dockerfile; CI only runs docker build + push.
@@ -110,7 +124,7 @@ backend:docker:
   variables:
     APP: backend # build context = backend/, Dockerfile = backend/Dockerfile
   rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG'
+    - if: $CI_PIPELINE_SOURCE != "schedule" && ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG)
       exists: [backend/Dockerfile]
       changes: [backend/**/*]
 
@@ -127,5 +141,7 @@ pages:
   artifacts:
     paths: [public]
   rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes: [frontend/**/*, .gitlab-ci.yml]

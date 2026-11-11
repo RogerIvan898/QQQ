@@ -33,18 +33,25 @@
   justify-content: center;
 }
 
-.stackLogo {
-  width: 16px;
-  height: 16px;
+.combinationWrap {
+  position: absolute;
+
+  top: calc(100% - 9px);
+  left: 50%;
+  z-index: 13;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .dealerWrap {
-  --dealer-distance: 84px;
+  --dealer-half: 17px;
+  --dealer-distance: calc(var(--plate-reach, 60px) + var(--dealer-half) + 6px);
 
   position: absolute;
   top: 50%;
   left: 50%;
-  z-index: 5;
+
+  z-index: 9;
   perspective: 300px;
   pointer-events: none;
   transform: translate(-50%, -50%)
@@ -59,19 +66,13 @@
   filter: grayscale(0.7);
 }
 
-.player.sitOut .avatar {
-  background: linear-gradient(180deg, #888888, #667676);
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .mainContainer {
     width: 64px;
   }
 
   .dealerWrap {
-    --dealer-distance: 48px;
+    --dealer-half: 13px;
   }
 
   .avatarWrap {
@@ -81,5 +82,20 @@
 
   .stackArea {
     margin-top: -10px;
+  }
+}
+
+@media (orientation: portrait) and (min-width: 769px) and (max-width: 1100px) {
+  .mainContainer {
+    width: 84px;
+  }
+
+  .dealerWrap {
+    --dealer-half: 15px;
+  }
+
+  .avatarWrap {
+    width: 68px;
+    height: 68px;
   }
 }

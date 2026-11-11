@@ -4,7 +4,12 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios';
 
-import { API_URL, APP_HEADER, APP_HEADER_VALUE } from './constants';
+import {
+  API_TIMEOUT_MS,
+  API_URL,
+  APP_HEADER,
+  APP_HEADER_VALUE,
+} from './constants';
 import { tokenManager } from './tokenManager';
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -29,10 +34,15 @@ export const setupInterceptors = (apiInstance: AxiosInstance) => {
         | CustomAxiosRequestConfig
         | undefined;
 
+      const isAuthCall = /\/(auth\/login|refresh)$/.test(
+        originalRequest?.url ?? ''
+      );
+
       if (
         !originalRequest ||
         error.response?.status !== 401 ||
-        originalRequest._isRetry
+        originalRequest._isRetry ||
+        isAuthCall
       ) {
         return Promise.reject(error);
       }
@@ -59,6 +69,7 @@ export const setupInterceptors = (apiInstance: AxiosInstance) => {
           {},
           {
             withCredentials: true,
+            timeout: API_TIMEOUT_MS,
             headers: { [APP_HEADER]: APP_HEADER_VALUE },
           }
         );

@@ -1,7 +1,7 @@
 .actionContainer {
   position: fixed;
-  right: 0;
-  bottom: calc(1rem + var(--tg-safe-area-bottom));
+  right: calc(16px + var(--tg-safe-area-right));
+  bottom: calc(16px + var(--tg-safe-area-bottom));
   z-index: 900;
   display: flex;
   gap: 1rem;
@@ -9,7 +9,7 @@
   height: auto;
   background: var(--color-overlay);
   border-radius: var(--radius-md);
-  width: min(460px, calc(100vw - 2rem));
+  width: min(460px, calc(100vw - 32px));
   min-width: 300px;
   backdrop-filter: blur(10px);
   border: 1px solid var(--color-border);
@@ -21,7 +21,7 @@
   min-width: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .actionContainer {
     left: calc(8px + var(--tg-safe-area-left));
     right: calc(8px + var(--tg-safe-area-right));

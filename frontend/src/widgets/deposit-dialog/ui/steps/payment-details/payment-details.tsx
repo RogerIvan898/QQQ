@@ -2,11 +2,11 @@ import { useState } from 'react';
 
 import { useLingui } from '@lingui/react/macro';
 
+import { formatTonAmount } from 'shared/lib/ton';
 import { Alert } from 'shared/ui/alert';
 import { cn } from 'shared/utils/cn';
 
 import type { PaymentMethod } from '../../../types';
-import { formatTonAmount } from '../../../utils';
 import shared from '../../deposit-dialog.module.css';
 
 import { ExchangePanel } from './exchange-panel';

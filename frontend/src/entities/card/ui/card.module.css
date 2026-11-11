@@ -35,7 +35,6 @@
   box-shadow: inset 0 1px color-mix(in srgb, var(--color-text) 8%, transparent);
 }
 
-/* Face-up: the SVG face draws its own margins, so no padding. */
 .face {
   padding: 0;
   overflow: hidden;
@@ -45,7 +44,6 @@
   animation: cardDealFlat 0.42s var(--ease-out-soft) var(--delay, 0ms) forwards;
 }
 
-/* Card slides in from the table center, then turns face-up. */
 @keyframes cardDealFlat {
   0% {
     transform: translateY(-18px) scale(0.92);
@@ -57,7 +55,6 @@
   }
 }
 
-/* Card slides in face down, lifts, and flips face up. */
 @keyframes cardDeal {
   0% {
     transform: translate(-70px, -24px) rotate(-12deg) scale(0.9);
@@ -80,7 +77,6 @@
   }
 }
 
-/* Face-down layer: covers the face until the card is edge-on. */
 .play::after {
   content: '';
   position: absolute;
@@ -110,8 +106,6 @@
 }
 
 .card {
-  --ease-spring: cubic-bezier(0.22, 1.2, 0.36, 1);
-  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
 }
 
@@ -132,8 +126,6 @@
   }
 }
 
-/* Drop the layer hint once the deal animation is over: a table holds up to
-   21 cards, and a permanent layer each (with its shadow) costs GPU memory. */
 .settled {
   will-change: auto;
 }

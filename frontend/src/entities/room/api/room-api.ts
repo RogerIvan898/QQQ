@@ -1,7 +1,8 @@
-import { api } from 'shared/api/axios';
+import { api } from 'shared/api';
 
-import type { JoinRoomResponse } from '../model';
+import type { JoinRoomResponse, RoomListItem } from '../model';
 
 export const roomApi = {
+  list: () => api.get<RoomListItem[]>('/rooms'),
   join: (roomId: string) => api.get<JoinRoomResponse>(`/room/${roomId}/join`),
 };

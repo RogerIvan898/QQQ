@@ -12,12 +12,156 @@
   min-width: clamp(88px, 18vw, 124px);
   max-width: clamp(108px, 22vw, 140px);
   padding: 7px 12px 8px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--color-bg-elevated);
-  border: 1.5px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  --frame-border: 1.5px;
+
+  border: var(--frame-border) solid
+    color-mix(in srgb, var(--color-primary) 40%, transparent);
   box-shadow: 0 4px 14px var(--color-shadow);
   pointer-events: none;
-  overflow: hidden;
+
+  transition: border-color 0.3s ease;
+}
+
+.frameHero {
+  --frame-border: 2px;
+
+  border: var(--frame-border) solid var(--color-primary);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 26%, var(--color-bg-elevated)) 0%,
+    var(--color-bg-elevated) 100%
+  );
+  box-shadow:
+    0 4px 14px var(--color-shadow),
+    0 0 14px color-mix(in srgb, var(--color-primary) 45%, transparent);
+}
+
+.frameHero .name {
+  color: var(--color-primary-light);
+}
+
+.frameWin {
+  --frame-border: 2px;
+
+  border: var(--frame-border) solid var(--color-warning);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-warning) 26%, var(--color-bg-elevated)) 0%,
+    var(--color-bg-elevated) 100%
+  );
+  animation: winGlow 1.1s ease-in-out infinite;
+}
+
+.frameWin .name,
+.frameWin .stackAmount {
+  color: #ffd96a;
+}
+
+.frameWin .stackLogo {
+  color: #ffd96a;
+}
+
+.stackAmount {
+  transition: color var(--dur-slow) var(--ease-out);
+}
+
+@keyframes winGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 14px var(--color-shadow),
+      0 0 10px color-mix(in srgb, var(--color-warning) 40%, transparent);
+  }
+
+  50% {
+    box-shadow:
+      0 4px 14px var(--color-shadow),
+      0 0 24px color-mix(in srgb, var(--color-warning) 75%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frameWin {
+    animation: none;
+  }
+}
+
+@property --turn-left {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
+.frameTurn {
+  border-color: transparent;
+}
+
+.turnBorder {
+  --turn-color: var(--color-info);
+  --turn-arc: calc(var(--turn-left) * 360deg);
+
+  position: absolute;
+  inset: calc(var(--frame-border) * -1);
+  z-index: 3;
+  padding: var(--frame-border);
+  border-radius: inherit;
+
+  --turn-edge: calc(360deg - var(--turn-arc));
+
+  background: conic-gradient(
+    color-mix(in srgb, var(--color-text) 10%, transparent) 0deg var(--turn-edge),
+    color-mix(in srgb, #fff 75%, var(--turn-color)) var(--turn-edge),
+    var(--turn-color) calc(var(--turn-edge) + 14deg),
+    color-mix(in srgb, var(--turn-color) 45%, transparent) 360deg
+  );
+
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+  animation-name: turnDrain;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  transition: opacity 0.25s ease-in;
+}
+
+.turnBorderEnter {
+  animation-name: turnDrain, turnFadeIn;
+  animation-timing-function: linear, ease-out;
+  animation-fill-mode: forwards, none;
+}
+
+.turnBorderLeave {
+  opacity: 0;
+  animation-play-state: paused;
+}
+
+@keyframes turnFadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+.turnBorderBank {
+  --turn-color: var(--color-warning);
+}
+
+.turnBorderUrgent {
+  --turn-color: var(--color-danger);
+}
+
+@keyframes turnDrain {
+  from {
+    --turn-left: 1;
+  }
+
+  to {
+    --turn-left: 0;
+  }
 }
 
 .content {
@@ -27,41 +171,6 @@
   flex-direction: column;
   align-items: center;
   gap: 3px;
-}
-
-.timerFill {
-  position: absolute;
-  inset: 0;
-  transform-origin: left center;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--color-info) 40%, transparent) 0%,
-    color-mix(in srgb, var(--color-primary) 25%, transparent) 100%
-  );
-  border-radius: inherit;
-  z-index: 0;
-  pointer-events: none;
-  animation-name: timerDrain;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
-}
-
-@keyframes timerDrain {
-  from {
-    transform: scaleX(1);
-  }
-
-  to {
-    transform: scaleX(0);
-  }
-}
-
-.timerFillBank {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--color-danger) 50%, transparent) 0%,
-    color-mix(in srgb, var(--color-danger) 28%, transparent) 100%
-  );
 }
 
 .name {
@@ -116,7 +225,7 @@
   filter: grayscale(0.5);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   .frame {
     min-width: 76px;
     max-width: 92px;
@@ -129,5 +238,21 @@
 
   .stackAmount {
     font-size: 13px;
+  }
+}
+
+@media (orientation: portrait) and (min-width: 769px) and (max-width: 1100px) {
+  .frame {
+    min-width: 100px;
+    max-width: 124px;
+    padding: 6px 10px 7px;
+  }
+
+  .name {
+    font-size: 14px;
+  }
+
+  .stackAmount {
+    font-size: 17px;
   }
 }

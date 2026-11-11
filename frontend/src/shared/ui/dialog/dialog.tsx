@@ -1,7 +1,13 @@
+import React from 'react';
 import { createPortal } from 'react-dom';
 
 import { useLingui } from '@lingui/react/macro';
 import { X } from 'lucide-react';
+
+import { useMediaQuery } from 'shared/hooks/use-media-query';
+import { usePresence } from 'shared/hooks/use-presence';
+import { useSwipeToClose } from 'shared/hooks/use-swipe-to-close';
+import { cn } from 'shared/utils/cn';
 
 import styles from './dialog.module.css';
 
@@ -12,6 +18,7 @@ interface Props {
   leading?: React.ReactNode;
   titleAddon?: React.ReactNode;
   variant?: 'center' | 'bottom';
+  skipEnter?: boolean;
 }
 
 export const Dialog = ({
@@ -21,25 +28,87 @@ export const Dialog = ({
   leading,
   titleAddon,
   variant = 'center',
+  skipEnter = false,
   children,
 }: React.PropsWithChildren<Props>) => {
   const { t } = useLingui();
+  const panelRef = React.useRef<HTMLDivElement | null>(null);
 
-  if (!open) {
+  const { mounted: rendered, closing } = usePresence(open);
+
+  const isPhone = useMediaQuery('(max-width: 600px)');
+  const isSheet = variant === 'bottom' && isPhone;
+  const swipe = useSwipeToClose(onClose, isSheet);
+  const dragY = swipe.offset;
+  const dragHandlers = swipe.handlers;
+  const resetSwipe = React.useEffectEvent(() => swipe.reset());
+
+  React.useEffect(() => {
+    if (!rendered) {
+      resetSwipe();
+    }
+  }, [rendered]);
+
+  const close = React.useEffectEvent(onClose);
+
+  React.useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    panelRef.current?.focus({ preventScroll: true });
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        close();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open]);
+
+  if (!rendered) {
     return null;
   }
 
   return createPortal(
-    <div className={styles.overlay} onClick={onClose} role="presentation">
+    <div
+      className={cn(
+        styles.overlay,
+        skipEnter && styles.noEnter,
+        closing && styles.overlayClosing
+      )}
+      onClick={onClose}
+      role="presentation"
+    >
       <div
-        className={`${styles.panel} ${styles[variant]}`}
+        ref={panelRef}
+        className={cn(
+          styles.panel,
+          styles[variant],
+          skipEnter && styles.noEnter,
+          closing && styles.panelClosing,
+          dragY > 0 && styles.dragging
+        )}
+        style={dragY > 0 ? { transform: `translateY(${dragY}px)` } : undefined}
         role="dialog"
         aria-modal="true"
         aria-label={typeof title === 'string' ? title : undefined}
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
       >
-        <header className={styles.header}>
+        {isSheet && (
+          <div className={styles.grabber} aria-hidden="true" {...dragHandlers}>
+            <span className={styles.grabberBar} />
+          </div>
+        )}
+
+        <header
+          className={styles.header}
+          {...(isSheet ? dragHandlers : undefined)}
+        >
           {leading ?? <div className={styles.headerSide} />}
 
           <div className={styles.titleGroup}>
@@ -52,6 +121,7 @@ export const Dialog = ({
               type="button"
               className={styles.iconBtn}
               onClick={onClose}
+              onPointerDown={e => e.stopPropagation()}
               aria-label={t`Close`}
             >
               <X size={18} />

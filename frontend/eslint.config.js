@@ -12,6 +12,7 @@ export default defineConfig([
       'dist',
       'public/mockServiceWorker.js',
       'src/locales/**/messages.ts',
+      'src/app/routeTree.gen.ts',
       'scripts/**',
     ],
   },
@@ -112,6 +113,12 @@ export default defineConfig([
           },
         },
       ],
+    },
+  },
+  {
+    files: ['src/app/providers/i18n/i18n.tsx'],
+    rules: {
+      '@typescript-eslint/only-throw-error': 'off',
     },
   },
 ]);

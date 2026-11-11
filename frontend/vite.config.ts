@@ -1,6 +1,7 @@
 import { lingui } from '@lingui/vite-plugin';
+import babel from '@rolldown/plugin-babel';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
-import react from '@vitejs/plugin-react';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
@@ -18,8 +19,6 @@ const createTonConnectManifest = (origin: string) => {
   };
 };
 
-// MSW only runs in dev (see features/mock-server), so its service worker
-// from public/ must not ship with the production build.
 const stripMockServiceWorkerPlugin = (): Plugin => {
   let outDir = 'dist';
 
@@ -81,6 +80,7 @@ export default defineConfig({
     }),
     lingui({ macroTransform: true }),
     react(),
+    babel({ presets: [reactCompilerPreset()] }),
     nodePolyfills({
       include: ['buffer'],
     }),

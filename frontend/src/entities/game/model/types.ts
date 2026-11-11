@@ -47,6 +47,10 @@ export interface TurnChangedEvent {
   type: typeof SERVER_EVENTS.TURN_CHANGED;
   payload: {
     activeSeat: number;
+
+    turnMs?: number;
+
+    timeBankMs?: number;
   };
 }
 
@@ -93,6 +97,15 @@ export interface PlayerInfo {
   avatar: string;
   stack: number;
   status: PlayerStatusType;
+}
+
+export interface PlayerStatusEvent {
+  type: typeof SERVER_EVENTS.PLAYER_STATUS;
+  payload: {
+    seat: number;
+    status: PlayerStatusType;
+    returning?: boolean;
+  };
 }
 
 export interface PlayerSeatedEvent {
@@ -154,7 +167,8 @@ export type ServerGameEvent =
   | BoardDealtEvent
   | ShowdownEvent
   | HandCompleteEvent
-  | DebugHolesEvent;
+  | DebugHolesEvent
+  | PlayerStatusEvent;
 
 type ClientCommands = (typeof CLIENT_COMMANDS)[keyof typeof CLIENT_COMMANDS];
 

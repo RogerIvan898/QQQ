@@ -1,0 +1,74 @@
+# Локальный стенд: RabbitMQ + MySQL + chain-service (broadcaster и watcher в одном процессе).
+# Сервис подписи здесь не поднимается: подписанные транзакции можно публиковать в withdrawals.signed вручную.
+#   docker compose up --build
+#   UI RabbitMQ: http://localhost:15672 (chain / chain), метрики: http://localhost:9090/metrics
+services:
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: chain
+      RABBITMQ_DEFAULT_PASS: chain
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: chain
+      MYSQL_USER: chain
+      MYSQL_PASSWORD: chain
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uchain", "-pchain"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  chain-service:
+    build: .
+    image: chain-service:local
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      RABBITMQ_URL: amqp://chain:chain@rabbitmq:5672/
+      MYSQL_DSN: chain:chain@tcp(mysql:3306)/chain
+      # Локально — заглушка сети. Для testnet: TON_CLIENT=toncenter, адреса
+      # кошельков ниже и TONCENTER_API_KEY (ключ добавим позже).
+      TON_CLIENT: stub
+      TONCENTER_URL: https://testnet.toncenter.com
+      TONCENTER_API_KEY: ""
+      # Для watcher с toncenter — адрес кошелька депозитов.
+      TON_DEPOSIT_ADDRESS: ""
+      # Для broadcaster с toncenter — горячий кошелёк выводов.
+      TON_WALLET_ADDRESS: ""
+      MAX_RETRIES: "3"
+      RETRY_BASE_DELAY: 5s
+      METRICS_PORT: "9090"
+      LOG_LEVEL: info
+    ports:
+      - "9090:9090"
+    # Больше SHUTDOWN_TIMEOUT (30s), чтобы Docker не убил процесс посреди drain.
+    stop_grace_period: 40s
+    restart: unless-stopped
+
+volumes:
+  rabbitmq-data:
+  mysql-data:

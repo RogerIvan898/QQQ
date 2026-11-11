@@ -39,6 +39,10 @@ export const resolveSeatActionBadge = (
   status: PlayerStatusType,
   blindRole?: BlindRole | null
 ): SeatActionBadge | null => {
+  if (status === PlayerStatus.SITTING_OUT) {
+    return SeatBadgeKind.SIT_OUT;
+  }
+
   if (status === PlayerStatus.ALL_IN) {
     return SeatBadgeKind.ALL_IN;
   }
@@ -62,10 +66,15 @@ export const resolveSeatActionBadge = (
   return null;
 };
 
+export const isStatusBadge = (badge: SeatActionBadge) =>
+  badge === SeatBadgeKind.ALL_IN ||
+  badge === PlayerAction.FOLD ||
+  badge === SeatBadgeKind.SIT_OUT;
+
 export const isBlindBadge = (badge: SeatActionBadge) =>
   badge === SeatBadgeKind.SB || badge === SeatBadgeKind.BB;
 
-const DEALER_OFFSET_RAD = (55 * Math.PI) / 180;
+const DEALER_OFFSET_RAD = (12 * Math.PI) / 180;
 const DEALER_OFFSET_COS = Math.cos(DEALER_OFFSET_RAD);
 const DEALER_OFFSET_SIN = Math.sin(DEALER_OFFSET_RAD);
 

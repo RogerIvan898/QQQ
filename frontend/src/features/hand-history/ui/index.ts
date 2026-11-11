@@ -1,1 +1,4 @@
-export { HandHistorySheet } from './hand-history-sheet';
+export {
+  HAND_HISTORY_TOGGLE_ATTR,
+  HandHistorySheet,
+} from './hand-history-sheet';

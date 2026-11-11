@@ -4,52 +4,6 @@
   gap: 20px;
 }
 
-.balanceCard {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas:
-    'label value'
-    'hint value';
-  gap: 2px 12px;
-  padding: 14px 16px;
-  text-align: left;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    background 0.2s;
-}
-
-.balanceCard:hover:not(:disabled) {
-  border-color: var(--color-border-hover);
-}
-
-.balanceCard:disabled {
-  cursor: default;
-}
-
-.balanceLabel {
-  grid-area: label;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-}
-
-.balanceHint {
-  grid-area: hint;
-  color: var(--color-text-secondary);
-  font-size: 11px;
-}
-
-.balanceValue {
-  grid-area: value;
-  align-self: center;
-  color: var(--color-primary);
-  font-size: 18px;
-  font-weight: 700;
-}
-
 .field {
   display: flex;
   flex-direction: column;
@@ -146,6 +100,7 @@
 
 .tabs {
   display: grid;
+  position: relative;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   padding: 4px;
@@ -156,27 +111,48 @@
 }
 
 .tab {
+  position: relative;
+  z-index: 1;
   height: 40px;
   border: 1.5px solid transparent;
   border-radius: calc(var(--radius-md) - 2px);
   background: transparent;
-  color: var(--option-off-text);
+  color: var(--color-text-secondary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition:
-    background 0.2s,
-    color 0.2s;
+  transition: color var(--dur-base) var(--ease-out);
 }
 
 .tab:hover {
   color: var(--color-text);
 }
 
-.tabActive {
-  border-color: var(--option-on-border);
-  background: var(--option-on-bg);
-  color: var(--option-on-text);
+.tabActive,
+.tabActive:hover {
+  color: var(--color-text);
+}
+.tabs::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 14px) / 2);
+  border-radius: calc(var(--radius-md) - 2px);
+  background: var(--color-bg-muted);
+  transition: transform var(--dur-slow) var(--ease-spring);
+  pointer-events: none;
+}
+
+.tabs:has(> .tab:nth-child(2).tabActive)::before {
+  transform: translateX(calc(100% + 6px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabs::before {
+    transition: none;
+  }
 }
 
 .walletCard {
@@ -231,11 +207,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.walletLabel {
-  color: var(--color-text-secondary);
-  font-size: 12px;
-}
-
 .walletAddress {
   color: var(--color-text);
   font-family: monospace;
@@ -243,81 +214,14 @@
   font-weight: 600;
 }
 
-.connectBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.connectText {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.addressSection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.warningWrap > * {
-  margin-bottom: 0;
-}
-
 .addressInput {
   font-family: monospace;
-  /* Below 16px iOS zooms the page when the field is focused. */
+
   font-size: 16px;
 }
 
-.primaryBtn,
-.secondaryBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  height: 50px;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 0.2s,
-    color 0.2s,
-    border-color 0.2s;
-}
-
 .primaryBtn {
-  background: var(--color-primary);
-  color: var(--color-text-on-primary);
-}
-
-.primaryBtn:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-}
-
-.primaryBtn:active:not(:disabled) {
-  background: var(--color-primary-active);
-}
-
-.primaryBtn:disabled {
-  background: var(--color-bg-muted);
-  color: var(--color-text-secondary);
-  cursor: not-allowed;
-}
-
-.secondaryBtn {
-  background: var(--color-bg-muted);
-  color: var(--color-text);
-  border: 1px solid var(--color-border-strong);
-}
-
-.secondaryBtn:hover {
-  border-color: var(--color-border-hover);
+  composes: solid from '../../../shared/ui/button/solid-button.module.css';
 }
 
 @media (max-width: 600px) {
@@ -331,8 +235,7 @@
 
   .amountBox,
   .addressBox,
-  .primaryBtn,
-  .secondaryBtn {
+  .primaryBtn {
     height: 60px;
   }
 
@@ -346,48 +249,19 @@
     font-size: 22px;
   }
 
-  .balanceValue {
-    font-size: 20px;
-  }
-
   .tab {
     height: 44px;
     font-size: 14px;
   }
 
-  .primaryBtn,
-  .secondaryBtn {
+  .primaryBtn {
     font-size: 17px;
     border-radius: var(--radius-lg);
   }
 }
 
-/* Same look as the Settings → Wallet connect button. */
 .connectBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  height: 52px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
-  color: var(--color-text-on-primary);
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: filter 0.15s ease;
-}
-
-.connectBtn:hover {
-  filter: brightness(1.1);
-}
-
-.connectBtn:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  composes: solid from '../../../shared/ui/button/solid-button.module.css';
 }
 
 .paneStack {
@@ -396,7 +270,6 @@
   gap: 12px;
 }
 
-/* Alert carries its own bottom margin; spacing here comes from the gap. */
 .paneStack.paneStack > * {
   margin-bottom: 0;
 }
@@ -415,4 +288,11 @@
 
 .pasteBtn:hover {
   filter: brightness(1.15);
+}
+
+.submitError {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 13px;
+  text-align: center;
 }

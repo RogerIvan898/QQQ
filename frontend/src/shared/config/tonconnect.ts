@@ -2,7 +2,7 @@ const DEFAULT_APP_URL = 'http://localhost:5000';
 
 const normalizeOrigin = (value: string) => value.replace(/\/$/, '');
 
-export const getAppOrigin = () => {
+const getAppOrigin = () => {
   if (typeof window !== 'undefined') {
     return window.location.origin;
   }
@@ -15,13 +15,3 @@ export const getAppOrigin = () => {
 
 export const getTonConnectManifestUrl = () =>
   `${getAppOrigin()}/tonconnect-manifest.json`;
-
-export const createTonConnectManifest = (origin: string) => {
-  const appOrigin = normalizeOrigin(origin);
-
-  return {
-    url: appOrigin,
-    name: 'GRAM Poker',
-    iconUrl: `${appOrigin}/ton-icon.png`,
-  };
-};

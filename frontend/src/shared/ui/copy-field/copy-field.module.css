@@ -1,11 +1,12 @@
 .fieldGroup {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .fieldHeader {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .fieldHeader span {
@@ -19,46 +20,169 @@
 }
 
 .fieldBox {
+  width: 100%;
   height: 52px;
   display: flex;
   align-items: center;
-  background: var(--color-bg);
+  gap: 10px;
+  padding: 0 6px 0 14px;
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
-  overflow: hidden;
+  background: var(--color-bg);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    background var(--dur-base) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .fieldBox:hover {
+    border-color: var(--color-border-hover);
+  }
+}
+
+.fieldBox:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .text {
   flex: 1;
   min-width: 0;
-  padding-left: 14px;
-  font-family: monospace;
-  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--color-text-secondary);
+  color: var(--color-text);
 }
 
 .copyBtn {
-  width: 48px;
-  height: 100%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  border: none;
+  gap: 6px;
+  flex-shrink: 0;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: calc(var(--radius-md) - 4px);
   background: var(--color-bg-muted);
   color: var(--color-text);
-  cursor: pointer;
-  transition: background 0.2s;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    background var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
-.copyBtn:hover {
-  background: color-mix(in srgb, var(--color-bg-muted) 85%, white);
+@media (hover: hover) {
+  .fieldBox:hover .copyBtn {
+    background: color-mix(in srgb, var(--color-bg-muted) 85%, white);
+  }
+}
+
+.fieldBox:active .copyBtn {
+  transform: scale(0.95);
+}
+
+.copied {
+  border-color: color-mix(in srgb, var(--color-success) 45%, transparent);
+}
+
+.copied .copyBtn,
+.copied:hover .copyBtn {
+  background: color-mix(in srgb, var(--color-success) 18%, transparent);
+  color: var(--color-success);
+}
+
+.copied .copyBtn svg {
+  animation: pop var(--dur-slow) var(--ease-spring);
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.4);
+  }
 }
 
 @media (max-width: 600px) {
   .fieldBox {
     height: 56px;
+  }
+}
+
+@media (max-width: 360px) {
+  .copyLabel {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copied .copyBtn svg {
+    animation: none;
+  }
+}
+
+.hint {
+  margin: 6px 0 0;
+  color: var(--color-warning);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.labelRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.infoBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--dur-base) var(--ease-out),
+    background var(--dur-base) var(--ease-out);
+}
+
+.infoBtn:hover,
+.infoBtnOn {
+  color: var(--color-primary-light);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.infoBtn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.info {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg));
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+  animation: infoIn var(--dur-base) var(--ease-out);
+}
+
+@keyframes infoIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
   }
 }

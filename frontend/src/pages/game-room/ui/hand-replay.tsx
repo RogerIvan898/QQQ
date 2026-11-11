@@ -21,6 +21,7 @@ import { sessionModel } from 'entities/session';
 import {
   buildTimeline,
   replayState,
+  type ReplayStep,
   toGameState,
   type HandRecord,
 } from 'features/hand-history';
@@ -49,6 +50,10 @@ const ACTION_LABELS = {
   RAISE: msg`Raise`,
 } as const satisfies Record<ActionKind, MessageDescriptor>;
 
+const SCRUBBER_THUMB_PX = 16;
+
+const TOOLTIP_EDGE_PX = 90;
+
 const STREET_LABELS: Partial<Record<GameStreet, MessageDescriptor>> = {
   PREFLOP: msg`Preflop`,
   FLOP: msg`Flop`,
@@ -60,19 +65,17 @@ const STREET_LABELS: Partial<Record<GameStreet, MessageDescriptor>> = {
 interface Props {
   hand: HandRecord;
   onClose: () => void;
+
+  suspended?: boolean;
 }
 
-/**
- * Step-by-step replay drawn with the real table widget: each step is fed into
- * an isolated effector scope, so the live game state is never touched.
- */
-export const HandReplay = ({ hand, onClose }: Props) => {
+export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
   const { i18n, t } = useLingui();
   const [viewerId, amountsInBb] = useUnit([
     sessionModel.$currentUserId,
     $amountsInBb,
   ]);
-  // The caption sits outside the replay scope: format with this hand's blind.
+
   const formatChips = (amount: number) =>
     amountsInBb && hand.bigBlind > 0
       ? formatBigBlinds(amount, hand.bigBlind)
@@ -81,6 +84,10 @@ export const HandReplay = ({ hand, onClose }: Props) => {
   const lastStep = timeline.length - 1;
   const [step, setStep] = React.useState(0);
   const [playing, setPlaying] = React.useState(false);
+
+  if (suspended && playing) {
+    setPlaying(false);
+  }
   const replay = replayState(hand, timeline, step);
 
   const scope = React.useMemo(() => {
@@ -99,14 +106,13 @@ export const HandReplay = ({ hand, onClose }: Props) => {
         [gameModel.$debugHoles, {}],
         [gameModel.$collectingBets, false],
         [sessionModel.$currentUserId, viewerId],
-        // The scope starts from defaults; carry the setting and table blind in.
+
         [$amountsInBb, amountsInBb],
         [$displayBigBlind, hand.bigBlind],
       ],
     });
   }, [hand, timeline, step, viewerId, amountsInBb]);
 
-  // Autoplay stops by itself on the last step.
   const isPlaying = playing && step < lastStep;
 
   React.useEffect(() => {
@@ -137,30 +143,64 @@ export const HandReplay = ({ hand, onClose }: Props) => {
     setPlaying(true);
   };
 
-  const current = replay.step;
-  let caption: React.ReactNode;
+  const describe = (item: ReplayStep): React.ReactNode => {
+    if (item.kind === 'start') {
+      return t`Hand started`;
+    }
 
-  if (current.kind === 'start') {
-    caption = t`Hand started`;
-  } else if (current.kind === 'action') {
-    caption = (
-      <>
-        <b>{current.action.isMe ? t`You` : current.action.name}</b> ·{' '}
-        {i18n._(ACTION_LABELS[current.action.action])}
-        {current.action.amount ? ` ${formatChips(current.action.amount)}` : ''}
-      </>
-    );
-  } else if (current.kind === 'deal') {
-    caption = i18n._(STREET_LABELS[current.street] ?? msg`Preflop`);
-  } else {
-    caption = hand.winners.map(winner => (
+    if (item.kind === 'action') {
+      return (
+        <>
+          <b>{item.action.isMe ? t`You` : item.action.name}</b> ·{' '}
+          {i18n._(ACTION_LABELS[item.action.action])}
+          {item.action.amount ? ` ${formatChips(item.action.amount)}` : ''}
+        </>
+      );
+    }
+
+    if (item.kind === 'deal') {
+      return i18n._(STREET_LABELS[item.street] ?? msg`Preflop`);
+    }
+
+    return hand.winners.map(winner => (
       <span key={winner.seat} className={styles.captionLine}>
         <b>{winner.isMe ? t`You` : winner.name}</b> +
         {formatChips(winner.amount)}
         {winner.combination ? ` · ${winner.combination}` : ''}
       </span>
     ));
-  }
+  };
+
+  const caption = describe(replay.step);
+
+  const [hover, setHover] = React.useState<{
+    index: number;
+    x: number;
+  } | null>(null);
+
+  const handleTrackHover = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse') {
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const usable = rect.width - SCRUBBER_THUMB_PX;
+    const ratio = Math.min(
+      1,
+      Math.max(0, (event.clientX - rect.left - SCRUBBER_THUMB_PX / 2) / usable)
+    );
+    const index = Math.round(ratio * lastStep);
+    const tickX =
+      SCRUBBER_THUMB_PX / 2 + (lastStep > 0 ? index / lastStep : 0) * usable;
+
+    setHover({
+      index,
+      x: Math.min(
+        rect.width - TOOLTIP_EDGE_PX,
+        Math.max(TOOLTIP_EDGE_PX, tickX)
+      ),
+    });
+  };
 
   const time = new Intl.DateTimeFormat(i18n.locale, {
     hour: '2-digit',
@@ -168,33 +208,79 @@ export const HandReplay = ({ hand, onClose }: Props) => {
   }).format(new Date(hand.startedAt));
 
   return createPortal(
-    <div className={styles.overlay} role="dialog" aria-modal="true">
+    <div
+      className={styles.overlay}
+      role="dialog"
+      aria-modal="true"
+      hidden={suspended}
+    >
       <header className={styles.header}>
         <button type="button" className={styles.backBtn} onClick={onClose}>
           <ArrowLeft size={14} strokeWidth={2.25} />
-          {t`Hands`}
+          {t`Back`}
         </button>
         <span className={styles.title}>{t`Hand at ${time}`}</span>
       </header>
 
-      <Provider value={scope}>
-        <PokerBoard />
-      </Provider>
+      <div className={styles.stage}>
+        <Provider value={scope}>
+          <PokerBoard />
+        </Provider>
+      </div>
 
       <div className={styles.panel}>
         <p className={styles.caption} aria-live="polite">
           {caption}
         </p>
 
-        <input
-          type="range"
-          className={styles.scrubber}
-          min={0}
-          max={lastStep}
-          value={step}
-          onChange={event => go(Number(event.target.value))}
-          aria-label={t`Hand step`}
-        />
+        <div
+          className={styles.scrubberTrack}
+          onPointerMove={handleTrackHover}
+          onPointerLeave={() => setHover(null)}
+          style={
+            {
+              '--progress': lastStep > 0 ? step / lastStep : 0,
+            } as React.CSSProperties
+          }
+        >
+          <input
+            type="range"
+            className={styles.scrubber}
+            min={0}
+            max={lastStep}
+            value={step}
+            onChange={event => go(Number(event.target.value))}
+            aria-label={t`Hand step`}
+          />
+          {hover ? (
+            <div
+              className={styles.tooltip}
+              style={{ left: hover.x }}
+              aria-hidden="true"
+            >
+              <span className={styles.tooltipStep}>
+                {hover.index + 1}/{timeline.length}
+              </span>
+              {describe(timeline[hover.index])}
+            </div>
+          ) : null}
+          <div className={styles.ticks} aria-hidden="true">
+            {timeline.map((item, index) => (
+              <span
+                key={index}
+                className={cn(
+                  styles.tick,
+                  (item.kind === 'deal' || item.kind === 'showdown') &&
+                    styles.tickStreet,
+                  index <= step && styles.tickPassed
+                )}
+                style={{
+                  left: `${lastStep > 0 ? (index / lastStep) * 100 : 0}%`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
 
         <div className={styles.controls}>
           <button

@@ -124,7 +124,6 @@ const startOfDay = (iso: string) => {
   ).getTime();
 };
 
-/** Consecutive runs of the same calendar day (items are newest first). */
 const groupByDay = (items: Transaction[]) => {
   const groups: { day: number; items: Transaction[] }[] = [];
 
@@ -142,7 +141,6 @@ const groupByDay = (items: Transaction[]) => {
   return groups;
 };
 
-/** Wallet transactions, loading older pages as the list scrolls. */
 export const TransactionsList = () => {
   const { i18n, t } = useLingui();
   const [typeFilter, changeFilter] = useUnit([
@@ -162,8 +160,6 @@ export const TransactionsList = () => {
   const [selected, setSelected] = React.useState<Transaction | null>(null);
   const sentinelRef = React.useRef<HTMLDivElement | null>(null);
 
-  // The sentinel sits after the last row; reaching it asks for the next page.
-  // The model drops the request while one is in flight or nothing is left.
   React.useEffect(() => {
     const sentinel = sentinelRef.current;
 
@@ -201,25 +197,44 @@ export const TransactionsList = () => {
             month: 'long',
           }).format(day);
 
+  const [retrying, setRetrying] = React.useState(false);
+
+  if (retrying && !loading) {
+    setRetrying(false);
+  }
+
+  const retryInitial = () => {
+    setRetrying(true);
+    retry();
+  };
+
+  const showInitialError =
+    items.length === 0 && (error || (retrying && loading));
+
   const renderBody = () => {
+    if (showInitialError) {
+      return (
+        <div className={styles.state}>
+          <AlertCircle size={28} strokeWidth={1.75} />
+          <span>{t`Couldn't load transactions`}</span>
+          <button
+            type="button"
+            className={styles.retryBtn}
+            onClick={retryInitial}
+            disabled={loading}
+          >
+            <RotateCw size={14} className={loading ? styles.spin : undefined} />
+            {t`Try again`}
+          </button>
+        </div>
+      );
+    }
+
     if (initialLoad) {
       return (
         <div className={styles.state}>
           <Loader2 size={24} className={styles.spin} />
           <span>{t`Loading transactions…`}</span>
-        </div>
-      );
-    }
-
-    if (items.length === 0 && error) {
-      return (
-        <div className={styles.state}>
-          <AlertCircle size={28} strokeWidth={1.75} />
-          <span>{t`Couldn't load transactions`}</span>
-          <button type="button" className={styles.retryBtn} onClick={retry}>
-            <RotateCw size={14} />
-            {t`Try again`}
-          </button>
         </div>
       );
     }

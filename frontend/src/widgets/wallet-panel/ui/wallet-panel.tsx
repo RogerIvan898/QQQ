@@ -5,22 +5,22 @@ import { useUnit } from 'effector-react';
 import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react';
 
 import { walletModel } from 'entities/wallet';
+import { useDismiss } from 'shared/hooks/use-dismiss';
 import { useMediaQuery } from 'shared/hooks/use-media-query';
+import { usePresence } from 'shared/hooks/use-presence';
 import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 import { Dialog } from 'shared/ui/dialog';
-import { Logo } from 'shared/ui/logo';
+import { GramBadge } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 import { formatBalance, truncateMiddle } from 'shared/utils/format';
 
 import { TransactionsList } from './transactions-list';
 import styles from './wallet-panel.module.css';
 
-// Matches the Dialog's bottom-sheet breakpoint.
 const MOBILE_QUERY = '(max-width: 600px)';
 
-/** Where the TON Connect UI renders its modal. */
 const TON_CONNECT_ROOT = '#tc-widget-root';
-/** Clicks here are not "outside" the popover. */
+
 const KEEP_OPEN_SELECTOR = `[role="dialog"], ${TON_CONNECT_ROOT}`;
 
 interface Props {
@@ -28,9 +28,7 @@ interface Props {
   onClose: () => void;
   onDeposit: () => void;
   onWithdraw: () => void;
-  /** Wallet button: clicks on it are not "outside" (it toggles the panel). */
   anchorRef: React.RefObject<HTMLElement | null>;
-  /** A deposit/withdraw form is open on top: keep the panel while it is. */
   suspended?: boolean;
 }
 
@@ -50,31 +48,37 @@ const WalletContent = ({
 
   return (
     <div className={styles.content}>
-      <div className={styles.walletStatus}>
-        <Wallet
-          size={16}
-          className={cn(styles.statusIcon, address && styles.statusConnected)}
-        />
-        {address ? (
-          <span>
-            {t`Wallet connected`}{' '}
-            <span className={styles.address}>{truncateMiddle(address, 4)}</span>
-          </span>
-        ) : (
-          <>
-            <span>{t`Wallet not connected`}</span>
-            <button type="button" className={styles.linkBtn} onClick={connect}>
-              {t`Connect`}
-            </button>
-          </>
-        )}
-      </div>
-
       <div className={styles.walletCard}>
+        <div className={styles.walletStatus}>
+          <Wallet
+            size={16}
+            className={cn(styles.statusIcon, address && styles.statusConnected)}
+          />
+          {address ? (
+            <span>
+              {t`Wallet connected`}{' '}
+              <span className={styles.address}>
+                {truncateMiddle(address, 4)}
+              </span>
+            </span>
+          ) : (
+            <>
+              <span>{t`Wallet not connected`}</span>
+              <button
+                type="button"
+                className={styles.linkBtn}
+                onClick={connect}
+              >
+                {t`Connect`}
+              </button>
+            </>
+          )}
+        </div>
+
         <div className={styles.balanceBlock}>
           <span className={styles.balanceLabel}>{t`Available balance`}</span>
           <span className={styles.balance}>
-            <Logo size={26} className={styles.balanceLogo} />
+            <GramBadge size={26} className={styles.balanceLogo} />
             {balance === null ? '—' : formatBalance(balance, i18n.locale)}
             <span className={styles.currency}>TON</span>
           </span>
@@ -108,10 +112,6 @@ const WalletContent = ({
   );
 };
 
-/**
- * My Wallet: balance, deposit/withdraw and the only place with the
- * transaction history. Popover on desktop/tablet, bottom sheet on phones.
- */
 export const WalletPanel = ({
   open,
   onClose,
@@ -122,6 +122,7 @@ export const WalletPanel = ({
 }: Props) => {
   const { t } = useLingui();
   const isMobile = useMediaQuery(MOBILE_QUERY);
+  const presence = usePresence(open && !isMobile);
   const panelRef = React.useRef<HTMLDivElement | null>(null);
   const [items, loading, reset] = useUnit([
     walletModel.$transactions,
@@ -129,75 +130,47 @@ export const WalletPanel = ({
     walletModel.transactionsReset,
   ]);
 
-  // First open loads the newest page; later opens keep what is loaded.
-  React.useEffect(() => {
-    if (open && items.length === 0 && !loading) {
+  const loadFirstPage = React.useEffectEvent(() => {
+    if (items.length === 0 && !loading) {
       reset();
     }
-    // Only on opening.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  });
+
+  React.useEffect(() => {
+    if (open) {
+      loadFirstPage();
+    }
   }, [open]);
 
-  // Desktop popover: close on outside click and Escape.
-  React.useEffect(() => {
-    if (!open || isMobile || suspended) {
-      return;
-    }
-
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-
-      if (
-        panelRef.current?.contains(target) ||
-        anchorRef.current?.contains(target) ||
-        // Dialogs opened from the panel (transaction details) live in portals,
-        // and the TON Connect modal renders into its own root.
-        (target instanceof Element && target.closest(KEEP_OPEN_SELECTOR))
-      ) {
-        return;
-      }
-
-      onClose();
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      // Escape inside the TON Connect modal closes that modal, not the panel.
-      if (
-        event.target instanceof Element &&
-        event.target.closest(TON_CONNECT_ROOT)
-      ) {
-        return;
-      }
-
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open, isMobile, suspended, onClose, anchorRef]);
-
-  if (!open) {
-    return null;
-  }
+  useDismiss({
+    enabled: open && !isMobile && !suspended,
+    insideRefs: [panelRef, anchorRef],
+    keepOpenSelector: KEEP_OPEN_SELECTOR,
+    ignoreEscapeSelector: TON_CONNECT_ROOT,
+    onDismiss: onClose,
+  });
 
   if (isMobile) {
     return (
-      <Dialog open variant="bottom" onClose={onClose} title={t`My Wallet`}>
+      <Dialog
+        open={open}
+        variant="bottom"
+        onClose={onClose}
+        title={t`My Wallet`}
+      >
         <WalletContent onDeposit={onDeposit} onWithdraw={onWithdraw} />
       </Dialog>
     );
   }
 
+  if (!presence.mounted) {
+    return null;
+  }
+
   return (
     <div
       ref={panelRef}
-      className={styles.popover}
+      className={cn(styles.popover, presence.closing && styles.popoverClosing)}
       role="dialog"
       aria-label={t`My Wallet`}
     >

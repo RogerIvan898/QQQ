@@ -6,9 +6,55 @@
 .copyFields {
   display: flex;
   flex-direction: column;
-  margin-top: 8px;
 }
 
 .copyFields > *:last-child {
   margin-bottom: 0;
+}
+
+.qrToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  margin-top: 4px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-primary-light);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.qrToggle:hover {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+}
+
+.qrToggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.chevron,
+.chevronOpen {
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.qrWrap {
+  padding-top: 8px;
+  animation: qrIn var(--dur-base) var(--ease-out);
+}
+
+@keyframes qrIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }

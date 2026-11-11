@@ -3,11 +3,10 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  /* Fill #root (which already reserves the Telegram safe areas); 100vh would
-     overflow on phones and add a scrollbar. */
+
   min-height: 100%;
-  background-color: #0d1117;
-  color: #f0f6fc;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   user-select: none;
 }
 
@@ -28,20 +27,20 @@
 }
 
 .centerIcon {
-  color: #38bdf8;
+  color: var(--color-primary-light);
   opacity: 0.85;
 }
 
 .spinner {
   position: absolute;
-  color: #0284c7;
+  color: var(--color-primary);
   animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
 }
 
 .label {
-  font-size: 0.95rem;
+  font-size: 15px;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   margin: 0;
   letter-spacing: 0.02em;
 }
@@ -57,21 +56,25 @@
 .track {
   width: 100%;
   height: 4px;
-  background-color: #1e293b;
+  background-color: var(--color-bg-elevated);
   border-radius: 9999px;
   overflow: hidden;
 }
 
 .bar {
   height: 100%;
-  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  background: linear-gradient(
+    90deg,
+    var(--color-primary-light),
+    var(--color-primary)
+  );
   border-radius: 9999px;
   transition: width 0.2s ease-out;
 }
 
 .progressText {
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: 12px;
+  color: var(--color-text-secondary);
   font-weight: 600;
 }
 

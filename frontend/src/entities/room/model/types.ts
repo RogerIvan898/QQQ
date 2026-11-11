@@ -1,8 +1,12 @@
 export type RoomMode = 'cash' | 'heads-up';
 
+export type RoomGame = 'nlh';
+
 export interface RoomCardInfo {
   name: string;
   mode: RoomMode;
+
+  game?: RoomGame;
   blinds: string;
   players: number;
   max: number;

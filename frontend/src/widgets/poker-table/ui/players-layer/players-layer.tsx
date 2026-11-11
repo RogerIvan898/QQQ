@@ -5,10 +5,10 @@ import { useStoreMap, useUnit } from 'effector-react';
 
 import { gameModel } from 'entities/game';
 import { sessionModel } from 'entities/session';
-import { $raisePanelTop } from 'features/player-actions';
+import { $raisePanelRect } from 'features/player-actions';
 import { useElementSize } from 'shared/hooks/use-element-size';
 import { useChipFormatter } from 'shared/lib/display-settings';
-import { Logo } from 'shared/ui/logo';
+import { GramMark } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 
 import styles from './players-layer.module.css';
@@ -32,10 +32,6 @@ interface FlightProps {
   className?: string;
 }
 
-/**
- * Moves on transform only: the outer box animates X and the inner one Y with
- * different easings, which together trace an arc without touching layout.
- */
 const ChipFlight = ({
   amount,
   fromX,
@@ -45,7 +41,7 @@ const ChipFlight = ({
   arrived,
   className,
 }: FlightProps) => {
-  const formatChips = useChipFormatter();
+  const formatChips = useChipFormatter(false);
 
   return (
     <div
@@ -61,7 +57,7 @@ const ChipFlight = ({
     >
       <div className={styles.flightY}>
         <div className={styles.potFlight}>
-          <Logo size={16} className={styles.potFlightLogo} />
+          <GramMark size={16} className={styles.potFlightLogo} />
           <span>{formatChips(amount)}</span>
         </div>
       </div>
@@ -70,15 +66,11 @@ const ChipFlight = ({
 };
 
 export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
-  const [viewerId, collecting, raisePanelTop] = useUnit([
+  const [viewerId, collecting, raisePanel] = useUnit([
     sessionModel.$currentUserId,
     gameModel.$collectingBets,
-    $raisePanelTop,
+    $raisePanelRect,
   ]);
-  // Primitive selections: the layer re-renders only when seating changes,
-  // per-player updates are handled inside <Seat>.
-  // "seat:playerId" pairs; the id keeps a seat remounting when someone else
-  // sits down, as keying by player id did before.
   const seatingKey = useStoreMap(gameModel.$players, players =>
     Object.values(players)
       .map(player => `${player.seat}:${player.id}`)
@@ -127,33 +119,41 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
     onHidePot
   );
 
-  // Lift the viewer's seat just enough to clear the raise panel. Uses the
-  // layout box (offsetTop/offsetHeight), which the lift's `translate` and its
-  // transition don't affect, so repeated measurements stay stable.
   React.useLayoutEffect(() => {
     const element = viewerSeatRef.current;
     const parent = element?.offsetParent;
 
-    if (raisePanelTop === null || !element || !parent) {
+    if (raisePanel === null || !element || !parent) {
       setViewerLift(0);
       return;
     }
 
-    // The wrapper is centered on its anchor with translate(-50%, -50%).
+    const seatBox = element.getBoundingClientRect();
+    const overlapsHorizontally =
+      seatBox.right > raisePanel.left && seatBox.left < raisePanel.right;
+
+    if (!overlapsHorizontally) {
+      setViewerLift(0);
+      return;
+    }
+
     const restingBottom =
       parent.getBoundingClientRect().top +
       element.offsetTop +
       element.offsetHeight / 2;
 
-    setViewerLift(Math.max(0, Math.round(restingBottom - raisePanelTop + 8)));
-  }, [raisePanelTop, seats]);
+    setViewerLift(Math.max(0, Math.round(restingBottom - raisePanel.top + 8)));
+  }, [raisePanel, seats]);
 
   if (!tableElement || !tableSize || !seats.length) {
     return null;
   }
 
   return createPortal(
-    <div className={styles.playersLayer}>
+    <div
+      className={styles.playersLayer}
+      style={{ '--table-w': `${tableSize.width}px` } as React.CSSProperties}
+    >
       {collectFlights?.map(flight => (
         <ChipFlight
           key={`collect-${flight.seat}`}

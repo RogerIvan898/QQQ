@@ -4,6 +4,7 @@ import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
 import { useUnit } from 'effector-react';
 
+import { walletModel } from 'entities/wallet';
 import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 import { Dialog } from 'shared/ui/dialog';
 
@@ -18,26 +19,29 @@ interface Props {
   open: boolean;
   onClose: () => void;
   balance: number;
-  onSubmit?: (payload: WithdrawPayload) => void;
+
+  onSubmit?: (payload: WithdrawPayload) => Promise<unknown> | void;
 }
 
-/** Withdraw to the connected TON wallet or to any TON address. */
 export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
   const { t } = useLingui();
   const wallet = useUnit($tonWallet);
   const connectedAddress = wallet?.friendlyAddress ?? '';
+  const savedAddress = useUnit(walletModel.$savedWithdrawAddress);
 
   const [amount, setAmount] = useState(0);
   const [draft, setDraft] = useState('');
   const [destination, setDestination] = useState<WithdrawDestination>('wallet');
   const [customAddress, setCustomAddress] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitFailed, setSubmitFailed] = useState(false);
 
-  // Default to the connected wallet when there is one.
   useEffect(() => {
     if (open) {
-      setDestination(connectedAddress ? 'wallet' : 'address');
+      setDestination(savedAddress ? 'address' : 'wallet');
+      setCustomAddress(savedAddress ?? '');
     }
-  }, [open, connectedAddress]);
+  }, [open, savedAddress]);
 
   const targetAddress =
     destination === 'wallet' ? connectedAddress : customAddress.trim();
@@ -46,7 +50,8 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
       ? Boolean(connectedAddress)
       : isValidTonAddress(customAddress);
   const exceedsBalance = amount > balance;
-  const canSubmit = isAddressValid && amount > 0 && !exceedsBalance;
+  const canSubmit =
+    isAddressValid && amount > 0 && !exceedsBalance && !submitting;
 
   const submitLabel =
     destination === 'wallet' && !connectedAddress ? (
@@ -66,6 +71,7 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
     setAmount(0);
     setDraft('');
     setCustomAddress('');
+    setSubmitFailed(false);
   };
 
   const handleAmountChange = (value: string) => {
@@ -93,18 +99,26 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
       .catch(() => undefined);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) {
       return;
     }
 
-    onSubmit?.({
-      amount,
-      address: targetAddress,
-      destination,
-    });
+    setSubmitting(true);
+    setSubmitFailed(false);
 
-    handleClose();
+    try {
+      await onSubmit?.({
+        amount,
+        address: targetAddress,
+        destination,
+      });
+      handleClose();
+    } catch {
+      setSubmitFailed(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -136,10 +150,16 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
           type="button"
           className={styles.primaryBtn}
           disabled={!canSubmit}
-          onClick={handleSubmit}
+          onClick={() => void handleSubmit()}
         >
-          {submitLabel}
+          {submitting ? t`Sending…` : submitLabel}
         </button>
+
+        {submitFailed ? (
+          <p className={styles.submitError} role="alert">
+            {t`The withdrawal didn't go through. Your balance is unchanged; try again.`}
+          </p>
+        ) : null}
       </div>
     </Dialog>
   );

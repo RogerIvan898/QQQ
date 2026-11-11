@@ -6,18 +6,37 @@ import type { PlayerActionType, PlayerStatusType } from 'entities/player';
 import { VIEWER_ID } from 'entities/session/model';
 import { clamp } from 'shared/utils/math';
 
+import { getMockNickname } from '../profile';
 import type { MockRoomConfig } from '../rooms';
 
 import { chooseBotAction } from './bot-policy';
-import { readPlayerAction, readReveal, type ChosenAction } from './commands';
+import {
+  readPlayerAction,
+  readSitIn,
+  readReveal,
+  type ChosenAction,
+} from './commands';
 import { createShuffledDeck } from './deck';
 import { rankHand } from './rank';
 
-const BOT_NAMES = ['Nova', 'Rex', 'Ivy', 'Lux'] as const;
-const HERO_TURN_MS = 20_000;
+const BOT_NAMES = [
+  'Nova',
+  'Rex',
+  'Ivy',
+  'Lux',
+  'Max',
+  'Zoe',
+  'Kai',
+  'Mia',
+] as const;
+
+const TURN_MS = 15_000;
+const TIME_BANK_MS = 10_000;
+
+const HERO_TURN_MS = TURN_MS + TIME_BANK_MS;
 const BOT_ACTION_MS = 1_600;
 const STREET_PAUSE_MS = 900;
-const BETWEEN_HANDS_MS = 1_600;
+const BETWEEN_HANDS_MS = 3_500;
 
 interface Seat {
   id: string;
@@ -30,6 +49,7 @@ interface Seat {
   folded: boolean;
   allIn: boolean;
   acted: boolean;
+  sittingOut: boolean;
 }
 
 interface MockSocket {
@@ -65,10 +85,13 @@ export class PokerTable {
 
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
 
+  private readonly allInScenario: boolean;
+
   constructor(
     private readonly client: MockSocket,
     room: MockRoomConfig
   ) {
+    this.allInScenario = room.scenario === 'all-in';
     this.smallBlind = room.smallBlind;
     this.bigBlind = room.bigBlind;
 
@@ -76,12 +99,18 @@ export class PokerTable {
     const bots = BOT_NAMES.slice(0, room.botCount);
 
     this.seats = [
-      this.createSeat(VIEWER_ID, 'You', 0, stack),
+      this.createSeat(VIEWER_ID, getMockNickname(), 0, stack),
       ...bots.map((name, index) =>
         this.createSeat(`bot-${index + 1}`, name, index + 1, stack)
       ),
     ];
     this.button = this.seats.length - 1;
+
+    const away = this.seats[this.seats.length - 1];
+
+    if (!this.allInScenario && this.seats.length > 3 && away) {
+      away.sittingOut = true;
+    }
   }
 
   start() {
@@ -124,6 +153,7 @@ export class PokerTable {
       folded: false,
       allIn: false,
       acted: false,
+      sittingOut: false,
     };
   }
 
@@ -144,8 +174,14 @@ export class PokerTable {
     this.deck = createShuffledDeck();
     this.board = [];
 
+    if (this.allInScenario) {
+      this.seats.forEach(seat => {
+        seat.stack = this.bigBlind * 100;
+      });
+    }
+
     this.seats.forEach(seat => {
-      const playing = seat.stack > 0;
+      const playing = seat.stack > 0 && !seat.sittingOut;
 
       seat.folded = !playing;
       seat.allIn = false;
@@ -307,7 +343,11 @@ export class PokerTable {
 
       this.emit({
         type: SERVER_EVENTS.TURN_CHANGED,
-        payload: { activeSeat: seat.seat },
+        payload: {
+          activeSeat: seat.seat,
+          turnMs: TURN_MS,
+          timeBankMs: TIME_BANK_MS,
+        },
       });
 
       const action =
@@ -331,8 +371,6 @@ export class PokerTable {
       bankroll,
       seat.committed + this.minRaiseExtra(seat)
     );
-    // `>=`: with less than a min-raise behind, the minimum is clamped to the
-    // whole stack and an all-in for less must still be allowed.
     const canRaise = seat.stack > need && bankroll >= minTotal;
 
     this.emit({
@@ -352,6 +390,7 @@ export class PokerTable {
       this.clearHeroTimer();
       this.heroTimer = setTimeout(() => {
         this.heroTimer = null;
+        seat.sittingOut = true;
         this.resolveHero(
           need > 0
             ? { action: PlayerAction.FOLD }
@@ -362,10 +401,21 @@ export class PokerTable {
   }
 
   private async botAction(seat: Seat): Promise<ChosenAction | null> {
-    await this.sleep(BOT_ACTION_MS);
+    await this.sleep(this.allInScenario ? 350 : BOT_ACTION_MS);
 
     if (this.closed) {
       return null;
+    }
+
+    if (this.allInScenario) {
+      const need = Math.max(0, this.currentBet - seat.committed);
+
+      return seat.stack > need
+        ? {
+            action: need === 0 ? PlayerAction.BET : PlayerAction.RAISE,
+            amount: seat.committed + seat.stack,
+          }
+        : { action: PlayerAction.CALL };
     }
 
     return chooseBotAction({
@@ -470,6 +520,24 @@ export class PokerTable {
     if (reveal !== null) {
       this.holesVisible = reveal;
       this.emitHoles();
+      return;
+    }
+
+    if (readSitIn(data)) {
+      const hero = this.seats.find(seat => seat.id === VIEWER_ID);
+
+      if (hero?.sittingOut) {
+        hero.sittingOut = false;
+        this.emit({
+          type: SERVER_EVENTS.PLAYER_STATUS,
+          payload: {
+            seat: hero.seat,
+            status: PlayerStatus.SITTING_OUT,
+            returning: true,
+          },
+        });
+      }
+
       return;
     }
 
@@ -650,8 +718,6 @@ export class PokerTable {
       hand: rankHand([...seat.hole, ...this.board]),
     }));
 
-    // Split chips into side pots by commitment level so a short all-in can
-    // only win what each opponent matched.
     const levels = [...new Set(this.seats.map(seat => seat.totalCommitted))]
       .filter(level => level > 0)
       .sort((left, right) => left - right);
@@ -672,8 +738,6 @@ export class PokerTable {
         return;
       }
 
-      // Nobody still in covers this layer (e.g. a folded overbet): refund it
-      // to the live seats with the highest commitment.
       const contenders = eligible.length
         ? eligible
         : ranked.filter(

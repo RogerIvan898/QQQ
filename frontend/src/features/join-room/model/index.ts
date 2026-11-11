@@ -1,1 +1,1 @@
-export { $joiningRoomId, joinRoomFx } from './join-room';
+export { $joinFailure, $joiningRoomId, joinRoomFx } from './join-room';

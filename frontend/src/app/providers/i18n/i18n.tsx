@@ -16,7 +16,6 @@ const LocaleReady = ({ children }: { children: ReactNode }) => {
   const ready = useUnit($isI18nReady);
 
   if (!ready) {
-    // eslint-disable-next-line @typescript-eslint/only-throw-error -- контракт React Suspense
     throw waitForLocale();
   }
 

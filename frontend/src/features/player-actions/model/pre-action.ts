@@ -20,7 +20,7 @@ import {
 import type { PreAction, PreActionDecision, PreActionOptions } from './types';
 
 export const setPreAction = createEvent<PreAction | null>();
-export const clearPreAction = createEvent();
+const clearPreAction = createEvent();
 
 export const $preAction = createStore<PreAction | null>(null)
   .on(setPreAction, (_, action) => action)

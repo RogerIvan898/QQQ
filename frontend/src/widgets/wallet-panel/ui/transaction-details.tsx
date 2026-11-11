@@ -147,7 +147,7 @@ export const TransactionDetails = ({ transaction, onClose }: Props) => {
         <div className={styles.footer}>
           <a
             className={styles.txPill}
-            href={`https://tonviewer.com/transaction/${transaction.txHash}`}
+            href={`https://tonviewer.com/transaction/${encodeURIComponent(transaction.txHash)}`}
             target="_blank"
             rel="noreferrer"
           >

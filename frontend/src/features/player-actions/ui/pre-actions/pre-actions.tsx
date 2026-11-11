@@ -2,13 +2,12 @@ import { useLingui } from '@lingui/react/macro';
 import { useUnit } from 'effector-react';
 
 import { gameModel } from 'entities/game';
-import { findPlayerById } from 'entities/player';
-import { sessionModel } from 'entities/session';
 import { useChipFormatter } from 'shared/lib/display-settings';
 import { Button } from 'shared/ui/button';
 
 import {
   $preAction,
+  $viewer,
   canPreAct,
   chipsToCall,
   setPreAction,
@@ -18,21 +17,19 @@ import styles from '../base-actions/base-actions.module.css';
 
 export const PreActions = () => {
   const { t } = useLingui();
-  const [activeAction, setActive, userId, players, currentBet] = useUnit([
+  const [activeAction, setActive, viewer, currentBet] = useUnit([
     $preAction,
     setPreAction,
-    sessionModel.$currentUserId,
-    gameModel.$players,
+    $viewer,
     gameModel.$currentBet,
   ]);
 
   const formatChips = useChipFormatter();
-  const viewer = findPlayerById(players, userId);
   const toCall =
     viewer && canPreAct(viewer.status)
       ? chipsToCall(currentBet, viewer.committed, viewer.stack)
       : 0;
-  // Same units as stacks and bets on the table, not big blinds.
+
   const callAmount = formatChips(toCall);
 
   const toggle = (action: PreAction) => {
