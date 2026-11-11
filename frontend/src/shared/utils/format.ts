@@ -73,3 +73,33 @@ export const formatBalance = (value: number, locale: string) => {
 
   return formatter.format(value);
 };
+
+const dateFormatters = new Map<string, Intl.DateTimeFormat>();
+
+export const dateTimeFormat = (
+  locale: string,
+  options: Intl.DateTimeFormatOptions
+) => {
+  const key = `${locale}|${JSON.stringify(options)}`;
+  let formatter = dateFormatters.get(key);
+
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(locale, options);
+    dateFormatters.set(key, formatter);
+  }
+
+  return formatter;
+};
+
+const numberFormatters = new Map<string, Intl.NumberFormat>();
+
+export const numberFormat = (locale: string) => {
+  let formatter = numberFormatters.get(locale);
+
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(locale);
+    numberFormatters.set(locale, formatter);
+  }
+
+  return formatter;
+};

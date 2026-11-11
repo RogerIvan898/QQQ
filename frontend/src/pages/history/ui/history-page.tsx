@@ -18,6 +18,7 @@ import {
 } from 'shared/lib/telegram';
 import { ChipGroup } from 'shared/ui/chip-group';
 import { cn } from 'shared/utils/cn';
+import { dateTimeFormat, numberFormat } from 'shared/utils/format';
 
 import { formatSignedTon } from '../lib/format';
 
@@ -48,7 +49,7 @@ const SessionCard = ({ session }: CardProps) => {
   const { i18n } = useLingui();
   const title = useSessionTitle();
 
-  const shortTime = new Intl.DateTimeFormat(i18n.locale, {
+  const shortTime = dateTimeFormat(i18n.locale, {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -154,7 +155,7 @@ export const HistoryPage = () => {
           <div className={styles.stat}>
             <span className={styles.metricLabel}>{t`Hands Played`}</span>
             <span className={styles.statValue}>
-              {new Intl.NumberFormat(i18n.locale).format(stats.hands)}
+              {numberFormat(i18n.locale).format(stats.hands)}
             </span>
           </div>
           <div className={styles.stat}>

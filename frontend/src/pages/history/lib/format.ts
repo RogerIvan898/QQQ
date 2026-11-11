@@ -1,4 +1,4 @@
-import { formatBalance } from 'shared/utils/format';
+import { dateTimeFormat, formatBalance } from 'shared/utils/format';
 
 export const formatSignedTon = (value: number, locale: string) =>
   `${value > 0 ? '+' : value < 0 ? '−' : ''}${formatBalance(Math.abs(value), locale)} TON`;
@@ -13,12 +13,12 @@ export const formatSessionTime = (
 ) => {
   const start = new Date(startedAt);
   const end = new Date(endedAt);
-  const date = new Intl.DateTimeFormat(locale, {
+  const date = dateTimeFormat(locale, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   }).format(start);
-  const time = new Intl.DateTimeFormat(locale, {
+  const time = dateTimeFormat(locale, {
     hour: '2-digit',
     minute: '2-digit',
   });

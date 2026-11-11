@@ -23,7 +23,7 @@ import {
   type TransactionType,
 } from 'entities/wallet';
 import { cn } from 'shared/utils/cn';
-import { formatBalance } from 'shared/utils/format';
+import { dateTimeFormat, formatBalance } from 'shared/utils/format';
 
 import { TransactionDetails } from './transaction-details';
 import styles from './wallet-panel.module.css';
@@ -45,7 +45,7 @@ const TransactionRow = ({ transaction, onSelect }: RowProps) => {
       : isDeposit
         ? ArrowDownLeft
         : ArrowUpRight;
-  const when = new Intl.DateTimeFormat(i18n.locale, {
+  const when = dateTimeFormat(i18n.locale, {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(transaction.createdAt));
@@ -192,7 +192,7 @@ export const TransactionsList = () => {
       ? t`Today`
       : day === todayStart - DAY_MS
         ? t`Yesterday`
-        : new Intl.DateTimeFormat(i18n.locale, {
+        : dateTimeFormat(i18n.locale, {
             day: 'numeric',
             month: 'long',
           }).format(day);

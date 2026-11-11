@@ -15,8 +15,8 @@ import { SeatEquity } from './seat-equity';
 
 interface Props {
   seat: number;
-  x: number;
-  y: number;
+  x: string;
+  y: string;
   towardCenter: SeatDirection;
   isViewer: boolean;
   lift: number;

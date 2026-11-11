@@ -57,8 +57,8 @@ export const usePotFlights = (
           amount: winner.amountWon,
           fromX,
           fromY,
-          toX: seat.x,
-          toY: seat.y,
+          toX: seat.fx * tableRect.width,
+          toY: seat.fy * tableRect.height,
         },
       ];
     });

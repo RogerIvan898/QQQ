@@ -15,38 +15,17 @@ interface Props {
   onReveal?: () => void;
 }
 
+const MAX_TILT_DEG = 5;
+
 export const Card = ({ card, flat = false, onReveal }: Props) => {
-  const ref = React.useRef<HTMLDivElement | null>(null);
-  const onRevealRef = React.useRef(onReveal);
+  const [tilt] = React.useState(() =>
+    flat ? 0 : (Math.random() * 2 - 1) * MAX_TILT_DEG
+  );
+  const reveal = React.useEffectEvent(() => onReveal?.());
 
   React.useEffect(() => {
-    onRevealRef.current = onReveal;
-  }, [onReveal]);
-
-  React.useEffect(() => {
-    const element = ref.current;
-
-    if (!element) {
-      return;
-    }
-
-    element.classList.add(flat ? styles.playFlat : styles.play);
-    onRevealRef.current?.();
-
-    const onEnd = () => {
-      element.style.transform = flat
-        ? 'none'
-        : `rotate(${(Math.random() * 10 - 5).toFixed(2)}deg)`;
-      element.classList.add(styles.settled);
-      element.removeEventListener('animationend', onEnd);
-    };
-
-    element.addEventListener('animationend', onEnd);
-
-    return () => {
-      element.removeEventListener('animationend', onEnd);
-    };
-  }, [flat]);
+    reveal();
+  }, []);
 
   const highlight = useStoreMap({
     store: $highlightView,
@@ -66,14 +45,15 @@ export const Card = ({ card, flat = false, onReveal }: Props) => {
 
   return (
     <div
-      ref={ref}
       className={cn(
         styles.card,
+        flat ? styles.playFlat : styles.play,
         card && styles.face,
         highlight === 'on' && styles.highlighted,
         highlight === 'live' && styles.live,
         highlight === 'off' && styles.dimmed
       )}
+      style={{ '--tilt': `${tilt.toFixed(2)}deg` } as React.CSSProperties}
       role="img"
     >
       {card ? <CardFace card={card} /> : <div className={styles.cardBack} />}

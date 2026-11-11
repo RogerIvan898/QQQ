@@ -10,6 +10,7 @@ import { useMediaQuery } from 'shared/hooks/use-media-query';
 import { usePresence } from 'shared/hooks/use-presence';
 import { useSwipeToClose } from 'shared/hooks/use-swipe-to-close';
 import { cn } from 'shared/utils/cn';
+import { dateTimeFormat } from 'shared/utils/format';
 
 import { formatNet } from '../lib/format-net';
 import { $hands, type HandRecord } from '../model';
@@ -44,7 +45,7 @@ export const HandHistorySheet = ({ open, onClose, onSelect }: Props) => {
       resetSwipe();
     }
   }, [presence.mounted]);
-  const time = new Intl.DateTimeFormat(i18n.locale, {
+  const time = dateTimeFormat(i18n.locale, {
     hour: '2-digit',
     minute: '2-digit',
   });

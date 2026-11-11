@@ -34,6 +34,33 @@ let generation = 0;
 let running = false;
 let live = false;
 
+let wakeWaiter: (() => void) | null = null;
+
+const wake = () => {
+  const resolve = wakeWaiter;
+
+  wakeWaiter = null;
+  resolve?.();
+};
+
+const waitForWakeOr = (ms: number) =>
+  new Promise<void>(resolve => {
+    const timer = window.setTimeout(done, Math.max(0, ms));
+
+    function done() {
+      window.clearTimeout(timer);
+
+      if (wakeWaiter === done) {
+        wakeWaiter = null;
+      }
+
+      resolve();
+    }
+
+    wake();
+    wakeWaiter = done;
+  });
+
 export const bindGameQueue = (api: {
   emit: (event: ServerGameEvent) => void;
   readState: () => Pick<GameState, 'players'>;
@@ -50,6 +77,7 @@ export const resetEventQueue = () => {
   running = false;
   live = false;
   collectingBets(false);
+  wake();
 };
 
 export const markGameQueueLive = () => {
@@ -64,6 +92,7 @@ export const enqueueServerEvent = (event: ServerGameEvent) => {
 
   queue.push(event);
   lastEnqueuedAt = performance.now();
+  wake();
   void run(generation);
 };
 
@@ -76,11 +105,16 @@ const BURST_MAX_WAIT_MS = 500;
 const waitForBurst = async () => {
   const started = performance.now();
 
-  while (
-    performance.now() - lastEnqueuedAt < BURST_GAP_MS &&
-    performance.now() - started < BURST_MAX_WAIT_MS
-  ) {
-    await delay(40);
+  for (;;) {
+    const now = performance.now();
+    const gapLeft = BURST_GAP_MS - (now - lastEnqueuedAt);
+    const maxLeft = BURST_MAX_WAIT_MS - (now - started);
+
+    if (gapLeft <= 0 || maxLeft <= 0) {
+      return;
+    }
+
+    await waitForWakeOr(Math.min(gapLeft, maxLeft));
   }
 };
 
@@ -90,12 +124,17 @@ let showdownSeen = false;
 
 const BACKLOG_HARD_LIMIT = 80;
 
-const queuedHandStarts = () =>
-  queue.reduce(
-    (count, event) =>
-      event.type === SERVER_EVENTS.HAND_STARTED ? count + 1 : count,
-    0
-  );
+const hasTwoHandStartsQueued = () => {
+  let found = 0;
+
+  for (const event of queue) {
+    if (event.type === SERVER_EVENTS.HAND_STARTED && ++found >= 2) {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 const debug = import.meta.env.DEV
   ? ((
@@ -114,7 +153,7 @@ const shouldFastForward = () => {
     return true;
   }
 
-  if (queuedHandStarts() >= 2) {
+  if (hasTwoHandStartsQueued()) {
     count('ffTwoHandsBehind');
     return true;
   }
@@ -219,7 +258,7 @@ const run = async (gen: number) => {
           }
         }
 
-        await delay(40);
+        await waitForWakeOr(introEnds - performance.now());
       }
 
       continue;

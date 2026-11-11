@@ -31,7 +31,7 @@ import {
   formatBigBlinds,
 } from 'shared/lib/display-settings';
 import { cn } from 'shared/utils/cn';
-import { formatCompactNumber } from 'shared/utils/format';
+import { dateTimeFormat, formatCompactNumber } from 'shared/utils/format';
 import { PokerBoard } from 'widgets/poker-table';
 
 import styles from './hand-replay.module.css';
@@ -202,7 +202,7 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
     });
   };
 
-  const time = new Intl.DateTimeFormat(i18n.locale, {
+  const time = dateTimeFormat(i18n.locale, {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(hand.startedAt));

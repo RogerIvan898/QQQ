@@ -1,4 +1,4 @@
-import { useAnimatedNumber } from 'shared/hooks/use-animated-number';
+import { useAnimatedText } from 'shared/hooks/use-animated-text';
 
 import styles from './equity-badge.module.css';
 
@@ -9,14 +9,16 @@ interface Props {
 }
 
 export const EquityBadge = ({ equity, decimals = 1 }: Props) => {
-  const percent = useAnimatedNumber(equity * 100);
+  const percentRef = useAnimatedText<HTMLSpanElement>(
+    equity * 100,
+    value => `${value.toFixed(decimals)}%`
+  );
 
   return (
     <span
+      ref={percentRef}
       className={styles.badge}
       aria-label={`${(equity * 100).toFixed(decimals)}%`}
-    >
-      {percent.toFixed(decimals)}%
-    </span>
+    />
   );
 };

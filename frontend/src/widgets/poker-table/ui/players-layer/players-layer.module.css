@@ -1,7 +1,10 @@
 .playersLayer {
+  --table-w: 100cqw;
+
   position: absolute;
   inset: 0;
   z-index: 6;
+  container-type: size;
   pointer-events: none;
 }
 

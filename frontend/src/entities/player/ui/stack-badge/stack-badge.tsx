@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { POT_FLIGHT_MS, winRevealMs } from 'shared/config/table-timing';
-import { useAnimatedNumber } from 'shared/hooks/use-animated-number';
+import { useAnimatedText } from 'shared/hooks/use-animated-text';
 import { usePresence } from 'shared/hooks/use-presence';
 import { useChipFormatter } from 'shared/lib/display-settings';
 import { GramBadge } from 'shared/ui/gram';
@@ -106,8 +106,9 @@ export const StackBadge = ({
   const isHoldingWin = Boolean(winId && winAmount && winId !== settledWinId);
   const displayAmount =
     isHoldingWin && winAmount ? Math.max(0, amount - winAmount) : amount;
-  const counted = useAnimatedNumber(displayAmount);
-  const shownAmount = Math.min(displayAmount, Math.round(counted * 100) / 100);
+  const amountRef = useAnimatedText<HTMLSpanElement>(displayAmount, value =>
+    formatChips(Math.min(displayAmount, Math.round(value * 100) / 100))
+  );
 
   React.useEffect(() => {
     if (!isHoldingWin || !winId) {
@@ -147,9 +148,7 @@ export const StackBadge = ({
         <div className={styles.content}>
           <span className={styles.name}>{name}</span>
           <div className={styles.stackRow}>
-            <span className={styles.stackAmount}>
-              {formatChips(shownAmount)}
-            </span>
+            <span ref={amountRef} className={styles.stackAmount} />
             <GramBadge size={20} className={styles.stackLogo} />
           </div>
         </div>

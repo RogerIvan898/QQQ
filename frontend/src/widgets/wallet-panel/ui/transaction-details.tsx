@@ -19,7 +19,7 @@ import { TON_EXPLORER_URL } from 'shared/config/ton-network';
 import { useCopyToClipboard } from 'shared/lib/clipboard';
 import { Dialog } from 'shared/ui/dialog';
 import { cn } from 'shared/utils/cn';
-import { formatBalance } from 'shared/utils/format';
+import { dateTimeFormat, formatBalance } from 'shared/utils/format';
 
 import styles from './transaction-details.module.css';
 
@@ -55,7 +55,7 @@ export const TransactionDetails = ({ transaction, onClose }: Props) => {
         ? ArrowDownLeft
         : ArrowUpRight;
   const ton = (value: number) => `${formatBalance(value, i18n.locale)} TON`;
-  const when = new Intl.DateTimeFormat(i18n.locale, {
+  const when = dateTimeFormat(i18n.locale, {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',

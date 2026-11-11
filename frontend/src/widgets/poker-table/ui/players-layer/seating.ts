@@ -3,16 +3,16 @@ import type { SeatDirection } from 'entities/player';
 export interface SeatLayout {
   seat: number;
   towardCenter: SeatDirection;
-  x: number;
-  y: number;
+  fx: number;
+  fy: number;
 }
 
-interface TableSize {
-  width: number;
-  height: number;
+export interface TableShape {
+  compact: boolean;
+  ratio: number;
 }
 
-const COMPACT_TABLE_WIDTH = 380;
+export const COMPACT_TABLE_WIDTH = 380;
 
 const ELLIPSE_SCALE = {
   compact: { x: 0.54, y: 0.57 },
@@ -24,20 +24,19 @@ const FULL_TURN_DEG = 360;
 export const computeSeats = (
   seats: number[],
   viewerSeat: number | null,
-  table: TableSize
+  shape: TableShape
 ): SeatLayout[] => {
   const count = seats.length;
 
   if (!count) return [];
 
-  const scale =
-    table.width < COMPACT_TABLE_WIDTH
-      ? ELLIPSE_SCALE.compact
-      : ELLIPSE_SCALE.regular;
-  const centerX = table.width / 2;
-  const centerY = table.height / 2;
-  const radiusX = table.width * scale.x;
-  const radiusY = table.height * scale.y;
+  const scale = shape.compact ? ELLIPSE_SCALE.compact : ELLIPSE_SCALE.regular;
+  const width = 1;
+  const height = shape.ratio;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radiusX = width * scale.x;
+  const radiusY = height * scale.y;
   const referenceSeat = viewerSeat ?? seats[0];
 
   const seatSpan = Math.max(referenceSeat, ...seats) + 1;
@@ -62,8 +61,8 @@ export const computeSeats = (
         x: (centerX - x) / distance,
         y: (centerY - y) / distance,
       },
-      x,
-      y,
+      fx: x / width,
+      fy: y / height,
     };
   });
 };

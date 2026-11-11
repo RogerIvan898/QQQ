@@ -6,7 +6,6 @@ import { useStoreMap, useUnit } from 'effector-react';
 import { gameModel } from 'entities/game';
 import { sessionModel } from 'entities/session';
 import { $raisePanelRect } from 'features/player-actions';
-import { useElementSize } from 'shared/hooks/use-element-size';
 import { useChipFormatter } from 'shared/lib/display-settings';
 import { GramMark } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
@@ -16,6 +15,7 @@ import { Seat } from './seat';
 import { computeSeats } from './seating';
 import { useCollectFlights } from './use-collect-flights';
 import { usePotFlights } from './use-pot-flights';
+import { useTableShape } from './use-table-shape';
 
 interface Props {
   tableElement: HTMLDivElement | null;
@@ -99,7 +99,7 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
         : null) ?? null,
   });
 
-  const tableSize = useElementSize(tableElement);
+  const tableShape = useTableShape(tableElement);
   const { collectFlights, collectAtPot } = useCollectFlights(
     collecting,
     tableElement
@@ -108,10 +108,10 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
   const [viewerLift, setViewerLift] = React.useState(0);
 
   const seats = React.useMemo(() => {
-    if (!tableSize || !seatPlayerIds.size) return [];
+    if (!tableShape || !seatPlayerIds.size) return [];
 
-    return computeSeats([...seatPlayerIds.keys()], viewerSeat, tableSize);
-  }, [seatPlayerIds, viewerSeat, tableSize]);
+    return computeSeats([...seatPlayerIds.keys()], viewerSeat, tableShape);
+  }, [seatPlayerIds, viewerSeat, tableShape]);
 
   const { wins, flights, flightId, atWinner } = usePotFlights(
     tableElement,
@@ -145,15 +145,12 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
     setViewerLift(Math.max(0, Math.round(restingBottom - raisePanel.top + 8)));
   }, [raisePanel, seats]);
 
-  if (!tableElement || !tableSize || !seats.length) {
+  if (!tableElement || !tableShape || !seats.length) {
     return null;
   }
 
   return createPortal(
-    <div
-      className={styles.playersLayer}
-      style={{ '--table-w': `${tableSize.width}px` } as React.CSSProperties}
-    >
+    <div className={styles.playersLayer}>
       {collectFlights?.map(flight => (
         <ChipFlight
           key={`collect-${flight.seat}`}
@@ -169,7 +166,7 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
           arrived={atWinner}
         />
       ))}
-      {seats.map(({ seat, towardCenter, x, y }) => {
+      {seats.map(({ seat, towardCenter, fx, fy }) => {
         const isViewer = seat === viewerSeat;
 
         return (
@@ -177,8 +174,8 @@ export const PlayersLayer = ({ tableElement, onHidePot }: Props) => {
             key={`${seat}:${seatPlayerIds.get(seat)}`}
             ref={isViewer ? viewerSeatRef : undefined}
             seat={seat}
-            x={x}
-            y={y}
+            x={`${(fx * 100).toFixed(3)}%`}
+            y={`${(fy * 100).toFixed(3)}%`}
             towardCenter={towardCenter}
             isViewer={isViewer}
             lift={isViewer ? viewerLift : 0}
