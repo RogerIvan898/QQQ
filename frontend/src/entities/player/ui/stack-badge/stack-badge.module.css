@@ -124,14 +124,14 @@
   -webkit-mask-composite: xor;
   pointer-events: none;
   animation-name: turnDrain;
-  animation-timing-function: linear;
+  animation-timing-function: steps(var(--turn-steps, 360));
   animation-fill-mode: forwards;
   transition: opacity 0.25s ease-in;
 }
 
 .turnBorderEnter {
   animation-name: turnDrain, turnFadeIn;
-  animation-timing-function: linear, ease-out;
+  animation-timing-function: steps(var(--turn-steps, 360)), ease-out;
   animation-fill-mode: forwards, none;
 }
 

@@ -183,6 +183,10 @@ gameModel.incomingEvent.watch(event => {
   }
 });
 
-gameModel.disconnectGame.watch(stop);
+gameModel.disconnectGame.watch(() => {
+  stop();
+  worker?.terminate();
+  worker = null;
+});
 
 getWorker();

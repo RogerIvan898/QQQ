@@ -12,6 +12,7 @@ import styles from './stack-badge.module.css';
 const URGENT_MS = 5000;
 
 const TURN_FADE_MS = 300;
+const TURN_FPS = 24;
 const TURN_LEAVE_MS = 250;
 
 const TurnBorder = ({
@@ -52,11 +53,17 @@ const TurnBorder = ({
         urgent && styles.turnBorderUrgent,
         leaving && styles.turnBorderLeave
       )}
-      style={{
-        animationDuration: bank
-          ? `${durationMs}ms`
-          : `${durationMs}ms, ${TURN_FADE_MS}ms`,
-      }}
+      style={
+        {
+          animationDuration: bank
+            ? `${durationMs}ms`
+            : `${durationMs}ms, ${TURN_FADE_MS}ms`,
+          '--turn-steps': Math.max(
+            1,
+            Math.round((durationMs / 1000) * TURN_FPS)
+          ),
+        } as React.CSSProperties
+      }
       aria-hidden
     />
   );
