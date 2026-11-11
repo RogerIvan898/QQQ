@@ -155,12 +155,17 @@ const scheduleReconnect = (wsUrl: string, id: number) => {
 
   reconnectAttempt += 1;
   reconnectTimer = window.setTimeout(() => {
-    if (id !== connectionId) return;
-
-    resetEventQueue();
-    openSocket = createGameSocket(wsUrl, id);
-    queueMicrotask(markGameQueueLive);
+    if (id === connectionId) {
+      connectNow(wsUrl, id);
+    }
   }, wait);
+};
+
+const connectNow = (wsUrl: string, id: number) => {
+  stopReconnecting();
+  resetEventQueue();
+  openSocket = createGameSocket(wsUrl, id);
+  queueMicrotask(markGameQueueLive);
 };
 
 const createGameSocket = (wsUrl: string, id: number): WebSocket => {
@@ -185,12 +190,14 @@ const createGameSocket = (wsUrl: string, id: number): WebSocket => {
     onClose: () => {
       window.clearTimeout(connectTimer);
 
-      if (openSocket === socket) {
-        clearStaleWatch();
+      if (openSocket !== socket) {
+        return;
       }
 
-      if (id === connectionId && openSocket === socket) {
-        openSocket = null;
+      clearStaleWatch();
+      openSocket = null;
+
+      if (id === connectionId) {
         scheduleReconnect(wsUrl, id);
       }
     },
@@ -206,23 +213,18 @@ const createGameSocket = (wsUrl: string, id: number): WebSocket => {
 };
 
 const reconnectNow = () => {
-  if (!activeWsUrl || openSocket?.readyState === WebSocket.OPEN) {
-    return;
-  }
+  const state = openSocket?.readyState;
 
-  if (openSocket?.readyState === WebSocket.CONNECTING) {
+  if (
+    !activeWsUrl ||
+    state === WebSocket.OPEN ||
+    state === WebSocket.CONNECTING
+  ) {
     return;
   }
 
   reconnectAttempt = 0;
-  scheduleImmediate(activeWsUrl, connectionId);
-};
-
-const scheduleImmediate = (wsUrl: string, id: number) => {
-  stopReconnecting();
-  resetEventQueue();
-  openSocket = createGameSocket(wsUrl, id);
-  queueMicrotask(markGameQueueLive);
+  connectNow(activeWsUrl, connectionId);
 };
 
 let activeWsUrl: string | null = null;

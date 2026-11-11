@@ -1,14 +1,11 @@
 import React from 'react';
 
-import { useLingui } from '@lingui/react/macro';
-import { useRouter } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
-import { BookmarkPlus, Wallet, WifiOff } from 'lucide-react';
 
-import { $rooms, $roomsStatus, RoomCard, roomsRequested } from 'entities/room';
+import { roomsRequested } from 'entities/room';
 import { sessionModel } from 'entities/session';
 import { walletModel } from 'entities/wallet';
-import { $joinFailure, JoinRoomButton, useJoinRoom } from 'features/join-room';
+import { JoinRoomButton } from 'features/join-room';
 import { $mockServerEnabled } from 'features/mock-server/model';
 import { MOCK_SERVER_AVAILABLE } from 'shared/config/mock';
 import {
@@ -16,29 +13,21 @@ import {
   setTelegramHeaderColor,
 } from 'shared/config/telegram-webapp';
 import { getTelegramUser } from 'shared/lib/telegram';
-import { Preloader } from 'shared/ui/preloader';
-import { Snackbar } from 'shared/ui/snackbar';
-import { formatBalance, truncateMiddle } from 'shared/utils/format';
 import { WalletPanel } from 'widgets/wallet-panel';
 
-import { filterRooms, type RoomFilter } from '../model';
+import type { RoomFilter } from '../model';
 
 import { DepositEntry } from './deposit-entry';
 import { Header } from './header';
+import { JoinErrorSnack } from './join-error-snack';
 import styles from './main-menu.module.css';
-import { Filters } from './room-filters';
-
-const loadDepositDialog = () => import('widgets/deposit-dialog');
-const loadWithdrawModal = () => import('widgets/withdraw');
+import { RoomList } from './room-list';
+import { loadWithdrawModal, useIdlePrefetch } from './use-idle-prefetch';
+import { useSaveAddressOffer, useShortfallSnack } from './use-menu-snacks';
 
 const WithdrawModal = React.lazy(() =>
   loadWithdrawModal().then(module => ({ default: module.WithdrawModal }))
 );
-
-const prefetchWalletDialogs = () => {
-  loadDepositDialog().catch(() => {});
-  loadWithdrawModal().catch(() => {});
-};
 
 const DevServerSwitch = MOCK_SERVER_AVAILABLE
   ? React.lazy(() =>
@@ -49,46 +38,26 @@ const DevServerSwitch = MOCK_SERVER_AVAILABLE
   : null;
 
 export const MenuPage = () => {
-  const { t, i18n } = useLingui();
-  const [snackOpen, setSnackOpen] = React.useState(false);
   const mockEnabled = useUnit($mockServerEnabled);
-  const joinFailure = useUnit($joinFailure);
-  const { joinRoom } = useJoinRoom();
-  const [seenFailure, setSeenFailure] = React.useState(joinFailure?.count ?? 0);
-  const [joinErrorOpen, setJoinErrorOpen] = React.useState(false);
-
-  if (joinFailure && joinFailure.count !== seenFailure) {
-    setSeenFailure(joinFailure.count);
-    setJoinErrorOpen(true);
-  }
-  const [snackMissing, setSnackMissing] = React.useState(0);
-  const [saveOpen, setSaveOpen] = React.useState(false);
-  const [saveCandidate, setSaveCandidate] = React.useState('');
-  const [saveId, setSaveId] = React.useState(0);
-  const [savedAddress, saveAddress] = useUnit([
-    walletModel.$savedWithdrawAddress,
-    walletModel.withdrawAddressSaved,
-  ]);
-  const [snackId, setSnackId] = React.useState(0);
   const [roomFilter, setRoomFilter] = React.useState<RoomFilter>('all');
   const [isDepositOpen, setIsDepositOpen] = React.useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false);
   const [isWalletOpen, setIsWalletOpen] = React.useState(false);
   const walletButtonRef = React.useRef<HTMLButtonElement | null>(null);
-  const [balance, requestBalance, refreshWallet] = useUnit([
+  const [balance, requestBalance, refreshWallet, requestRooms] = useUnit([
     walletModel.$balance,
     walletModel.balanceRequested,
     walletModel.walletRefreshRequested,
+    roomsRequested,
   ]);
   const closeWallet = React.useCallback(() => setIsWalletOpen(false), []);
   const [telegramUser] = React.useState(getTelegramUser);
-
   const nickname = useUnit(sessionModel.$nickname);
-  const [rooms, roomsStatus, requestRooms] = useUnit([
-    $rooms,
-    $roomsStatus,
-    roomsRequested,
-  ]);
+
+  const shortfall = useShortfallSnack(() => setIsDepositOpen(true));
+  const saveOffer = useSaveAddressOffer();
+
+  useIdlePrefetch();
 
   React.useEffect(() => {
     setTelegramHeaderColor(MENU_HEADER_BG);
@@ -98,60 +67,8 @@ export const MenuPage = () => {
 
   React.useEffect(() => {
     requestRooms();
-  }, [requestRooms]);
-
-  const visibleRooms = filterRooms(rooms, roomFilter);
-
-  const showShortfall = (missing: number) => {
-    setSnackMissing(missing);
-    setSnackId(id => id + 1);
-    setSnackOpen(true);
-  };
-
-  const openTopUp = () => {
-    setSnackOpen(false);
-    setIsDepositOpen(true);
-  };
-
-  const offerSaveAddress = (address: string) => {
-    if (address === savedAddress) {
-      return;
-    }
-
-    setSaveCandidate(address);
-    setSaveId(id => id + 1);
-    setSaveOpen(true);
-  };
-
-  const shortAddress = truncateMiddle(saveCandidate, 4);
-
-  const missingLabel = `${formatBalance(snackMissing, i18n.locale)} TON`;
-  const router = useRouter();
-
-  React.useEffect(() => {
     requestBalance();
-  }, [requestBalance]);
-
-  React.useEffect(() => {
-    const prefetch = () => {
-      prefetchWalletDialogs();
-      walletModel.depositAddressRequested();
-
-      for (const route of ['/game/$roomId', '/history'] as const) {
-        router.loadRouteChunk(router.routesById[route])?.catch(() => undefined);
-      }
-    };
-
-    if (typeof window.requestIdleCallback !== 'function') {
-      const timer = window.setTimeout(prefetch, 1500);
-
-      return () => window.clearTimeout(timer);
-    }
-
-    const handle = window.requestIdleCallback(prefetch);
-
-    return () => window.cancelIdleCallback(handle);
-  }, [router]);
+  }, [requestRooms, requestBalance]);
 
   return (
     <div className={styles.page}>
@@ -190,127 +107,22 @@ export const MenuPage = () => {
                   <JoinRoomButton roomId="allin" isFull={false} />
                 </div>
               ) : null}
-              <div className={styles.listBar}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>{t`Available tables`}</h2>
-                  {visibleRooms.length > 0 ? (
-                    <span className={styles.sectionCount}>
-                      {visibleRooms.length}
-                    </span>
-                  ) : null}
-                </div>
-                <Filters active={roomFilter} onChange={setRoomFilter} />
-              </div>
-              {roomsStatus === 'failed' ? (
-                <div className={styles.roomsState} role="alert">
-                  <span>{t`Couldn't load tables`}</span>
-                  <button
-                    type="button"
-                    className={styles.roomsRetry}
-                    onClick={() => requestRooms()}
-                  >
-                    {t`Retry`}
-                  </button>
-                </div>
-              ) : rooms.length === 0 && roomsStatus !== 'ready' ? (
-                <div className={styles.roomsState} role="status">
-                  <Preloader inline label={t`Loading tables…`} />
-                </div>
-              ) : visibleRooms.length === 0 ? (
-                <div className={styles.roomsState}>{t`No tables here yet`}</div>
-              ) : null}
-              <div className={styles.roomGrid}>
-                <div className={styles.roomHead} aria-hidden="true">
-                  <span>{t`Table`}</span>
-                  <span>{t`Blinds`}</span>
-                  <span>{t`Buy-in`}</span>
-                  <span>{t`Players`}</span>
-                  <span />
-                </div>
-                {visibleRooms.map((room, index) => {
-                  const shortfall =
-                    balance === null ? 0 : Math.max(0, room.minBuy - balance);
 
-                  return (
-                    <RoomCard
-                      key={room.id}
-                      index={index}
-                      room={{
-                        name: room.name,
-                        game: room.game,
-                        mode: room.mode,
-                        blinds: room.blinds,
-                        players: room.players,
-                        max: room.max,
-                        minBuy: room.minBuy,
-                        maxBuy: room.maxBuy,
-                      }}
-                      action={
-                        <JoinRoomButton
-                          roomId={String(room.id)}
-                          isFull={room.players >= room.max}
-                          onBlocked={
-                            shortfall > 0
-                              ? () => showShortfall(shortfall)
-                              : undefined
-                          }
-                        />
-                      }
-                    />
-                  );
-                })}
-              </div>
+              <RoomList
+                filter={roomFilter}
+                onFilterChange={setRoomFilter}
+                balance={balance}
+                onShortfall={shortfall.show}
+              />
 
               <div className={styles.bottomSpacer} />
             </div>
           </main>
         </div>
 
-        <Snackbar
-          open={snackOpen}
-          onClose={() => setSnackOpen(false)}
-          tone="warning"
-          showId={snackId}
-          icon={<Wallet size={18} />}
-          message={
-            <>
-              {t`Not enough balance.`} <b>{t`Top up ${missingLabel}`}</b>
-            </>
-          }
-          actionLabel={t`Top up`}
-          onAction={openTopUp}
-        />
-
-        <Snackbar
-          open={joinErrorOpen}
-          onClose={() => setJoinErrorOpen(false)}
-          tone="warning"
-          showId={joinFailure?.count ?? 0}
-          icon={<WifiOff size={18} />}
-          message={t`Couldn't join the table`}
-          actionLabel={t`Retry`}
-          onAction={() => {
-            setJoinErrorOpen(false);
-
-            if (joinFailure) {
-              void joinRoom(joinFailure.roomId);
-            }
-          }}
-        />
-
-        <Snackbar
-          open={saveOpen}
-          onClose={() => setSaveOpen(false)}
-          showId={saveId}
-          durationMs={8000}
-          icon={<BookmarkPlus size={18} />}
-          message={t`Save ${shortAddress} for next withdrawals?`}
-          actionLabel={t`Save`}
-          onAction={() => {
-            saveAddress(saveCandidate);
-            setSaveOpen(false);
-          }}
-        />
+        {shortfall.snack}
+        <JoinErrorSnack />
+        {saveOffer.snack}
 
         <React.Suspense fallback={null}>
           {isDepositOpen && (
@@ -334,7 +146,7 @@ export const MenuPage = () => {
                 setIsWalletOpen(false);
 
                 if (destination === 'address') {
-                  offerSaveAddress(address);
+                  saveOffer.offer(address);
                 }
               }}
             />
