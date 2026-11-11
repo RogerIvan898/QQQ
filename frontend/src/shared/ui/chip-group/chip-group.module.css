@@ -11,7 +11,8 @@
   scroll-behavior: smooth;
   scroll-padding-inline: 40px;
   scrollbar-width: none;
-  overscroll-behavior-x: contain;
+  overscroll-behavior-x: none;
+  -webkit-overflow-scrolling: auto;
 }
 
 .track::-webkit-scrollbar {
