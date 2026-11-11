@@ -4,7 +4,7 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { rmSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 const normalizeOrigin = (value: string) => value.replace(/\/$/, '');
@@ -19,7 +19,7 @@ const createTonConnectManifest = (origin: string) => {
   };
 };
 
-const stripMockServiceWorkerPlugin = (): Plugin => {
+const stripMockServiceWorkerPlugin = (mockServer: boolean): Plugin => {
   let outDir = 'dist';
 
   return {
@@ -29,7 +29,7 @@ const stripMockServiceWorkerPlugin = (): Plugin => {
       outDir = resolve(config.root, config.build.outDir);
     },
     closeBundle() {
-      if (process.env.VITE_MOCK_SERVER === 'off') {
+      if (!mockServer) {
         rmSync(resolve(outDir, 'mockServiceWorker.js'), { force: true });
       }
     },
@@ -68,7 +68,7 @@ const tonConnectManifestPlugin = (): Plugin => ({
   },
 });
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     tanstackRouter({
       target: 'react',
@@ -87,7 +87,9 @@ export default defineConfig({
       include: ['buffer'],
     }),
     tonConnectManifestPlugin(),
-    stripMockServiceWorkerPlugin(),
+    stripMockServiceWorkerPlugin(
+      loadEnv(mode, import.meta.dirname, 'VITE_').VITE_MOCK_SERVER === 'true'
+    ),
   ],
   resolve: {
     alias: {
@@ -104,4 +106,4 @@ export default defineConfig({
     port: 5000,
     allowedHosts: true,
   },
-});
+}));

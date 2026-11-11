@@ -233,7 +233,7 @@ export const MenuPage = () => {
                   <DevServerSwitch />
                 </React.Suspense>
               ) : null}
-              {MOCK_SERVER_AVAILABLE && mockEnabled ? (
+              {import.meta.env.DEV && mockEnabled ? (
                 <div className={styles.devTable}>
                   <span>All-in test · 9 players (mock)</span>
                   <JoinRoomButton roomId="allin" isFull={false} />
