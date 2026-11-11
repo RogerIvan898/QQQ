@@ -75,7 +75,14 @@ export const GameRoomPage = () => {
     setReplayMinimized(false);
     setReplayHand(null);
   };
-  useTelegramBackButton(() => setIsLeaveOpen(true));
+  useTelegramBackButton(() => {
+    if (isLoading) {
+      void navigate({ to: '/' });
+      return;
+    }
+
+    setIsLeaveOpen(true);
+  });
 
   useTelegramClosingConfirmation();
 
