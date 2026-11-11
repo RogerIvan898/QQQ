@@ -47,3 +47,12 @@ button {
   font-family: inherit;
   cursor: pointer;
 }
+
+button,
+[role='button'],
+a {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
