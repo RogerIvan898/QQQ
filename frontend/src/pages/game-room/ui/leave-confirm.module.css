@@ -59,9 +59,6 @@
 }
 
 .stay:active,
-.leave:active {
-  transform: scale(0.97);
-}
 
 .stay:focus-visible,
 .leave:focus-visible {

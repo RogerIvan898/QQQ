@@ -84,9 +84,6 @@
   transition: transform var(--dur-fast) var(--ease-out);
 }
 
-.action:active {
-  transform: scale(0.95);
-}
 
 .action:focus-visible,
 .close:focus-visible {

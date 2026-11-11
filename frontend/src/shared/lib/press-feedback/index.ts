@@ -54,7 +54,9 @@ const press = (event: PointerEvent) => {
   });
 
   active = { el, scale, anim };
-  el.addEventListener('pointerleave', release, { once: true });
+  if (event.pointerType === 'mouse') {
+    el.addEventListener('pointerleave', release, { once: true });
+  }
 };
 
 export const initPressFeedback = () => {

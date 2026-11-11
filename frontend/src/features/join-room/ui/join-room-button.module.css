@@ -36,9 +36,6 @@
   }
 }
 
-.button:active:not(:disabled) {
-  transform: scale(0.96);
-}
 
 .playIcon {
   fill: currentColor;

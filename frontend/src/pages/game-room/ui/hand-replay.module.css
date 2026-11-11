@@ -245,9 +245,6 @@
   background: color-mix(in srgb, var(--color-text) 12%, var(--color-bg-muted));
 }
 
-.control:active:not(:disabled) {
-  transform: scale(0.92);
-}
 
 .control:disabled {
   opacity: 0.35;

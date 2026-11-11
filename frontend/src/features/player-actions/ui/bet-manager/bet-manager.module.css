@@ -54,7 +54,6 @@
 
 .shortcut:not(:disabled):active,
 .step:not(:disabled):active {
-  transform: scale(0.95);
   background: color-mix(in srgb, var(--color-primary) 20%, transparent);
   border-color: var(--color-primary-light);
   transition-duration: 0.05s;

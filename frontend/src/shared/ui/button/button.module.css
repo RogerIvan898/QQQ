@@ -28,9 +28,6 @@
     background 0.2s ease;
 }
 
-.button:active:not(:disabled) {
-  transform: scale(0.95);
-}
 
 .button:disabled {
   opacity: 0.35;
