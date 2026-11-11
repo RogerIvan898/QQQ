@@ -198,6 +198,18 @@
 }
 
 @media (min-width: 1024px) {
+  .mainContainer {
+    background: var(--color-bg-subtle);
+  }
+
+  .listBar {
+    background: linear-gradient(
+      180deg,
+      var(--color-bg-subtle) 85%,
+      transparent
+    );
+  }
+
   .contentArea {
     --lobby-width: 1560px;
     --lobby-gutter: max(32px, calc((100% - var(--lobby-width)) / 2));
