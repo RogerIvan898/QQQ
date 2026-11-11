@@ -13,6 +13,7 @@ import {
   Wallet,
 } from 'lucide-react';
 
+import { IS_TESTNET } from 'shared/config/ton-network';
 import { $soundEnabled, setSoundEnabled } from 'shared/lib/audio';
 import { useCopyToClipboard } from 'shared/lib/clipboard';
 import {
@@ -111,7 +112,7 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
       : '';
 
   return (
-    <Dialog open={open} title={t`Settings`} onClose={onClose}>
+    <Dialog open={open} title={t`Settings`} onClose={onClose} variant="bottom">
       <div className={styles.sections}>
         <Setting label={t`Language`}>
           <div className={styles.langRow} role="group" aria-label={t`Language`}>
@@ -162,7 +163,12 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
                 </span>
 
                 <span className={styles.walletInfo}>
-                  <span className={styles.walletStatus}>{t`Connected`}</span>
+                  <span className={styles.walletStatus}>
+                    {t`Connected`}
+                    {IS_TESTNET ? (
+                      <span className={styles.networkBadge}>Testnet</span>
+                    ) : null}
+                  </span>
                   <span className={styles.walletAddress} title={walletAddress}>
                     {truncateMiddle(walletAddress, 6)}
                   </span>

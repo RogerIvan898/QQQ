@@ -710,3 +710,9 @@ msgstr "Вернётесь со следующей раздачи"
 
 msgid "Your seat and stack are kept"
 msgstr "Место и стек сохранены"
+
+msgid "Your wallet is on mainnet. Switch it to testnet and try again."
+msgstr "Кошелёк в основной сети. Переключите его на тестнет и попробуйте снова."
+
+msgid "Your wallet is on testnet. Switch it to mainnet and try again."
+msgstr "Кошелёк в тестнете. Переключите его на основную сеть и попробуйте снова."

@@ -709,3 +709,9 @@ msgstr "You will be dealt in from the next hand"
 
 msgid "Your seat and stack are kept"
 msgstr "Your seat and stack are kept"
+
+msgid "Your wallet is on mainnet. Switch it to testnet and try again."
+msgstr "Your wallet is on mainnet. Switch it to testnet and try again."
+
+msgid "Your wallet is on testnet. Switch it to mainnet and try again."
+msgstr "Your wallet is on testnet. Switch it to mainnet and try again."

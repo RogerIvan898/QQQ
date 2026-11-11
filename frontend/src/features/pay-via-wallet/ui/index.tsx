@@ -1,1 +1,1 @@
-export { PayViaWalletButton } from './pay-via-wallet';
+export { PayViaWalletButton, WrongNetworkError } from './pay-via-wallet';

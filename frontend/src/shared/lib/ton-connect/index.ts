@@ -11,6 +11,8 @@ export interface TonWalletInfo {
   name?: string;
 
   imageUrl?: string;
+
+  chain: string;
 }
 
 const tonWalletChanged = createEvent<TonWalletInfo | null>();
@@ -38,6 +40,7 @@ export const getTonConnectUI = (): Promise<TonConnectUI> => {
           wallet
             ? {
                 address: wallet.account.address,
+                chain: wallet.account.chain,
                 friendlyAddress: toUserFriendlyAddress(
                   wallet.account.address,
                   wallet.account.chain === (CHAIN.TESTNET as string)

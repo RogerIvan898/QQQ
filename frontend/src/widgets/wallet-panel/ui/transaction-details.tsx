@@ -15,6 +15,7 @@ import {
   type FailureReason,
   type Transaction,
 } from 'entities/wallet';
+import { TON_EXPLORER_URL } from 'shared/config/ton-network';
 import { useCopyToClipboard } from 'shared/lib/clipboard';
 import { Dialog } from 'shared/ui/dialog';
 import { cn } from 'shared/utils/cn';
@@ -147,7 +148,7 @@ export const TransactionDetails = ({ transaction, onClose }: Props) => {
         <div className={styles.footer}>
           <a
             className={styles.txPill}
-            href={`https://tonviewer.com/transaction/${encodeURIComponent(transaction.txHash)}`}
+            href={`${TON_EXPLORER_URL}/transaction/${encodeURIComponent(transaction.txHash)}`}
             target="_blank"
             rel="noreferrer"
           >

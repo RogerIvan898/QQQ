@@ -15,12 +15,7 @@ export const LeaveConfirm = ({ open, onStay, onLeave }: Props) => {
   const { t } = useLingui();
 
   return (
-    <Dialog
-      open={open}
-      onClose={onStay}
-      variant="bottom"
-      title={t`Leave table?`}
-    >
+    <Dialog open={open} onClose={onStay} title={t`Leave table?`}>
       <div className={styles.body}>
         <p className={styles.text}>
           {t`If you are in a hand, your cards will be folded.`}

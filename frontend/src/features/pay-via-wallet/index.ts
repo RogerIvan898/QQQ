@@ -1,1 +1,1 @@
-export { PayViaWalletButton } from './ui';
+export { PayViaWalletButton, WrongNetworkError } from './ui';

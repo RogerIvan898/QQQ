@@ -6,8 +6,15 @@ import { Address, beginCell } from '@ton/core';
 import { useUnit } from 'effector-react';
 import { Loader2, Wallet } from 'lucide-react';
 
+import { TON_CHAIN_ID } from 'shared/config/ton-network';
 import { toNanoSafe } from 'shared/lib/ton';
 import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
+
+export class WrongNetworkError extends Error {
+  constructor() {
+    super('Wallet is on another network');
+  }
+}
 
 interface Props {
   amount: number;
@@ -35,6 +42,11 @@ export const PayViaWalletButton = ({
 
     if (!wallet) {
       await tonConnectUI.openModal();
+      return;
+    }
+
+    if (wallet.chain !== TON_CHAIN_ID) {
+      onError?.(new WrongNetworkError());
       return;
     }
 
@@ -66,6 +78,7 @@ export const PayViaWalletButton = ({
       }
 
       await tonConnectUI.sendTransaction({
+        network: TON_CHAIN_ID,
         validUntil: Math.floor(Date.now() / 1000) + 60 * 10,
         messages: [
           {
