@@ -25,9 +25,11 @@ const release = () => {
 
   active = null;
   anim.cancel();
-  el.animate([{ scale: String(scale) }, { scale: '1' }], {
-    duration: 420,
-    easing: SPRING,
+  requestAnimationFrame(() => {
+    el.animate([{ scale: String(scale) }, { scale: '1' }], {
+      duration: 420,
+      easing: SPRING,
+    });
   });
 };
 
