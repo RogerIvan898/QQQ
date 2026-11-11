@@ -36,6 +36,7 @@ import { truncateMiddle } from 'shared/utils/format';
 
 import { Setting } from './setting';
 import styles from './settings-dialog.module.css';
+import { ToggleRow } from './toggle-row';
 
 const COPIED_RESET_MS = 1500;
 
@@ -130,81 +131,27 @@ export const SettingsDialog = ({ open, onClose }: Props) => {
         </Setting>
 
         <Setting label={t`Sound`}>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={soundEnabled}
-            className={styles.soundRow}
-            onClick={() => toggleSound(!soundEnabled)}
-          >
-            <span className={styles.soundIcon} aria-hidden="true">
-              {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-            </span>
-
-            <span className={styles.soundText}>
-              {soundEnabled ? t`Sound on` : t`Sound off`}
-            </span>
-
-            <span
-              className={cn(
-                styles.switchTrack,
-                soundEnabled && styles.switchTrackOn
-              )}
-              aria-hidden="true"
-            >
-              <span className={styles.switchThumb} />
-            </span>
-          </button>
+          <ToggleRow
+            icon={soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+            label={soundEnabled ? t`Sound on` : t`Sound off`}
+            checked={soundEnabled}
+            onChange={toggleSound}
+          />
         </Setting>
 
         <Setting label={t`Display`}>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={amountsInBb}
-            className={styles.soundRow}
-            onClick={() => toggleAmountsInBb(!amountsInBb)}
-          >
-            <span className={styles.soundIcon} aria-hidden="true">
-              <Coins size={18} />
-            </span>
-
-            <span className={styles.soundText}>{t`Display amounts in BB`}</span>
-
-            <span
-              className={cn(
-                styles.switchTrack,
-                amountsInBb && styles.switchTrackOn
-              )}
-              aria-hidden="true"
-            >
-              <span className={styles.switchThumb} />
-            </span>
-          </button>
-
-          <button
-            type="button"
-            role="switch"
-            aria-checked={fourColor}
-            className={styles.soundRow}
-            onClick={() => toggleFourColor(!fourColor)}
-          >
-            <span className={styles.soundIcon} aria-hidden="true">
-              <Palette size={18} />
-            </span>
-
-            <span className={styles.soundText}>{t`Four-color deck`}</span>
-
-            <span
-              className={cn(
-                styles.switchTrack,
-                fourColor && styles.switchTrackOn
-              )}
-              aria-hidden="true"
-            >
-              <span className={styles.switchThumb} />
-            </span>
-          </button>
+          <ToggleRow
+            icon={<Coins size={18} />}
+            label={t`Display amounts in BB`}
+            checked={amountsInBb}
+            onChange={toggleAmountsInBb}
+          />
+          <ToggleRow
+            icon={<Palette size={18} />}
+            label={t`Four-color deck`}
+            checked={fourColor}
+            onChange={toggleFourColor}
+          />
         </Setting>
 
         <Setting label={t`Wallet`}>

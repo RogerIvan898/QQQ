@@ -3,7 +3,7 @@ import React from 'react';
 import { useLingui } from '@lingui/react/macro';
 import { useRouter } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
-import { BookmarkPlus, Coins, Swords, Wallet, WifiOff } from 'lucide-react';
+import { BookmarkPlus, Wallet, WifiOff } from 'lucide-react';
 
 import { $rooms, $roomsStatus, RoomCard, roomsRequested } from 'entities/room';
 import { sessionModel } from 'entities/session';
@@ -14,20 +14,15 @@ import { MOCK_SERVER_AVAILABLE } from 'shared/config/mock';
 import { getTelegramUser } from 'shared/lib/telegram';
 import { Preloader } from 'shared/ui/preloader';
 import { Snackbar } from 'shared/ui/snackbar';
-import { cn } from 'shared/utils/cn';
 import { formatBalance, truncateMiddle } from 'shared/utils/format';
 import { WalletPanel } from 'widgets/wallet-panel';
 
-import {
-  filterRooms,
-  ROOM_FILTERS,
-  roomFilterLabel,
-  type RoomFilter,
-} from '../model';
+import { filterRooms, type RoomFilter } from '../model';
 
 import { DepositEntry } from './deposit-entry';
 import { Header } from './header';
 import styles from './main-menu.module.css';
+import { Filters } from './room-filters';
 
 const loadDepositDialog = () => import('widgets/deposit-dialog');
 const loadWithdrawModal = () => import('widgets/withdraw');
@@ -48,54 +43,6 @@ const DevServerSwitch = MOCK_SERVER_AVAILABLE
       }))
     )
   : null;
-
-interface FiltersProps {
-  active: RoomFilter;
-  onChange: (filter: RoomFilter) => void;
-}
-
-const FILTER_ICONS = {
-  cash: Coins,
-  'heads-up': Swords,
-} as const;
-
-const Filters = ({ active, onChange }: FiltersProps) => {
-  const { i18n } = useLingui();
-
-  return (
-    <div className={styles.tabsContainer}>
-      <div
-        className={styles.tabsScroll}
-        style={
-          {
-            '--tab-index': Math.max(0, ROOM_FILTERS.indexOf(active)),
-            '--tab-count': ROOM_FILTERS.length,
-          } as React.CSSProperties
-        }
-      >
-        <span className={styles.tabIndicator} aria-hidden="true" />
-        {ROOM_FILTERS.map(filter => {
-          const Icon = filter === 'all' ? null : FILTER_ICONS[filter];
-
-          return (
-            <button
-              key={filter}
-              type="button"
-              onClick={() => onChange(filter)}
-              className={cn(
-                styles.tabItem,
-                active === filter && styles.activeTab
-              )}
-            >
-              {Icon ? <Icon size={15} strokeWidth={2.25} /> : null}
-              {i18n._(roomFilterLabel(filter))}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
 
 export const MenuPage = () => {
   const { t, i18n } = useLingui();

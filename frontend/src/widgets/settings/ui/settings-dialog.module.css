@@ -81,7 +81,7 @@
   outline-offset: 2px;
 }
 
-.soundRow {
+.toggleRow {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -99,11 +99,11 @@
     color 0.15s ease;
 }
 
-.soundRow[aria-checked='false']:hover {
+.toggleRow[aria-checked='false']:hover {
   border-color: var(--option-hover-border);
 }
 
-.soundRow[aria-checked='true'] {
+.toggleRow[aria-checked='true'] {
   border-color: var(--option-on-border);
 
   box-shadow: inset 0 0 0 1px var(--option-on-border);
@@ -111,16 +111,16 @@
   color: var(--option-on-text);
 }
 
-.soundRow[aria-checked='false'] .soundIcon {
+.toggleRow[aria-checked='false'] .toggleIcon {
   color: var(--option-off-icon);
 }
 
-.soundRow:focus-visible {
+.toggleRow:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
-.soundIcon {
+.toggleIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -128,7 +128,7 @@
   color: var(--option-on-icon);
 }
 
-.soundText {
+.toggleText {
   flex: 1 1 auto;
   min-width: 0;
   text-align: left;
@@ -284,7 +284,7 @@
 
   .iconBtn,
   .langBtn,
-  .soundRow,
+  .toggleRow,
   .switchTrack,
   .switchThumb,
   .connectBtn,
