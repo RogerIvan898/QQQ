@@ -13,6 +13,7 @@ import {
   type HandRecord,
 } from 'features/hand-history';
 import { PlayerActions } from 'features/player-actions';
+import { MOCK_SERVER_AVAILABLE } from 'shared/config/mock';
 import {
   useTelegramBackButton,
   useTelegramClosingConfirmation,
@@ -27,7 +28,7 @@ import styles from './game-room.module.css';
 import { HandReplay } from './hand-replay';
 import { LeaveConfirm } from './leave-confirm';
 
-const RevealCardsButton = import.meta.env.DEV
+const RevealCardsButton = MOCK_SERVER_AVAILABLE
   ? React.lazy(() =>
       import('features/mock-server').then(module => ({
         default: module.RevealCardsButton,

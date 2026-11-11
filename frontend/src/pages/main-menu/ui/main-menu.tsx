@@ -9,6 +9,8 @@ import { $rooms, $roomsStatus, RoomCard, roomsRequested } from 'entities/room';
 import { sessionModel } from 'entities/session';
 import { walletModel } from 'entities/wallet';
 import { $joinFailure, JoinRoomButton, useJoinRoom } from 'features/join-room';
+import { $mockServerEnabled } from 'features/mock-server/model';
+import { MOCK_SERVER_AVAILABLE } from 'shared/config/mock';
 import { getTelegramUser } from 'shared/lib/telegram';
 import { Preloader } from 'shared/ui/preloader';
 import { Snackbar } from 'shared/ui/snackbar';
@@ -39,7 +41,7 @@ const prefetchWalletDialogs = () => {
   loadWithdrawModal().catch(() => {});
 };
 
-const DevServerSwitch = import.meta.env.DEV
+const DevServerSwitch = MOCK_SERVER_AVAILABLE
   ? React.lazy(() =>
       import('features/mock-server').then(module => ({
         default: module.ServerModeSwitch,
@@ -98,6 +100,7 @@ const Filters = ({ active, onChange }: FiltersProps) => {
 export const MenuPage = () => {
   const { t, i18n } = useLingui();
   const [snackOpen, setSnackOpen] = React.useState(false);
+  const mockEnabled = useUnit($mockServerEnabled);
   const joinFailure = useUnit($joinFailure);
   const { joinRoom } = useJoinRoom();
   const [seenFailure, setSeenFailure] = React.useState(joinFailure?.count ?? 0);
@@ -230,7 +233,7 @@ export const MenuPage = () => {
                   <DevServerSwitch />
                 </React.Suspense>
               ) : null}
-              {import.meta.env.DEV ? (
+              {MOCK_SERVER_AVAILABLE && mockEnabled ? (
                 <div className={styles.devTable}>
                   <span>All-in test · 9 players (mock)</span>
                   <JoinRoomButton roomId="allin" isFull={false} />

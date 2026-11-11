@@ -29,7 +29,9 @@ const stripMockServiceWorkerPlugin = (): Plugin => {
       outDir = resolve(config.root, config.build.outDir);
     },
     closeBundle() {
-      rmSync(resolve(outDir, 'mockServiceWorker.js'), { force: true });
+      if (process.env.VITE_MOCK_SERVER === 'off') {
+        rmSync(resolve(outDir, 'mockServiceWorker.js'), { force: true });
+      }
     },
   };
 };

@@ -1,10 +1,11 @@
 import { createEvent, createStore } from 'effector';
 
+import { MOCK_SERVER_AVAILABLE } from 'shared/config/mock';
 import { readStorage, writeStorage } from 'shared/lib/storage';
 
 const STORAGE_KEY = 'poker:mock-server';
 
-const DEFAULT_ENABLED = import.meta.env.DEV;
+const DEFAULT_ENABLED = MOCK_SERVER_AVAILABLE;
 
 const readMockServerEnabled = (): boolean => {
   const stored = readStorage(STORAGE_KEY);
@@ -27,7 +28,7 @@ mockServerChanged.watch(enabled => {
 });
 
 export const setMockServerEnabled = async (enabled: boolean) => {
-  if (!import.meta.env.DEV) return;
+  if (!MOCK_SERVER_AVAILABLE) return;
 
   const { applyMockServer } = await import('../../../mocks/runtime');
 
@@ -36,7 +37,7 @@ export const setMockServerEnabled = async (enabled: boolean) => {
 };
 
 export const bootstrapMockServer = async () => {
-  if (!import.meta.env.DEV) return;
+  if (!MOCK_SERVER_AVAILABLE) return;
 
   if (!readMockServerEnabled()) {
     return;

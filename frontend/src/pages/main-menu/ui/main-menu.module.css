@@ -182,6 +182,7 @@
 
 .roomsRetry {
   composes: solid from '../../../shared/ui/button/solid-button.module.css';
+  width: auto;
   height: 38px;
   padding: 0 20px;
   border-radius: var(--radius-md);
