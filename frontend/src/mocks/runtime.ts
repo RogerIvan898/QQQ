@@ -12,7 +12,8 @@ export const applyMockServer = async (enabled: boolean) => {
       onUnhandledRequest: 'bypass',
       quiet: true,
       serviceWorker: {
-        url: '/mockServiceWorker.js',
+        url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+        options: { scope: import.meta.env.BASE_URL },
       },
     });
     workerStarted = true;

@@ -6,6 +6,7 @@ import { RouteError, RoutePending } from './route-status';
 
 export const router = createRouter({
   routeTree,
+  basepath: import.meta.env.BASE_URL,
   defaultPreload: 'intent',
 
   defaultPendingComponent: RoutePending,
