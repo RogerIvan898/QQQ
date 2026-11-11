@@ -26,6 +26,7 @@ declare global {
         setHeaderColor: (color: string) => void;
         setBackgroundColor: (color: string) => void;
         requestFullscreen: () => void;
+        disableVerticalSwipes?: () => void;
         version: string;
         isVersionAtLeast: (version: string) => boolean;
         enableClosingConfirmation: () => void;

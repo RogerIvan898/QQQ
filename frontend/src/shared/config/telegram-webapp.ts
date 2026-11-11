@@ -32,6 +32,11 @@ export const initTelegramWebApp = () => {
 
   tg.ready();
   tg.expand();
+
+  if (tg.isVersionAtLeast('7.7')) {
+    tg.disableVerticalSwipes?.();
+  }
+
   tg.setHeaderColor(APP_BG);
   tg.setBackgroundColor(APP_BG);
 
