@@ -43,8 +43,34 @@ const BOOT_LOADING_LABELS: Record<Locale, string> = {
 
 export const getBootLoadingLabel = () => BOOT_LOADING_LABELS[detectLocale()];
 
-export const activateLocale = async (locale: Locale) => {
-  const { messages } = await catalogLoaders[locale]();
+const CATALOG_ATTEMPTS = 3;
+
+const loadCatalog = async (locale: Locale) => {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await catalogLoaders[locale]();
+    } catch (error) {
+      if (attempt >= CATALOG_ATTEMPTS) {
+        throw error;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 400 * attempt));
+    }
+  }
+};
+
+export const activateLocale = async (locale: Locale): Promise<Locale> => {
+  let messages;
+
+  try {
+    ({ messages } = await loadCatalog(locale));
+  } catch (error) {
+    if (locale === DEFAULT_LOCALE) {
+      throw error;
+    }
+
+    return activateLocale(DEFAULT_LOCALE);
+  }
 
   i18n.loadAndActivate({ locale, messages });
   document.documentElement.lang = locale;

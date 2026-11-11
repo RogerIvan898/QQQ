@@ -76,6 +76,7 @@ export const prepareGameAudio = async () => {
 
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 15000;
+const CONNECT_TIMEOUT_MS = 10000;
 
 let reconnectAttempt = 0;
 let reconnectTimer: number | undefined;
@@ -126,9 +127,10 @@ const scheduleReconnect = (wsUrl: string, id: number) => {
   }, wait);
 };
 
-const createGameSocket = (wsUrl: string, id: number): WebSocket =>
-  createSocket(wsUrl, {
+const createGameSocket = (wsUrl: string, id: number): WebSocket => {
+  const socket = createSocket(wsUrl, {
     onOpen: () => {
+      window.clearTimeout(connectTimer);
       reconnectAttempt = 0;
       connectionLost(false);
     },
@@ -140,12 +142,58 @@ const createGameSocket = (wsUrl: string, id: number): WebSocket =>
       }
     },
     onClose: () => {
-      if (id === connectionId) {
+      window.clearTimeout(connectTimer);
+
+      if (id === connectionId && openSocket === socket) {
         openSocket = null;
         scheduleReconnect(wsUrl, id);
       }
     },
   });
+
+  const connectTimer = window.setTimeout(() => {
+    if (socket.readyState === WebSocket.CONNECTING) {
+      socket.close();
+    }
+  }, CONNECT_TIMEOUT_MS);
+
+  return socket;
+};
+
+const reconnectNow = () => {
+  if (!activeWsUrl || openSocket?.readyState === WebSocket.OPEN) {
+    return;
+  }
+
+  if (openSocket?.readyState === WebSocket.CONNECTING) {
+    return;
+  }
+
+  reconnectAttempt = 0;
+  scheduleImmediate(activeWsUrl, connectionId);
+};
+
+const scheduleImmediate = (wsUrl: string, id: number) => {
+  stopReconnecting();
+  resetEventQueue();
+  openSocket = createGameSocket(wsUrl, id);
+  queueMicrotask(markGameQueueLive);
+};
+
+let activeWsUrl: string | null = null;
+let resumeTracked = false;
+
+const trackResume = () => {
+  if (resumeTracked) return;
+
+  resumeTracked = true;
+  window.addEventListener('online', reconnectNow);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      reconnectNow();
+    }
+  });
+};
 
 export const sendToGameSocket = (command: unknown) => {
   if (openSocket?.readyState !== WebSocket.OPEN) {
@@ -166,6 +214,8 @@ export const openGameSocket = ({ wsUrl }: GameConnectParams) => {
   resetEventQueue();
   openSocket?.close();
   openSocket = null;
+  activeWsUrl = wsUrl;
+  trackResume();
   const socket = createGameSocket(wsUrl, currentId);
   openSocket = socket;
   queueMicrotask(markGameQueueLive);
@@ -174,6 +224,7 @@ export const openGameSocket = ({ wsUrl }: GameConnectParams) => {
 
 export const closeOpenGameSocket = (socket: WebSocket | null) => {
   connectionId += 1;
+  activeWsUrl = null;
   stopReconnecting();
   connectionLost(false);
   openSocket?.close();
