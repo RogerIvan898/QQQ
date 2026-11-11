@@ -105,8 +105,8 @@
   .container {
     justify-content: center;
     align-items: center;
-    padding-top: calc(48px + var(--tg-safe-area-top));
-    padding-bottom: calc(88px + var(--tg-safe-area-bottom));
+    padding-top: calc(64px + var(--tg-safe-area-top));
+    padding-bottom: calc(64px + var(--tg-safe-area-bottom));
 
     background-image:
       radial-gradient(
@@ -140,6 +140,8 @@
 .connectionBanner {
   position: fixed;
   inset: 0;
+  padding: var(--tg-safe-area-top) var(--tg-safe-area-right)
+    var(--tg-safe-area-bottom) var(--tg-safe-area-left);
   z-index: 900;
   display: flex;
   align-items: center;
