@@ -1,5 +1,5 @@
 # Builds the frontend and publishes it to GitHub Pages:
-# https://rogerivan898.github.io/Poker/
+# https://<owner>.github.io/<repo>/  (now https://rogerivan898.github.io/QQQ/)
 # One-time setup: Settings > Pages > Build and deployment > Source: GitHub Actions.
 name: Pages
 
