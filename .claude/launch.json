@@ -5,8 +5,26 @@
       "name": "web",
       "runtimeExecutable": "npx",
       "cwd": "frontend",
-      "runtimeArgs": ["vite", "--port", "5173", "--strictPort"],
+      "runtimeArgs": [
+        "vite",
+        "--port",
+        "5173",
+        "--strictPort"
+      ],
       "port": 5173
+    },
+    {
+      "name": "web-prod",
+      "runtimeExecutable": "npx",
+      "cwd": "frontend",
+      "runtimeArgs": [
+        "vite",
+        "preview",
+        "--port",
+        "4173",
+        "--strictPort"
+      ],
+      "port": 4173
     }
   ]
 }

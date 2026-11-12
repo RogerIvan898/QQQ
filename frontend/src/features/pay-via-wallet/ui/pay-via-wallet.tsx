@@ -114,14 +114,12 @@ export const PayViaWalletButton = ({
         ) : (
           <Trans
             id="Pay {amount, number} TON with wallet"
-            message="Pay {amount, number} TON with wallet"
             values={{ amount }}
           />
         )
       ) : (
         <Trans
           id="Connect wallet and pay {amount, number} TON"
-          message="Connect wallet and pay {amount, number} TON"
           values={{ amount }}
         />
       )}

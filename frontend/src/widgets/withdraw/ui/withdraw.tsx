@@ -57,11 +57,7 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
     destination === 'wallet' && !connectedAddress ? (
       t`Connect wallet to withdraw`
     ) : amount > 0 ? (
-      <Trans
-        id="Withdraw {amount, number} TON"
-        message="Withdraw {amount, number} TON"
-        values={{ amount }}
-      />
+      <Trans id="Withdraw {amount, number} TON" values={{ amount }} />
     ) : (
       t`Withdraw`
     );

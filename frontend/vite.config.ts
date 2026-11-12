@@ -107,10 +107,16 @@ const hoverOnlyOnPointerDevices = (): PostcssPlugin => ({
   },
 });
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ command, mode }) => ({
   base: process.env.VITE_BASE_PATH || '/',
   css: {
     postcss: { plugins: [hoverOnlyOnPointerDevices()] },
+    // Readable names in dev; short hashes in builds, where every class name
+    // ships twice (in the CSS and in the JS `styles` object).
+    modules:
+      command === 'build'
+        ? { generateScopedName: '[hash:base64:6]' }
+        : undefined,
   },
   plugins: [
     tanstackRouter({
@@ -142,6 +148,35 @@ export default defineConfig(({ mode }) => ({
       entities: resolve(import.meta.dirname, 'src/entities'),
       shared: resolve(import.meta.dirname, 'src/shared'),
       widgets: resolve(import.meta.dirname, 'src/widgets'),
+    },
+  },
+  build: {
+    rolldownOptions: {
+      output: {
+        minify: { compress: { dropConsole: true } },
+        // Libraries every page loads get their own long-lived chunks, so a
+        // deploy that only touches app code doesn't re-download ~100 kB gzip
+        // of React and the router.
+        codeSplitting: {
+          groups: [
+            {
+              name: 'vendor-react',
+              test: /[\\/]node_modules[\\/](react|react-dom|scheduler|use-sync-external-store)[\\/]/,
+              priority: 30,
+            },
+            {
+              name: 'vendor-router',
+              test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
+              priority: 20,
+            },
+            {
+              name: 'vendor-state',
+              test: /[\\/]node_modules[\\/](effector|effector-react|@lingui[\\/](core|react))[\\/]/,
+              priority: 10,
+            },
+          ],
+        },
+      },
     },
   },
   server: {
