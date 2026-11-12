@@ -15,12 +15,7 @@ interface Props {
   onReveal?: () => void;
 }
 
-const MAX_TILT_DEG = 5;
-
 export const Card = ({ card, flat = false, onReveal }: Props) => {
-  const [tilt] = React.useState(() =>
-    flat ? 0 : (Math.random() * 2 - 1) * MAX_TILT_DEG
-  );
   const reveal = React.useEffectEvent(() => onReveal?.());
 
   React.useEffect(() => {
@@ -53,7 +48,6 @@ export const Card = ({ card, flat = false, onReveal }: Props) => {
         highlight === 'live' && styles.live,
         highlight === 'off' && styles.dimmed
       )}
-      style={{ '--tilt': `${tilt.toFixed(2)}deg` } as React.CSSProperties}
       role="img"
     >
       {card ? <CardFace card={card} /> : <div className={styles.cardBack} />}
