@@ -2,11 +2,17 @@ package ton
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/xssnick/tonutils-go/address"
+	"github.com/xssnick/tonutils-go/tlb"
+	"github.com/xssnick/tonutils-go/tvm/cell"
 
 	"gitlab.com/company-group7340831/poker/chain-service/internal/failure"
 )
@@ -117,5 +123,32 @@ func TestFindTransactions(t *testing.T) {
 	}
 	if got["m3"] != nil {
 		t.Error("internal incoming message must not match a withdrawal")
+	}
+}
+
+func TestExternalDestination(t *testing.T) {
+	want, err := ParseAddress("0:" + strings.Repeat("ab", 32))
+	if err != nil {
+		t.Fatal(err)
+	}
+	msg, err := tlb.ToCell(&tlb.ExternalMessage{
+		SrcAddr: address.NewAddressNone(),
+		DstAddr: want,
+		Body:    cell.BeginCell().MustStoreUInt(7, 32).EndCell(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := ExternalDestination(base64.StdEncoding.EncodeToString(msg.ToBOC()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.Equals(want) {
+		t.Fatalf("destination %s, want %s", got.StringRaw(), want.StringRaw())
+	}
+
+	plain := cell.BeginCell().MustStoreUInt(1, 64).EndCell()
+	if _, err := ExternalDestination(base64.StdEncoding.EncodeToString(plain.ToBOC())); err == nil {
+		t.Fatal("a cell that is not a message must be rejected")
 	}
 }

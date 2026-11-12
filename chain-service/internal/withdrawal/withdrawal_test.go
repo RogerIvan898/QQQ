@@ -6,11 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	amqp091 "github.com/rabbitmq/amqp091-go"
+	"github.com/xssnick/tonutils-go/address"
+	"github.com/xssnick/tonutils-go/tlb"
 	"github.com/xssnick/tonutils-go/tvm/cell"
 	"go.uber.org/zap"
 
@@ -107,6 +110,11 @@ func (r *fakeRepo) ListStale(_ context.Context, sentBefore time.Time, afterID st
 	return out, nil
 }
 
+func (r *fakeRepo) CountStale(ctx context.Context, sentBefore time.Time) (int, error) {
+	stale, err := r.ListStale(ctx, sentBefore, "", 1<<30)
+	return len(stale), err
+}
+
 type fakePublisher struct {
 	msgs []amqp.Message
 	err  error
@@ -122,13 +130,14 @@ func (f *fakePublisher) Publish(_ context.Context, m amqp.Message) error {
 
 // fakeTON считает отправки и отдаёт заданную транзакцию.
 type fakeTON struct {
-	sends     int
-	attempts  int // все попытки отправки, включая неудачные
-	scans     int // запросов окна транзакций
-	single    int // запросов по одному сообщению
-	sendErr   error
-	failTimes int // сколько первых попыток отправки падают с sendErr (0 — все)
-	tx        *ton.Tx
+	sends       int
+	attempts    int // все попытки отправки, включая неудачные
+	scans       int // запросов окна транзакций
+	single      int // запросов по одному сообщению
+	sendErr     error
+	failTimes   int // сколько первых попыток отправки падают с sendErr (0 — все)
+	tx          *ton.Tx
+	outOfWindow bool // вывод не попадает в окно последних транзакций
 }
 
 func (f *fakeTON) SendBoc(_ context.Context, boc string) (string, error) {
@@ -147,7 +156,7 @@ func testBOC(n uint64) string {
 
 // fastBroadcaster — broadcaster с короткими паузами повторов для тестов.
 func fastBroadcaster(repo Repository, tc ton.Client, pub events.Publisher) *Broadcaster {
-	h := NewBroadcaster(repo, tc, NewResultPublisher(pub, "ex", "withdrawals.result"), zap.NewNop())
+	h := NewBroadcaster(BroadcasterConfig{}, repo, tc, NewResultPublisher(pub, "ex", "withdrawals.result"), zap.NewNop())
 	h.retryInitial, h.retryMax = time.Millisecond, 5*time.Millisecond
 	return h
 }
@@ -160,7 +169,7 @@ func (f *fakeTON) FindTransaction(context.Context, string) (*ton.Tx, error) {
 func (f *fakeTON) FindTransactions(_ context.Context, _ string, hashes []string, _ int) (map[string]*ton.Tx, error) {
 	f.scans++
 	out := map[string]*ton.Tx{}
-	if f.tx != nil {
+	if f.tx != nil && !f.outOfWindow {
 		for _, h := range hashes {
 			out[h] = f.tx
 		}
@@ -199,7 +208,7 @@ func TestBroadcastHandler(t *testing.T) {
 
 	t.Run("sends once, redelivery does not resend", func(t *testing.T) {
 		repo, tc, pub := newFakeRepo(), &fakeTON{}, &fakePublisher{}
-		h := NewBroadcaster(repo, tc, NewResultPublisher(pub, "ex", "withdrawals.result"), log)
+		h := NewBroadcaster(BroadcasterConfig{}, repo, tc, NewResultPublisher(pub, "ex", "withdrawals.result"), log)
 
 		for i := 0; i < 2; i++ {
 			if err := h.Handle(context.Background(), signedDelivery(t, boc)); err != nil {
@@ -220,7 +229,7 @@ func TestBroadcastHandler(t *testing.T) {
 
 	t.Run("conflicting boc is refused", func(t *testing.T) {
 		repo, tc := newFakeRepo(), &fakeTON{}
-		h := NewBroadcaster(repo, tc, NewResultPublisher(&fakePublisher{}, "ex", "rk"), log)
+		h := NewBroadcaster(BroadcasterConfig{}, repo, tc, NewResultPublisher(&fakePublisher{}, "ex", "rk"), log)
 		if err := h.Handle(context.Background(), signedDelivery(t, boc)); err != nil {
 			t.Fatal(err)
 		}
@@ -371,4 +380,82 @@ func TestConfirmPoller(t *testing.T) {
 			t.Fatalf("must stay sent without results, row %+v, published %d", w, len(pub.msgs))
 		}
 	})
+}
+
+func TestBroadcasterChecks(t *testing.T) {
+	ctx := context.Background()
+	hot, _ := ton.ParseAddress("0:" + strings.Repeat("ab", 32))
+	other, _ := ton.ParseAddress("0:" + strings.Repeat("cd", 32))
+	extBOC := func(dst *address.Address) string {
+		c, err := tlb.ToCell(&tlb.ExternalMessage{SrcAddr: address.NewAddressNone(), DstAddr: dst,
+			Body: cell.BeginCell().MustStoreUInt(1, 32).EndCell()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return base64.StdEncoding.EncodeToString(c.ToBOC())
+	}
+	newHandler := func(tc *fakeTON) *Broadcaster {
+		h := NewBroadcaster(BroadcasterConfig{SignerUser: "signer", Wallet: hot}, newFakeRepo(), tc,
+			NewResultPublisher(&fakePublisher{}, "ex", "rk"), zap.NewNop())
+		h.retryInitial, h.retryMax = time.Millisecond, time.Millisecond
+		return h
+	}
+
+	t.Run("foreign sender rejected", func(t *testing.T) {
+		tc := &fakeTON{}
+		d := signedDelivery(t, extBOC(hot))
+		d.UserId = "core"
+		if err := newHandler(tc).Handle(ctx, d); !failure.IsPermanent(err) || tc.attempts != 0 {
+			t.Fatalf("err=%v attempts=%d", err, tc.attempts)
+		}
+	})
+
+	t.Run("boc for another wallet rejected", func(t *testing.T) {
+		tc := &fakeTON{}
+		d := signedDelivery(t, extBOC(other))
+		d.UserId = "signer"
+		if err := newHandler(tc).Handle(ctx, d); !failure.IsPermanent(err) || tc.attempts != 0 {
+			t.Fatalf("err=%v attempts=%d", err, tc.attempts)
+		}
+	})
+
+	t.Run("signer and hot wallet accepted", func(t *testing.T) {
+		tc := &fakeTON{}
+		d := signedDelivery(t, extBOC(hot))
+		d.UserId = "signer"
+		if err := newHandler(tc).Handle(ctx, d); err != nil || tc.sends != 1 {
+			t.Fatalf("err=%v sends=%d", err, tc.sends)
+		}
+	})
+
+	t.Run("attempt metric reset after success", func(t *testing.T) {
+		var last int
+		tc := &fakeTON{sendErr: failure.Transient(errors.New("busy")), failTimes: 2}
+		h := NewBroadcaster(BroadcasterConfig{OnAttempt: func(n int) { last = n }}, newFakeRepo(), tc,
+			NewResultPublisher(&fakePublisher{}, "ex", "rk"), zap.NewNop())
+		h.retryInitial, h.retryMax = time.Millisecond, time.Millisecond
+		if err := h.Handle(ctx, signedDelivery(t, testBOC(5))); err != nil || last != 0 || tc.attempts != 3 {
+			t.Fatalf("err=%v last=%d attempts=%d", err, last, tc.attempts)
+		}
+	})
+}
+
+func TestConfirmPollerLooksUpOutOfWindow(t *testing.T) {
+	ctx := context.Background()
+	repo, pub := newFakeRepo(), &fakePublisher{}
+	_, _ = repo.InsertSigned(ctx, Withdrawal{RequestID: testRequestID, Seqno: 7, BOC: testBOC(1)})
+	_ = repo.MarkSent(ctx, testRequestID, "h")
+	tc := &fakeTON{tx: &ton.Tx{Hash: "tx1", Success: true}, outOfWindow: true}
+	p := NewConfirmPoller(ConfirmPollerConfig{Interval: time.Second, Timeout: time.Hour, BatchSize: 10, MissesBeforeLookup: 3},
+		repo, tc, NewResultPublisher(pub, "ex", "rk"), zap.NewNop())
+
+	p.Poll(ctx)
+	p.Poll(ctx)
+	if w, _ := repo.Get(ctx, testRequestID); w.Status != StatusSent || tc.single != 0 {
+		t.Fatalf("looked up too early: status=%s single=%d", w.Status, tc.single)
+	}
+	p.Poll(ctx)
+	if w, _ := repo.Get(ctx, testRequestID); w.Status != StatusConfirmed || tc.single != 1 {
+		t.Fatalf("not confirmed by lookup: status=%s single=%d", w.Status, tc.single)
+	}
 }

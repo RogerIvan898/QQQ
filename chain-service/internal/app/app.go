@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/xssnick/tonutils-go/address"
 	"go.uber.org/zap"
 
 	"gitlab.com/company-group7340831/poker/chain-service/internal/amqp"
@@ -61,7 +62,16 @@ func Run(ctx context.Context, cfg *config.Config, log *zap.Logger) error {
 	// Канал фатальных ошибок фоновых компонентов → остановка сервиса.
 	errCh := make(chan error, 8)
 
-	httpSrv := metrics.NewServer(cfg.MetricsAddr(), m, client.IsConnected, log)
+	ready := func(ctx context.Context) error {
+		if !client.IsConnected() {
+			return errors.New("rabbitmq: not connected")
+		}
+		if err := db.PingContext(ctx); err != nil {
+			return fmt.Errorf("postgres: %w", err)
+		}
+		return nil
+	}
+	httpSrv := metrics.NewServer(cfg.MetricsAddr(), m, ready, log)
 	if err := httpSrv.Start(errCh); err != nil {
 		_ = client.Close()
 		return fmt.Errorf("metrics server: %w", err)
@@ -92,12 +102,30 @@ func Run(ctx context.Context, cfg *config.Config, log *zap.Logger) error {
 		}()
 	}
 
+	// Компонент, который должен работать в одном экземпляре на всё
+	// развёртывание, запускается под advisory lock PostgreSQL.
+	startExclusive := func(name string, key int64, fn func(context.Context) error) {
+		held := m.LeaderLocks.WithLabelValues(name)
+		start(name, func(ctx context.Context) error {
+			return store.RunExclusive(ctx, db, key, log.Named(name),
+				func(on bool) { held.Set(boolGauge(on)) }, fn)
+		})
+	}
+
 	// Один клиент TON на процесс: лимит запросов toncenter общий для
 	// broadcaster и watcher.
 	tonClient := newTONClient(cfg, log)
 
 	if cfg.Mode.Broadcasts() {
-		broadcaster := withdrawal.NewBroadcaster(repo, tonClient, results, log)
+		var wallet *address.Address
+		if cfg.TONClient == "toncenter" {
+			wallet, _ = ton.ParseAddress(cfg.WalletAddress) // формат проверен в config
+		}
+		broadcaster := withdrawal.NewBroadcaster(withdrawal.BroadcasterConfig{
+			SignerUser: cfg.SignerRabbitUser,
+			Wallet:     wallet,
+			OnAttempt:  func(n int) { m.BroadcastAttempt.Set(float64(n)) },
+		}, repo, tonClient, results, log)
 		// Строгий порядок seqno: prefetch 1, один воркер, без таймаута —
 		// временные ошибки обработчик повторяет на месте, не пропуская
 		// следующий seqno вперёд.
@@ -121,8 +149,9 @@ func Run(ctx context.Context, cfg *config.Config, log *zap.Logger) error {
 			Interval:  cfg.ConfirmPollInterval,
 			Timeout:   cfg.ConfirmTimeout,
 			BatchSize: cfg.ConfirmBatchSize,
+			OnStale:   func(n int) { m.WithdrawalsStale.Set(float64(n)) },
 		}, repo, tonClient, results, log)
-		start("confirm poller", poller.Run)
+		startExclusive("confirm_poller", store.LockKey("confirm-poller", cfg.WalletAddress), poller.Run)
 	}
 
 	if cfg.Mode.Watches() {
@@ -135,7 +164,7 @@ func Run(ctx context.Context, cfg *config.Config, log *zap.Logger) error {
 			StartLT:        cfg.WatcherStartLT,
 			PublishTimeout: cfg.PublishTimeout,
 		}, tonClient, store.NewCursors(db), pub, log)
-		start("deposit watcher", watcher.Run)
+		startExclusive("deposit_watcher", store.LockKey("deposit-watcher", cfg.DepositAddress), watcher.Run)
 	}
 
 	log.Info("chain-service started", zap.String("metrics_addr", cfg.MetricsAddr()))
@@ -207,6 +236,13 @@ func shutdown(cfg *config.Config, log *zap.Logger, consumers []*amqp.Consumer, w
 	return err
 }
 
+func boolGauge(on bool) float64 {
+	if on {
+		return 1
+	}
+	return 0
+}
+
 // newTONClient создаёт клиент сети по TON_CLIENT; nil — режиму сеть не нужна.
 func newTONClient(cfg *config.Config, log *zap.Logger) ton.Network {
 	if !cfg.Mode.UsesTON() {
@@ -238,6 +274,9 @@ func buildTopology(cfg *config.Config) amqp.Topology {
 			cfg.QueueWithdrawalsSigned,
 			cfg.QueueWithdrawalsResult,
 			cfg.QueueDeposits,
+		},
+		SingleActive: map[string]bool{
+			cfg.QueueWithdrawalsSigned: cfg.SingleActiveConsumer,
 		},
 		Retry: map[string][]amqp.RetryQueue{
 			cfg.QueueWithdrawalsSigned: amqp.RetryQueues(cfg.QueueWithdrawalsSigned, cfg.RetryBaseDelay, cfg.MaxRetries),

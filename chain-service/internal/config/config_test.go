@@ -9,8 +9,9 @@ func baseEnv(t *testing.T) {
 	t.Helper()
 	t.Setenv("RABBITMQ_URL", "amqp://chain-svc:secret@rabbit:5672/")
 	t.Setenv("POSTGRES_DSN", "postgres://u:p@db:5432/x")
-	t.Setenv("TON_WALLET_ADDRESS", "EQhot")
-	t.Setenv("TON_DEPOSIT_ADDRESS", "EQdep")
+	t.Setenv("TON_WALLET_ADDRESS", "0:"+strings.Repeat("ab", 32))
+	t.Setenv("TON_DEPOSIT_ADDRESS", "0:"+strings.Repeat("cd", 32))
+	t.Setenv("SIGNER_RABBIT_USER", "signer")
 }
 
 func TestToncenterURLMustBeHTTPS(t *testing.T) {
@@ -56,5 +57,32 @@ func TestRabbitUserAndMetricsAddr(t *testing.T) {
 	cfg.RabbitURL = "amqp://rabbit:5672/"
 	if cfg.RabbitUser() != "guest" {
 		t.Errorf("RabbitUser without credentials = %q, want guest", cfg.RabbitUser())
+	}
+}
+
+func TestSafetyChecks(t *testing.T) {
+	baseEnv(t)
+	t.Setenv("TON_WALLET_ADDRESS", "EQnot-an-address")
+	if _, err := Load(); err == nil || !strings.Contains(err.Error(), "TON_WALLET_ADDRESS") {
+		t.Errorf("bad wallet address: got %v", err)
+	}
+
+	baseEnv(t)
+	t.Setenv("SIGNER_RABBIT_USER", "")
+	if _, err := Load(); err == nil || !strings.Contains(err.Error(), "SIGNER_RABBIT_USER") {
+		t.Errorf("missing signer user: got %v", err)
+	}
+
+	baseEnv(t)
+	t.Setenv("TON_CLIENT", "stub")
+	t.Setenv("TONCENTER_URL", "https://toncenter.com")
+	if _, err := Load(); err == nil || !strings.Contains(err.Error(), "stub") {
+		t.Errorf("stub on mainnet: got %v", err)
+	}
+
+	baseEnv(t)
+	t.Setenv("AMQP_SINGLE_ACTIVE_CONSUMER", "maybe")
+	if _, err := Load(); err == nil || !strings.Contains(err.Error(), "AMQP_SINGLE_ACTIVE_CONSUMER") {
+		t.Errorf("bad bool: got %v", err)
 	}
 }

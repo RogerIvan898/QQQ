@@ -25,6 +25,13 @@ type ConfirmPollerConfig struct {
 	ScanLimit  int           // сколько последних транзакций кошелька читать за проход
 	StaleEvery int           // зависшие проверяются раз в StaleEvery проходов
 	StaleBatch int           // сколько зависших проверять за раз
+	// MissesBeforeLookup — после стольких проходов, где свежий вывод не
+	// нашёлся в окне последних транзакций, он ищется отдельно по хэшу: при
+	// большом потоке депозитов вывод выпадает из окна задолго до таймаута.
+	MissesBeforeLookup int
+	LookupBatch        int // сколько таких поисков за проход
+	// OnStale получает число выводов, ждущих ручного разбора (метрика).
+	OnStale func(n int)
 }
 
 // ConfirmTON — то, что нужно опросчику от сети.
@@ -61,7 +68,8 @@ type ConfirmPoller struct {
 	now     func() time.Time
 
 	passes       int
-	staleAfterID string // курсор обхода зависших по кругу
+	staleAfterID string         // курсор обхода зависших по кругу
+	misses       map[string]int // request_id → проходы, где вывод не нашёлся в окне
 }
 
 // NewConfirmPoller создаёт опросчик.
@@ -75,7 +83,16 @@ func NewConfirmPoller(cfg ConfirmPollerConfig, repo Repository, client ConfirmTO
 	if cfg.ScanLimit < 1 {
 		cfg.ScanLimit = 100
 	}
-	return &ConfirmPoller{cfg: cfg, repo: repo, ton: client, results: results, log: log.Named("confirm_poller"), now: time.Now}
+	if cfg.MissesBeforeLookup < 1 {
+		cfg.MissesBeforeLookup = 3
+	}
+	if cfg.LookupBatch < 1 {
+		cfg.LookupBatch = 3
+	}
+	if cfg.OnStale == nil {
+		cfg.OnStale = func(int) {}
+	}
+	return &ConfirmPoller{cfg: cfg, repo: repo, ton: client, results: results, log: log.Named("confirm_poller"), now: time.Now, misses: map[string]int{}}
 }
 
 // Run опрашивает до отмены ctx; начатый проход дорабатывается.
@@ -121,14 +138,47 @@ func (p *ConfirmPoller) pollFresh(ctx context.Context, cutoff time.Time) {
 		p.log.Warn("scan wallet transactions failed", zap.Error(err))
 		return
 	}
+	pending := make(map[string]int, len(fresh))
+	var lookup []Withdrawal
 	for _, w := range fresh {
 		if tx := found[w.MsgHash]; tx != nil {
 			p.finalize(ctx, w, tx)
+			continue
+		}
+		pending[w.RequestID] = p.misses[w.RequestID] + 1
+		if pending[w.RequestID] >= p.cfg.MissesBeforeLookup && len(lookup) < p.cfg.LookupBatch {
+			lookup = append(lookup, w)
+		}
+	}
+	// Выводы, которых нет в выборке, уже завершены или стали зависшими.
+	p.misses = pending
+
+	for _, w := range lookup {
+		lctx, cancel := context.WithTimeout(ctx, networkTimeout)
+		tx, err := p.ton.FindTransaction(lctx, w.MsgHash)
+		cancel()
+		if err != nil {
+			p.log.Warn("find transaction failed", zap.String("request_id", w.RequestID), zap.Error(err))
+			continue
+		}
+		if tx != nil {
+			p.finalize(ctx, w, tx)
+			delete(p.misses, w.RequestID)
+		} else {
+			p.misses[w.RequestID] = 0 // следующий отдельный поиск — через MissesBeforeLookup проходов
 		}
 	}
 }
 
 func (p *ConfirmPoller) pollStale(ctx context.Context, cutoff time.Time) {
+	cctx, cancel := context.WithTimeout(ctx, queryTimeout)
+	if n, err := p.repo.CountStale(cctx, cutoff); err == nil {
+		p.cfg.OnStale(n)
+	} else {
+		p.log.Warn("count stale withdrawals failed", zap.Error(err))
+	}
+	cancel()
+
 	qctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	stale, err := p.repo.ListStale(qctx, cutoff, p.staleAfterID, p.cfg.StaleBatch)
 	cancel()

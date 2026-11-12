@@ -62,4 +62,6 @@ type Repository interface {
 	// ListStale — отправленные не позже sentBefore, по возрастанию request_id
 	// начиная после afterID (обход зависших по кругу).
 	ListStale(ctx context.Context, sentBefore time.Time, afterID string, limit int) ([]Withdrawal, error)
+	// CountStale — сколько отправленных не позже sentBefore ждут подтверждения.
+	CountStale(ctx context.Context, sentBefore time.Time) (int, error)
 }

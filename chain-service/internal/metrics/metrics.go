@@ -49,6 +49,10 @@ type Metrics struct {
 	ReconnectTotal  prometheus.Counter       // chain_reconnect_total
 	HandlerDuration *prometheus.HistogramVec // chain_handler_duration_seconds{queue}
 	PublishDuration *prometheus.HistogramVec // chain_publish_duration_seconds{queue}
+
+	BroadcastAttempt prometheus.Gauge     // chain_broadcast_attempt
+	WithdrawalsStale prometheus.Gauge     // chain_withdrawals_stale
+	LeaderLocks      *prometheus.GaugeVec // chain_leader_lock{component}
 }
 
 // New создаёт и регистрирует все метрики.
@@ -90,6 +94,18 @@ func New() *Metrics {
 			Help:    "Время от публикации до подтверждения брокером.",
 			Buckets: []float64{.001, .0025, .005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5},
 		}, []string{"queue"}),
+		BroadcastAttempt: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "chain_broadcast_attempt",
+			Help: "Номер попытки отправки текущего вывода; 0 — очередь не стоит. Алерт: >= 10.",
+		}),
+		WithdrawalsStale: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "chain_withdrawals_stale",
+			Help: "Отправленные выводы без подтверждения дольше CONFIRM_TIMEOUT: нужен ручной разбор. Алерт: > 0.",
+		}),
+		LeaderLocks: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "chain_leader_lock",
+			Help: "1 — экземпляр держит блокировку компонента и работает, 0 — ждёт.",
+		}, []string{"component"}),
 	}
 
 	reg.MustRegister(
@@ -97,6 +113,7 @@ func New() *Metrics {
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		m.PublishTotal, m.ConsumeTotal, m.RetryTotal, m.DLQTotal,
 		m.ConnectionUp, m.ReconnectTotal, m.HandlerDuration, m.PublishDuration,
+		m.BroadcastAttempt, m.WithdrawalsStale, m.LeaderLocks,
 	)
 	return m
 }
@@ -113,18 +130,20 @@ type Server struct {
 // NewServer собирает HTTP-сервер:
 //   - /metrics — Prometheus;
 //   - /healthz — liveness: процесс жив и отвечает;
-//   - /readyz  — readiness: есть соединение с RabbitMQ (ready() == true).
-func NewServer(addr string, m *Metrics, ready func() bool, log *zap.Logger) *Server {
+//   - /readyz  — readiness: все проверки ready проходят (RabbitMQ, PostgreSQL).
+func NewServer(addr string, m *Metrics, ready func(ctx context.Context) error, log *zap.Logger) *Server {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.HandlerFor(m.reg, promhttp.HandlerOpts{Registry: m.reg}))
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok\n"))
 	})
-	mux.HandleFunc("/readyz", func(w http.ResponseWriter, _ *http.Request) {
-		if !ready() {
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		if err := ready(ctx); err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			_, _ = w.Write([]byte("rabbitmq: not connected\n"))
+			_, _ = w.Write([]byte(err.Error() + "\n"))
 			return
 		}
 		w.WriteHeader(http.StatusOK)

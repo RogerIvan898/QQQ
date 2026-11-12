@@ -60,6 +60,11 @@ type Topology struct {
 	Queues []string
 	// Retry — delay-очереди для потребляемых очередей.
 	Retry map[string][]RetryQueue
+	// SingleActive — очереди с x-single-active-consumer: сообщения получает
+	// только один подписчик, остальные ждут в резерве. Так второй экземпляр
+	// сервиса не нарушит порядок seqno. Аргумент нельзя поменять у уже
+	// созданной очереди — её нужно пересоздать.
+	SingleActive map[string]bool
 }
 
 // ClientConfig — параметры соединения.
@@ -344,7 +349,7 @@ func declareTopology(ch *amqp091.Channel, t Topology) error {
 	}
 
 	for _, q := range t.Queues {
-		if err := declareQueueWithDLQ(ch, q, t.QueueType); err != nil {
+		if err := declareQueueWithDLQ(ch, q, t.QueueType, t.SingleActive[q]); err != nil {
 			return err
 		}
 		if err := ch.QueueBind(q, q, t.Exchange, false, nil); err != nil {
@@ -366,7 +371,7 @@ func declareTopology(ch *amqp091.Channel, t Topology) error {
 // queueName с x-dead-letter-exchange: "" и
 // x-dead-letter-routing-key: queueName + ".dlq". Тогда
 // msg.Nack(false, false) по основной очереди отправляет сообщение в DLQ.
-func declareQueueWithDLQ(ch *amqp091.Channel, queueName, queueType string) error {
+func declareQueueWithDLQ(ch *amqp091.Channel, queueName, queueType string, singleActive bool) error {
 	dlq := queueName + DLQSuffix
 	if _, err := ch.QueueDeclare(dlq, true, false, false, false, queueArgs(queueType, nil)); err != nil {
 		return fmt.Errorf("queue %q: %w", dlq, err)
@@ -375,6 +380,9 @@ func declareQueueWithDLQ(ch *amqp091.Channel, queueName, queueType string) error
 	args := amqp091.Table{
 		"x-dead-letter-exchange":    "",
 		"x-dead-letter-routing-key": dlq,
+	}
+	if singleActive {
+		args["x-single-active-consumer"] = true
 	}
 	if queueType == "quorum" {
 		// Для quorum-очередей dead-lettering по умолчанию at-most-once:

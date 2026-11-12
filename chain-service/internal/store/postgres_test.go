@@ -127,3 +127,45 @@ func TestPostgresCursorsAndIdempotency(t *testing.T) {
 		t.Fatalf("cleanup removed %d", removed)
 	}
 }
+
+func TestPostgresRunExclusive(t *testing.T) {
+	repo := openTestDB(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	key := LockKey("test", uuid.NewString())
+
+	started := make(chan struct{})
+	release := make(chan struct{})
+	firstDone := make(chan error, 1)
+	go func() {
+		firstDone <- RunExclusive(ctx, repo.db, key, zap.NewNop(), nil, func(context.Context) error {
+			close(started)
+			<-release
+			return nil
+		})
+	}()
+	<-started
+
+	secondRan := make(chan struct{})
+	go func() {
+		_ = RunExclusive(ctx, repo.db, key, zap.NewNop(), nil, func(context.Context) error {
+			close(secondRan)
+			return nil
+		})
+	}()
+	select {
+	case <-secondRan:
+		t.Fatal("second instance ran while the lock was held")
+	case <-time.After(time.Second):
+	}
+
+	close(release)
+	if err := <-firstDone; err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-secondRan:
+	case <-time.After(2 * lockRetryInterval):
+		t.Fatal("second instance did not take the lock after release")
+	}
+}

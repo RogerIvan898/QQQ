@@ -105,6 +105,18 @@ func (r *Withdrawals) ListStale(ctx context.Context, sentBefore time.Time, after
 		withdrawal.StatusSent, sentBefore.UTC(), afterID, limit)
 }
 
+// CountStale — число зависших выводов (sent_at <= sentBefore).
+func (r *Withdrawals) CountStale(ctx context.Context, sentBefore time.Time) (int, error) {
+	var n int
+	err := r.db.QueryRowContext(ctx,
+		`SELECT count(*) FROM withdrawals WHERE status = $1 AND sent_at <= $2`,
+		withdrawal.StatusSent, sentBefore.UTC()).Scan(&n)
+	if err != nil {
+		return 0, dbErr("count stale", err)
+	}
+	return n, nil
+}
+
 func (r *Withdrawals) list(ctx context.Context, op, query string, args ...any) ([]withdrawal.Withdrawal, error) {
 	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {

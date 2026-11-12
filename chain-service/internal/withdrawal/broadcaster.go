@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/rabbitmq/amqp091-go"
+	"github.com/xssnick/tonutils-go/address"
 	"go.uber.org/zap"
 
 	"gitlab.com/company-group7340831/poker/chain-service/internal/amqp"
@@ -23,6 +24,10 @@ const (
 	broadcastRetryMax     = 30 * time.Second
 )
 
+// attemptTimeout — предел одной попытки: запросы к БД, отправка в сеть и
+// публикация результата. Истечение — временная ошибка, попытка повторится.
+const attemptTimeout = 2 * time.Minute
+
 // Broadcaster: withdrawals.signed → отправка в TON → WITHDRAW_RESULT{sent}.
 //
 // Двойной отправки не будет:
@@ -38,6 +43,7 @@ const (
 // одним воркером с prefetch 1, без таймаута обработчика; остановить ожидание
 // может только shutdown (тогда сообщение возвращается в очередь).
 type Broadcaster struct {
+	cfg     BroadcasterConfig
 	repo    Repository
 	ton     ton.Client
 	results *ResultPublisher
@@ -47,10 +53,31 @@ type Broadcaster struct {
 	retryMax     time.Duration // максимальная пауза
 }
 
+// BroadcasterConfig — проверки входящих выводов и наблюдение за повторами.
+// Пустые поля отключают соответствующую проверку (локальный стенд, тесты).
+type BroadcasterConfig struct {
+	// SignerUser — пользователь RabbitMQ сервиса подписи. Сообщение с другим
+	// AMQP user_id отклоняется: RabbitMQ не даёт подделать это свойство,
+	// поэтому чужой сервис не займёт request_id мусорным BOC.
+	SignerUser string
+	// Wallet — горячий кошелёк. BOC, адресованный другому кошельку, не
+	// отправляется: его подтверждение никогда не нашлось бы.
+	Wallet *address.Address
+	// OnAttempt получает номер текущей попытки (0 — вывод обработан или
+	// отклонён): метрика застрявшего вывода.
+	OnAttempt func(attempt int)
+}
+
+// Попытка с этим номером и дальше пишется в лог как ошибка: вывод застрял.
+const stuckAttempt = 10
+
 // NewBroadcaster создаёт обработчик.
-func NewBroadcaster(repo Repository, client ton.Client, results *ResultPublisher, log *zap.Logger) *Broadcaster {
+func NewBroadcaster(cfg BroadcasterConfig, repo Repository, client ton.Client, results *ResultPublisher, log *zap.Logger) *Broadcaster {
+	if cfg.OnAttempt == nil {
+		cfg.OnAttempt = func(int) {}
+	}
 	return &Broadcaster{
-		repo: repo, ton: client, results: results, log: log.Named("broadcaster"),
+		cfg: cfg, repo: repo, ton: client, results: results, log: log.Named("broadcaster"),
 		retryInitial: broadcastRetryInitial, retryMax: broadcastRetryMax,
 	}
 }
@@ -59,6 +86,11 @@ func NewBroadcaster(repo Repository, client ton.Client, results *ResultPublisher
 func (h *Broadcaster) Handle(ctx context.Context, d amqp091.Delivery) error {
 	if err := events.CheckEnvelope(d, events.WithdrawSigned); err != nil {
 		return failure.Permanent(err)
+	}
+	if h.cfg.SignerUser != "" && d.UserId != h.cfg.SignerUser {
+		h.log.Error("signed withdrawal from unexpected sender, rejecting",
+			zap.String("message_id", amqp.MessageID(d)), zap.String("user_id", d.UserId))
+		return failure.Permanent(fmt.Errorf("sender %q is not the signing service", d.UserId))
 	}
 	var msg Signed
 	if err := events.DecodeJSON(d.Body, &msg); err != nil {
@@ -73,6 +105,15 @@ func (h *Broadcaster) Handle(ctx context.Context, d amqp091.Delivery) error {
 	if err != nil {
 		return failure.Permanent(err)
 	}
+	if h.cfg.Wallet != nil {
+		dst, err := ton.ExternalDestination(msg.BOC)
+		if err != nil {
+			return failure.Permanent(err)
+		}
+		if !dst.Equals(h.cfg.Wallet) {
+			return failure.Permanent(fmt.Errorf("boc is addressed to %s, not to the hot wallet", dst.StringRaw()))
+		}
+	}
 
 	log := h.log.With(
 		zap.String("message_id", amqp.MessageID(d)),
@@ -80,13 +121,19 @@ func (h *Broadcaster) Handle(ctx context.Context, d amqp091.Delivery) error {
 		zap.Uint32("seqno", msg.Seqno),
 		zap.String("msg_hash", msgHash))
 
+	defer h.cfg.OnAttempt(0)
 	delay := h.retryInitial
 	for attempt := 1; ; attempt++ {
+		h.cfg.OnAttempt(attempt)
 		err := h.handleOnce(ctx, log, msg, msgHash)
 		if err == nil || !failure.IsTransient(err) || ctx.Err() != nil {
 			return err
 		}
-		log.Warn("broadcast attempt failed, retrying in place to keep seqno order",
+		level := zap.WarnLevel
+		if attempt >= stuckAttempt {
+			level = zap.ErrorLevel // очередь выводов стоит: нужен человек
+		}
+		log.Log(level, "broadcast attempt failed, retrying in place to keep seqno order",
 			zap.Int("attempt", attempt), zap.Duration("retry_in", delay), zap.Error(err))
 		if !schedule.Sleep(ctx, delay) {
 			return err
@@ -98,6 +145,11 @@ func (h *Broadcaster) Handle(ctx context.Context, d amqp091.Delivery) error {
 }
 
 func (h *Broadcaster) handleOnce(ctx context.Context, log *zap.Logger, msg Signed, msgHash string) error {
+	// Сам обработчик без таймаута (порядок seqno), но одна попытка ограничена:
+	// иначе повисшее соединение с PostgreSQL остановило бы выводы навсегда.
+	ctx, cancel := context.WithTimeout(ctx, attemptTimeout)
+	defer cancel()
+
 	w, err := h.repo.Get(ctx, msg.RequestID)
 	if err != nil {
 		return err

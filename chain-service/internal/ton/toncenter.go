@@ -38,9 +38,14 @@ type Toncenter struct {
 // NewToncenter создаёт клиента.
 func NewToncenter(cfg ToncenterConfig) *Toncenter {
 	return &Toncenter{
-		cfg:  cfg,
-		http: &http.Client{Timeout: cfg.Timeout},
-		lim:  rate.NewLimiter(rate.Limit(cfg.RPS), 1),
+		cfg: cfg,
+		http: &http.Client{
+			Timeout: cfg.Timeout,
+			// Редиректы не выполняем: заголовок X-API-Key ушёл бы на чужой хост.
+			// Ответ 3xx станет обычной ошибкой HTTP.
+			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+		},
+		lim: rate.NewLimiter(rate.Limit(cfg.RPS), 1),
 	}
 }
 
@@ -143,11 +148,15 @@ func (t *Toncenter) do(ctx context.Context, method, path string, body []byte, ou
 	if resp.StatusCode != http.StatusOK {
 		he := &HTTPError{Status: resp.StatusCode, Body: text.Truncate(string(data), 300)}
 		switch {
+		case resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden:
+			// Неверный или заблокированный ключ: временная ошибка (ключ можно
+			// заменить без потери сообщений), но с понятным текстом для алерта.
+			return failure.Transient(fmt.Errorf("toncenter rejected the API key (check TONCENTER_API_KEY): %w", he))
 		case resp.StatusCode == http.StatusBadRequest || resp.StatusCode == http.StatusUnprocessableEntity:
 			// Битый запрос / BOC — повтор не поможет.
 			return failure.Permanent(he)
 		default:
-			// 401/403 (ключ), 404, 429 (лимит), 5xx. Отказ ноды принять
+			// 404, 429 (лимит), 5xx, 3xx. Отказ ноды принять
 			// внешнее сообщение (например, seqno ещё не дошёл) toncenter
 			// тоже отдаёт как 5xx — такой BOC может пройти чуть позже.
 			return failure.Transient(he)

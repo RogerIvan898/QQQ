@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"gitlab.com/company-group7340831/poker/chain-service/internal/ton"
 )
 
 // Mode — режим работы сервиса.
@@ -48,6 +50,12 @@ type Config struct {
 	Exchange     string        // AMQP_EXCHANGE
 	ExchangeType string        // AMQP_EXCHANGE_TYPE: direct | topic
 	QueueType    string        // AMQP_QUEUE_TYPE: quorum | classic
+	// AMQP_SINGLE_ACTIVE_CONSUMER: withdrawals.signed читает только один
+	// экземпляр (x-single-active-consumer).
+	SingleActiveConsumer bool
+	// SIGNER_RABBIT_USER: пользователь RabbitMQ сервиса подписи; подписанные
+	// выводы от других отправителей отклоняются.
+	SignerRabbitUser string
 
 	// Имена очередей
 	QueueWithdrawalsSigned string // QUEUE_WITHDRAWALS_SIGNED
@@ -114,6 +122,9 @@ func Load() (*Config, error) {
 		Exchange:     r.str("AMQP_EXCHANGE", "core.events"),
 		ExchangeType: strings.ToLower(r.str("AMQP_EXCHANGE_TYPE", "direct")),
 		QueueType:    strings.ToLower(r.str("AMQP_QUEUE_TYPE", "quorum")),
+
+		SingleActiveConsumer: r.bool("AMQP_SINGLE_ACTIVE_CONSUMER", true),
+		SignerRabbitUser:     r.str("SIGNER_RABBIT_USER", ""),
 
 		QueueWithdrawalsSigned: r.str("QUEUE_WITHDRAWALS_SIGNED", "withdrawals.signed"),
 		QueueWithdrawalsResult: r.str("QUEUE_WITHDRAWALS_RESULT", "withdrawals.result"),
@@ -212,9 +223,25 @@ func (c *Config) validate() error {
 	if c.Mode.Broadcasts() && c.TONClient == "toncenter" && c.WalletAddress == "" {
 		add("TON_WALLET_ADDRESS: обязательна для broadcaster с TON_CLIENT=toncenter")
 	}
+	for env, addr := range map[string]string{"TON_WALLET_ADDRESS": c.WalletAddress, "TON_DEPOSIT_ADDRESS": c.DepositAddress} {
+		if addr == "" {
+			continue
+		}
+		if _, err := ton.ParseAddress(addr); err != nil {
+			add("%s: неверный адрес TON: %v", env, err)
+		}
+	}
+	if c.Mode.Broadcasts() && c.TONClient == "toncenter" && c.SignerRabbitUser == "" {
+		add("SIGNER_RABBIT_USER: обязательна для broadcaster с TON_CLIENT=toncenter (пользователь RabbitMQ сервиса подписи)")
+	}
 	if c.Mode.UsesTON() {
 		switch c.TONClient {
 		case "stub":
+			// Заглушка «подтверждает» выводы, ничего не отправляя: с боевой
+			// сетью это означало бы списание денег без перевода.
+			if u, err := url.Parse(c.ToncenterURL); err == nil && strings.EqualFold(u.Hostname(), "toncenter.com") {
+				add("TON_CLIENT=stub запрещён при TONCENTER_URL основной сети (toncenter.com)")
+			}
 		case "toncenter":
 			// Ключ API уходит в заголовке — только по https. http допустим
 			// лишь для локального мока.
@@ -347,6 +374,19 @@ func parse[T any](r *reader, key string, def T, want string, conv func(string) (
 		return def
 	}
 	return out
+}
+
+func (r *reader) bool(key string, def bool) bool {
+	v, ok := os.LookupEnv(key)
+	if !ok || strings.TrimSpace(v) == "" {
+		return def
+	}
+	b, err := strconv.ParseBool(strings.TrimSpace(v))
+	if err != nil {
+		r.errs = append(r.errs, fmt.Errorf("%s: ожидается true|false, получено %q", key, v))
+		return def
+	}
+	return b
 }
 
 func (r *reader) int(key string, def int) int {

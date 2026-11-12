@@ -90,17 +90,34 @@ go build ./... && go vet ./... && go test ./...
 - **Идемпотентность.** `message_id` в `processed_messages` (PostgreSQL, TTL 24 ч, общая для реплик).
 - **Graceful shutdown.** SIGINT/SIGTERM → отмена подписки → ожидание текущих сообщений до `SHUTDOWN_TIMEOUT` → закрытие каналов и соединения.
 - **Схема БД** применяется при старте (`CREATE … IF NOT EXISTS`), повторный запуск безопасен.
+- **Один экземпляр.** `withdrawals.signed` объявлена с `x-single-active-consumer` (`AMQP_SINGLE_ACTIVE_CONSUMER`): второй экземпляр ждёт в резерве и не ломает порядок seqno. Watcher и опрос подтверждений работают под advisory lock PostgreSQL (по ключу компонента и адреса кошелька); если соединение с блокировкой оборвалось, сервис останавливается, а не работает вдвоём.
+- **Таймауты.** Обработчик выводов без таймаута (порядок seqno), но каждая попытка ограничена 2 минутами: повисшее соединение с PostgreSQL или сетью не остановит выводы навсегда.
+- **Подтверждения вне окна.** Если свежий вывод 3 прохода подряд не найден среди последних `CONFIRM_SCAN_LIMIT` транзакций кошелька (много депозитов), он ищется отдельно по хэшу.
 
 ## HTTP (`METRICS_PORT`, по умолчанию 9090)
 
-- `/metrics` — `chain_publish_total{queue,status}`, `chain_consume_total{queue,status}`, `chain_retry_total{queue}`, `chain_dlq_total{queue}`, `chain_connection_up`, `chain_reconnect_total`, `chain_handler_duration_seconds`, `chain_publish_duration_seconds`.
-- `/healthz` — liveness; `/readyz` — есть соединение с RabbitMQ (используется `HEALTHCHECK` в Dockerfile).
+- `/metrics` — `chain_publish_total{queue,status}`, `chain_consume_total{queue,status}`, `chain_retry_total{queue}`, `chain_dlq_total{queue}`, `chain_connection_up`, `chain_reconnect_total`, `chain_handler_duration_seconds`, `chain_publish_duration_seconds`, `chain_broadcast_attempt`, `chain_withdrawals_stale`, `chain_leader_lock{component}`.
+- `/healthz` — liveness; `/readyz` — есть соединение с RabbitMQ и PostgreSQL отвечает (используется `HEALTHCHECK` в Dockerfile).
+
+Алерты, без которых проблемы с деньгами останутся незамеченными:
+
+| Метрика | Условие | Что значит |
+|---|---|---|
+| `chain_broadcast_attempt` | `>= 10` | очередь выводов стоит: toncenter недоступен, неверный ключ, БД |
+| `chain_withdrawals_stale` | `> 0` | вывод без подтверждения дольше `CONFIRM_TIMEOUT`, нужен ручной разбор |
+| `increase(chain_dlq_total[15m])` | `> 0` | сообщение в DLQ: конфликт BOC, чужой отправитель, битые данные |
+| `chain_connection_up` | `== 0` 2 мин | нет соединения с RabbitMQ |
+| `max(chain_leader_lock{component="deposit_watcher"})` | `== 0` 5 мин | депозиты никто не наблюдает |
 - Эндпоинты без авторизации: вне Docker привяжите их к внутреннему интерфейсу через `METRICS_HOST`.
 
 ## Безопасность
 
 - Ключей кошелька в сервисе нет: отправляются только транзакции, уже подписанные сервисом подписи.
 - Подлинность исходящих событий — через `user_id` (см. «Контракт сообщений»).
+- Подлинность входящих: `WITHDRAW_SIGNED` принимается только с `user_id = SIGNER_RABBIT_USER`, остальные — в DLQ. Ядро может писать в тот же exchange, и без этой проверки скомпрометированная игровая VPS заняла бы `request_id` мусорным BOC и заблокировала настоящий вывод.
+- BOC должен быть адресован `TON_WALLET_ADDRESS`, иначе он не отправляется.
+- `TON_CLIENT=stub` запрещён при `TONCENTER_URL` основной сети: заглушка «подтверждает» выводы, ничего не отправляя.
+- Клиент toncenter не ходит по редиректам: заголовок `X-API-Key` не уйдёт на чужой хост. Отказ в ключе (401/403) в логах назван явно.
 - toncenter — только по https; это единственный источник данных о депозитах, для крупных сумм в будущем стоит сверять со вторым источником (lite-сервер с доказательствами).
 - Сборка на Go 1.27.3 (`toolchain` в `go.mod`, тег образа в Dockerfile); проверка зависимостей: `go run golang.org/x/vuln/cmd/govulncheck@latest ./...`.
 - Учётки и открытые порты в `docker-compose.yml` — только для локальной разработки.
