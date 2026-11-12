@@ -4,17 +4,14 @@ import { parseCard, type CardType as Card } from 'entities/card';
 import { gameModel, SERVER_EVENTS, type ServerGameEvent } from 'entities/game';
 import type { PlayerType as Player } from 'entities/player';
 import { sessionModel } from 'entities/session';
-import {
-  readSessionJson,
-  removeStorageByPrefix,
-  writeSessionJson,
-} from 'shared/lib/storage';
+import { readJson, removeStorageByPrefix, writeJson } from 'shared/lib/storage';
 
 import type { HandAction, HandRecord, HandSeat } from './types';
 
-// История живёт, пока игрок за столом: переживает перезагрузку страницы
-// (sessionStorage), но стирается при выходе из-за стола.
-const STORAGE_KEY = 'poker:hand-history';
+// История живёт, пока игрок за столом: переживает перезагрузку и закрытие
+// окна (можно вернуться за тот же стол), стирается при выходе из-за стола.
+// Хранится только один стол: вход за другой стол заменяет запись.
+const STORAGE_KEY = 'poker:table-hands';
 const MAX_HANDS_PER_ROOM = 50;
 
 interface Saved {
@@ -23,14 +20,14 @@ interface Saved {
 }
 
 // Старый формат: по ключу на стол в localStorage, без очистки.
-removeStorageByPrefix(STORAGE_KEY);
+removeStorageByPrefix('poker:hand-history');
 
 const loadHands = (roomId: string | null): HandRecord[] => {
   if (!roomId) {
     return [];
   }
 
-  const saved = readSessionJson<Partial<Saved> | null>(STORAGE_KEY, null);
+  const saved = readJson<Partial<Saved> | null>(STORAGE_KEY, null);
 
   return saved?.roomId === roomId && Array.isArray(saved.hands)
     ? saved.hands
@@ -38,7 +35,7 @@ const loadHands = (roomId: string | null): HandRecord[] => {
 };
 
 const saveHands = (roomId: string, hands: HandRecord[]) => {
-  writeSessionJson(STORAGE_KEY, { roomId, hands } satisfies Saved);
+  writeJson(STORAGE_KEY, { roomId, hands } satisfies Saved);
 };
 
 export const tableEntered = createEvent<string | null>();
@@ -60,7 +57,7 @@ export const $hands = createStore<HandRecord[]>([])
   .reset(tableLeft);
 
 tableLeft.watch(() => {
-  writeSessionJson(STORAGE_KEY, null);
+  writeJson(STORAGE_KEY, null);
 });
 
 handRecorded.watch(hand => {

@@ -54,37 +54,6 @@ export const writeFlag = (key: string, enabled: boolean) => {
   writeStorage(key, enabled ? 'on' : 'off');
 };
 
-// sessionStorage: переживает перезагрузку страницы, но не закрытие вкладки или WebView.
-const sessionStore = (): Storage | null => {
-  try {
-    return globalThis.sessionStorage ?? null;
-  } catch {
-    return null;
-  }
-};
-
-export const readSessionJson = <T>(key: string, fallback: T): T => {
-  try {
-    const raw = sessionStore()?.getItem(key);
-
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-};
-
-export const writeSessionJson = (key: string, value: unknown) => {
-  try {
-    if (value === null) {
-      sessionStore()?.removeItem(key);
-    } else {
-      sessionStore()?.setItem(key, JSON.stringify(value));
-    }
-  } catch {
-    void 0;
-  }
-};
-
 // Удаляет из localStorage все ключи с данным префиксом.
 export const removeStorageByPrefix = (prefix: string) => {
   try {
