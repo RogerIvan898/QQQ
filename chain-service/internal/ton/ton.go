@@ -21,8 +21,8 @@ type Tx struct {
 
 // Client — то, что нужно broadcaster от сети.
 //
-// Ошибки сети, таймауты, 429 и 5xx возвращаются как amqp.Transient,
-// ошибки данных (400 — битый BOC) — как amqp.Permanent.
+// Ошибки сети, таймауты, 429 и 5xx возвращаются как failure.Transient,
+// ошибки данных (400 — битый BOC) — как failure.Permanent.
 type Client interface {
 	// SendBoc отправляет BOC (base64) и возвращает хэш внешнего сообщения,
 	// по которому затем ищется транзакция.

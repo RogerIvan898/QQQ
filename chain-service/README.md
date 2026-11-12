@@ -112,11 +112,20 @@ go build ./... && go vet ./... && go test ./...
 ## Структура
 
 ```
-cmd/chain-service/main.go      запуск, graceful shutdown, healthcheck
+cmd/chain-service/main.go      конфиг, логгер, сигналы, healthcheck
+internal/app/                  сборка компонентов, запуск и остановка в порядке зависимостей
+internal/withdrawal/           выводы: модель и статусы, интерфейс хранилища, broadcaster, опрос подтверждений
+internal/deposit/              наблюдение за кошельком депозитов
+internal/events/               контракт сообщений: типы событий, message_id, разбор тела
 internal/config/               env → Config с валидацией
 internal/amqp/                 соединение и переподключение, топология, publisher confirms, consumer
-internal/store/                PostgreSQL: схема, идемпотентность, история выводов, курсор watcher
+internal/store/                PostgreSQL: реализует хранилища withdrawal и deposit, идемпотентность
 internal/ton/                  клиент toncenter (отправка, подтверждения, депозиты) и заглушка
-internal/handler/              broadcaster, опрос подтверждений, watcher
+internal/failure/              временные и постоянные ошибки (решение о повторе)
+internal/schedule/, text/      паузы и периодический запуск; обрезка строк
 internal/metrics/              Prometheus и HTTP-сервер
 ```
+
+Зависимости направлены внутрь: `withdrawal` и `deposit` не знают про PostgreSQL —
+`store` реализует их интерфейсы. `ton` и `store` не зависят от RabbitMQ: временность
+ошибки они сообщают через `failure`.

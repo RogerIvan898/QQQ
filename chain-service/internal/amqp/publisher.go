@@ -10,6 +10,7 @@ import (
 	amqp091 "github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
 
+	"gitlab.com/company-group7340831/poker/chain-service/internal/failure"
 	"gitlab.com/company-group7340831/poker/chain-service/internal/metrics"
 )
 
@@ -71,7 +72,7 @@ func NewPublisher(client *Client, cfg PublisherConfig, log *zap.Logger, m *metri
 // Publish отправляет сообщение и ждёт подтверждения брокера.
 func (p *Publisher) Publish(ctx context.Context, msg Message) error {
 	if msg.MessageID == "" {
-		return Permanent(errors.New("publish: message_id is required"))
+		return failure.Permanent(errors.New("publish: message_id is required"))
 	}
 	queue := msg.RoutingKey
 	log := p.log.With(
@@ -161,7 +162,7 @@ func (p *Publisher) send(ctx context.Context, msg Message) (*pendingConfirm, *pu
 		})
 	if err != nil {
 		sess.remove(pc)
-		return nil, nil, Transient(fmt.Errorf("publish: %w", err))
+		return nil, nil, failure.Transient(fmt.Errorf("publish: %w", err))
 	}
 	return pc, sess, nil
 }
@@ -178,15 +179,15 @@ func (p *Publisher) session(ctx context.Context) (*publishSession, error) {
 
 	conn, err := p.client.Connection(ctx)
 	if err != nil {
-		return nil, Transient(fmt.Errorf("wait connection: %w", err))
+		return nil, failure.Transient(fmt.Errorf("wait connection: %w", err))
 	}
 	ch, err := conn.Channel()
 	if err != nil {
-		return nil, Transient(fmt.Errorf("open publish channel: %w", err))
+		return nil, failure.Transient(fmt.Errorf("open publish channel: %w", err))
 	}
 	if err := ch.Confirm(false); err != nil {
 		_ = ch.Close()
-		return nil, Transient(fmt.Errorf("enable confirms: %w", err))
+		return nil, failure.Transient(fmt.Errorf("enable confirms: %w", err))
 	}
 
 	// Каналы уведомлений намеренно небуферизованные и читаются ОДНОЙ

@@ -14,7 +14,8 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"gitlab.com/company-group7340831/poker/chain-service/internal/amqp"
+	"gitlab.com/company-group7340831/poker/chain-service/internal/failure"
+	"gitlab.com/company-group7340831/poker/chain-service/internal/text"
 )
 
 // ToncenterConfig — параметры клиента toncenter.
@@ -47,7 +48,7 @@ func NewToncenter(cfg ToncenterConfig) *Toncenter {
 func (t *Toncenter) SendBoc(ctx context.Context, boc string) (string, error) {
 	payload, err := json.Marshal(map[string]string{"boc": boc})
 	if err != nil {
-		return "", amqp.Permanent(err)
+		return "", failure.Permanent(err)
 	}
 	var resp struct {
 		OK     bool   `json:"ok"`
@@ -61,7 +62,7 @@ func (t *Toncenter) SendBoc(ctx context.Context, boc string) (string, error) {
 		return "", fmt.Errorf("sendBoc: %w", err)
 	}
 	if !resp.OK {
-		return "", amqp.Transient(fmt.Errorf("sendBoc: %s", resp.Error))
+		return "", failure.Transient(fmt.Errorf("sendBoc: %s", resp.Error))
 	}
 	// Храним хэш сообщения в том виде, в каком оно попадёт в блок: он
 	// совпадает с in_msg.hash транзакции кошелька. Нормализованный — запасной.
@@ -71,7 +72,7 @@ func (t *Toncenter) SendBoc(ctx context.Context, boc string) (string, error) {
 	if resp.Result.HashNorm != "" {
 		return resp.Result.HashNorm, nil
 	}
-	return "", amqp.Transient(errors.New("sendBoc: empty message hash in response"))
+	return "", failure.Transient(errors.New("sendBoc: empty message hash in response"))
 }
 
 // FindTransaction ищет входящую транзакцию кошелька по хэшу сообщения.
@@ -110,7 +111,7 @@ func (e *HTTPError) Error() string { return fmt.Sprintf("toncenter HTTP %d: %s",
 // do выполняет запрос с учётом лимита и классифицирует ошибки.
 func (t *Toncenter) do(ctx context.Context, method, path string, body []byte, out any) error {
 	if err := t.lim.Wait(ctx); err != nil {
-		return amqp.Transient(err)
+		return failure.Transient(err)
 	}
 
 	var rd io.Reader
@@ -119,7 +120,7 @@ func (t *Toncenter) do(ctx context.Context, method, path string, body []byte, ou
 	}
 	req, err := http.NewRequestWithContext(ctx, method, t.cfg.BaseURL+path, rd)
 	if err != nil {
-		return amqp.Permanent(err)
+		return failure.Permanent(err)
 	}
 	req.Header.Set("Accept", "application/json")
 	if body != nil {
@@ -131,30 +132,30 @@ func (t *Toncenter) do(ctx context.Context, method, path string, body []byte, ou
 
 	resp, err := t.http.Do(req)
 	if err != nil {
-		return amqp.Transient(err) // сеть, DNS, таймаут
+		return failure.Transient(err) // сеть, DNS, таймаут
 	}
 	defer resp.Body.Close()
 	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return amqp.Transient(err)
+		return failure.Transient(err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		he := &HTTPError{Status: resp.StatusCode, Body: amqp.Truncate(string(data), 300)}
+		he := &HTTPError{Status: resp.StatusCode, Body: text.Truncate(string(data), 300)}
 		switch {
 		case resp.StatusCode == http.StatusBadRequest || resp.StatusCode == http.StatusUnprocessableEntity:
 			// Битый запрос / BOC — повтор не поможет.
-			return amqp.Permanent(he)
+			return failure.Permanent(he)
 		default:
 			// 401/403 (ключ), 404, 429 (лимит), 5xx. Отказ ноды принять
 			// внешнее сообщение (например, seqno ещё не дошёл) toncenter
 			// тоже отдаёт как 5xx — такой BOC может пройти чуть позже.
-			return amqp.Transient(he)
+			return failure.Transient(he)
 		}
 	}
 
 	if err := json.Unmarshal(data, out); err != nil {
-		return amqp.Transient(fmt.Errorf("decode response: %w", err))
+		return failure.Transient(fmt.Errorf("decode response: %w", err))
 	}
 	return nil
 }

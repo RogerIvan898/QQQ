@@ -1,4 +1,4 @@
-package handler
+package deposit
 
 import (
 	"context"
@@ -11,8 +11,23 @@ import (
 	"go.uber.org/zap"
 
 	"gitlab.com/company-group7340831/poker/chain-service/internal/amqp"
+	"gitlab.com/company-group7340831/poker/chain-service/internal/events"
 	"gitlab.com/company-group7340831/poker/chain-service/internal/ton"
 )
+
+// fakePublisher запоминает опубликованные сообщения.
+type fakePublisher struct {
+	msgs []amqp.Message
+	err  error
+}
+
+func (f *fakePublisher) Publish(_ context.Context, m amqp.Message) error {
+	if f.err != nil {
+		return f.err
+	}
+	f.msgs = append(f.msgs, m)
+	return nil
+}
 
 // MemoryCursors — CursorStore в памяти (для тестов).
 type MemoryCursors struct {
@@ -67,8 +82,8 @@ func (f *flakyPublisher) Publish(ctx context.Context, m amqp.Message) error {
 	return f.fakePublisher.Publish(ctx, m)
 }
 
-func newWatcher(src DepositSource, cur CursorStore, pub Publisher) *DepositWatcher {
-	return NewDepositWatcher(DepositWatcherConfig{
+func newWatcher(src Source, cur CursorStore, pub events.Publisher) *Watcher {
+	return NewWatcher(WatcherConfig{
 		Account: "EQwallet", Exchange: "ex", RoutingKey: "deposits",
 		PollInterval: time.Second, BatchSize: 10, StartLT: 100, PublishTimeout: time.Second,
 	}, src, cur, pub, zap.NewNop())
@@ -94,12 +109,12 @@ func TestDepositWatcherPublishesAndSavesCursor(t *testing.T) {
 	if len(pub.msgs) != 2 {
 		t.Fatalf("published %d, want 2", len(pub.msgs))
 	}
-	var ev DepositDetected
+	var ev Detected
 	_ = json.Unmarshal(pub.msgs[0].Body, &ev)
-	if ev.Amount != "1.5" || ev.AmountNano != 1_500_000_000 || ev.Comment != "user-1" || ev.Asset != AssetTON || ev.LT != 101 {
+	if ev.Amount != "1.5" || ev.AmountNano != 1_500_000_000 || ev.Comment != "user-1" || ev.Asset != events.AssetTON || ev.LT != 101 {
 		t.Errorf("unexpected event %+v", ev)
 	}
-	if pub.msgs[0].MessageID != DeterministicID(EventDepositDetected, "a") {
+	if pub.msgs[0].MessageID != events.DeterministicID(events.DepositDetected, "a") {
 		t.Error("message_id must be derived from tx_hash")
 	}
 	if lt, ok, _ := cur.Load(ctx, "EQwallet"); !ok || lt != 110 {

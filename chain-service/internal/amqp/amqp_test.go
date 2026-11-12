@@ -9,11 +9,14 @@ import (
 	"time"
 
 	amqp091 "github.com/rabbitmq/amqp091-go"
+
+	"gitlab.com/company-group7340831/poker/chain-service/internal/failure"
+	"gitlab.com/company-group7340831/poker/chain-service/internal/text"
 )
 
 func TestIsTransient(t *testing.T) {
 	transient := []error{
-		Transient(errors.New("node unavailable")),
+		failure.Transient(errors.New("node unavailable")),
 		context.DeadlineExceeded,
 		fmt.Errorf("wrap: %w", ErrNacked),
 		ErrPublishTimeout,
@@ -30,8 +33,8 @@ func TestIsTransient(t *testing.T) {
 	permanent := []error{
 		nil,
 		errors.New("unknown"),
-		Permanent(errors.New("bad json")),
-		Permanent(context.DeadlineExceeded), // явная пометка важнее эвристики
+		failure.Permanent(errors.New("bad json")),
+		failure.Permanent(context.DeadlineExceeded), // явная пометка важнее эвристики
 		context.Canceled,
 	}
 	for _, err := range permanent {
@@ -125,7 +128,7 @@ func TestNextBackoff(t *testing.T) {
 }
 
 func TestTruncateKeepsUTF8(t *testing.T) {
-	s := Truncate("ошибка", 3) // 3 байта режут вторую кириллическую букву
+	s := text.Truncate("ошибка", 3) // 3 байта режут вторую кириллическую букву
 	if s != "о" {
 		t.Errorf("truncate = %q, want %q", s, "о")
 	}

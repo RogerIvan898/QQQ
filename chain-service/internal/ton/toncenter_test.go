@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/company-group7340831/poker/chain-service/internal/amqp"
+	"gitlab.com/company-group7340831/poker/chain-service/internal/failure"
 )
 
 func newTestClient(t *testing.T, h http.HandlerFunc) *Toncenter {
@@ -52,8 +52,8 @@ func TestSendBocErrors(t *testing.T) {
 			_, _ = w.Write([]byte(`{"ok":false,"error":"boom","code":` + http.StatusText(status) + `}`))
 		})
 		_, err := c.SendBoc(context.Background(), "x")
-		if err == nil || amqp.IsTransient(err) != transient {
-			t.Errorf("status %d: err=%v transient=%v, want transient=%v", status, err, amqp.IsTransient(err), transient)
+		if err == nil || failure.IsTransient(err) != transient {
+			t.Errorf("status %d: err=%v transient=%v, want transient=%v", status, err, failure.IsTransient(err), transient)
 		}
 	}
 }

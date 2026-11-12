@@ -1,6 +1,6 @@
-// Package handler — бизнес-логика: отправка подписанных выводов в сеть,
-// отслеживание подтверждений и наблюдение за депозитами.
-package handler
+// Package events — контракт сообщений chain-service в RabbitMQ: типы событий,
+// детерминированные message_id, проверка конверта и разбор тела.
+package events
 
 import (
 	"bytes"
@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	amqp091 "github.com/rabbitmq/amqp091-go"
@@ -19,12 +18,16 @@ import (
 
 // Типы событий (AMQP-свойство type).
 const (
-	EventWithdrawSigned  = "WITHDRAW_SIGNED"
-	EventWithdrawResult  = "WITHDRAW_RESULT"
-	EventDepositDetected = "DEPOSIT_DETECTED"
+	WithdrawSigned  = "WITHDRAW_SIGNED"
+	WithdrawResult  = "WITHDRAW_RESULT"
+	DepositDetected = "DEPOSIT_DETECTED"
 )
 
-// Publisher — минимальный интерфейс паблишера (для подмены в тестах).
+// AssetTON — единственный поддерживаемый актив.
+const AssetTON = "TON"
+
+// Publisher публикует сообщение и ждёт подтверждения брокера
+// (реализация — amqp.Publisher, в тестах — подмена).
 type Publisher interface {
 	Publish(ctx context.Context, msg amqp.Message) error
 }
@@ -42,8 +45,8 @@ func DeterministicID(kind, key string) string {
 	return uuid.NewSHA1(idNamespace, []byte(kind+":"+key)).String()
 }
 
-// checkEnvelope проверяет content type и тип события, если они заданы.
-func checkEnvelope(d amqp091.Delivery, wantType string) error {
+// CheckEnvelope проверяет content type и тип события, если они заданы.
+func CheckEnvelope(d amqp091.Delivery, wantType string) error {
 	if ct := d.ContentType; ct != "" && !strings.HasPrefix(ct, amqp.ContentTypeJSON) {
 		return fmt.Errorf("unexpected content type %q", ct)
 	}
@@ -53,9 +56,9 @@ func checkEnvelope(d amqp091.Delivery, wantType string) error {
 	return nil
 }
 
-// decodeJSON разбирает тело сообщения в v. Неизвестные поля допускаются
+// DecodeJSON разбирает тело сообщения в v. Неизвестные поля допускаются
 // (совместимость при расширении контракта), мусор после объекта — нет.
-func decodeJSON(body []byte, v any) error {
+func DecodeJSON(body []byte, v any) error {
 	dec := json.NewDecoder(bytes.NewReader(body))
 	if err := dec.Decode(v); err != nil {
 		return fmt.Errorf("decode json: %w", err)
@@ -66,34 +69,8 @@ func decodeJSON(body []byte, v any) error {
 	return nil
 }
 
-func validUUID(s string) bool {
+// ValidUUID сообщает, является ли s UUID.
+func ValidUUID(s string) bool {
 	_, err := uuid.Parse(s)
 	return err == nil
-}
-
-// sleep — пауза, прерываемая ctx. false — ctx отменён.
-func sleep(ctx context.Context, d time.Duration) bool {
-	t := time.NewTimer(d)
-	defer t.Stop()
-	select {
-	case <-ctx.Done():
-		return false
-	case <-t.C:
-		return true
-	}
-}
-
-// runEvery вызывает fn сразу и затем каждые interval, пока ctx не отменён.
-// Начатый вызов fn дорабатывает до конца.
-func runEvery(ctx context.Context, interval time.Duration, fn func()) {
-	t := time.NewTicker(interval)
-	defer t.Stop()
-	for {
-		fn()
-		select {
-		case <-ctx.Done():
-			return
-		case <-t.C:
-		}
-	}
 }

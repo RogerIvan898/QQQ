@@ -8,6 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+
+	"gitlab.com/company-group7340831/poker/chain-service/internal/withdrawal"
 )
 
 // Интеграционный тест: запускается, только если задан POSTGRES_TEST_DSN,
@@ -37,11 +39,11 @@ func TestPostgresWithdrawalLifecycle(t *testing.T) {
 	ctx := context.Background()
 	id := uuid.NewString()
 
-	inserted, err := repo.InsertSigned(ctx, Withdrawal{RequestID: id, Seqno: 4_000_000_000, BOC: "boc", MsgHash: "h1", AmountNano: 5})
+	inserted, err := repo.InsertSigned(ctx, withdrawal.Withdrawal{RequestID: id, Seqno: 4_000_000_000, BOC: "boc", MsgHash: "h1", AmountNano: 5})
 	if err != nil || !inserted {
 		t.Fatalf("insert: %v %v", inserted, err)
 	}
-	again, err := repo.InsertSigned(ctx, Withdrawal{RequestID: id, Seqno: 1, BOC: "other"})
+	again, err := repo.InsertSigned(ctx, withdrawal.Withdrawal{RequestID: id, Seqno: 1, BOC: "other"})
 	if err != nil || again {
 		t.Fatalf("duplicate insert: %v %v", again, err)
 	}
@@ -50,7 +52,7 @@ func TestPostgresWithdrawalLifecycle(t *testing.T) {
 	if err != nil || w == nil {
 		t.Fatalf("get: %v %v", w, err)
 	}
-	if w.Seqno != 4_000_000_000 || w.Status != StatusSigned || w.BOCHash != BOCHash("boc") || w.AmountNano != 5 {
+	if w.Seqno != 4_000_000_000 || w.Status != withdrawal.StatusSigned || w.BOCHash != withdrawal.BOCHash("boc") || w.AmountNano != 5 {
 		t.Fatalf("unexpected row: %+v", w)
 	}
 
@@ -80,7 +82,7 @@ func TestPostgresWithdrawalLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 	w, _ = repo.Get(ctx, id)
-	if w.Status != StatusConfirmed || w.TxHash != "tx1" || w.SentAt.IsZero() {
+	if w.Status != withdrawal.StatusConfirmed || w.TxHash != "tx1" || w.SentAt.IsZero() {
 		t.Fatalf("confirmed row changed or wrong: %+v", w)
 	}
 }

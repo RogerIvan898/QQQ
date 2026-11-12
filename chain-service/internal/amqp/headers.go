@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	amqp091 "github.com/rabbitmq/amqp091-go"
+
+	"gitlab.com/company-group7340831/poker/chain-service/internal/text"
 )
 
 // Имена заголовков сообщений.
@@ -93,16 +95,7 @@ func retryHeaders(src amqp091.Table, messageID string, attempt int, queue string
 	h[HeaderRetryCount] = int32(attempt)
 	h[HeaderOriginalQueue] = queue
 	if lastErr != nil {
-		h[HeaderLastError] = Truncate(lastErr.Error(), 512)
+		h[HeaderLastError] = text.Truncate(lastErr.Error(), 512)
 	}
 	return h
-}
-
-// Truncate обрезает s до max байт, не разрезая UTF-8 символ.
-func Truncate(s string, max int) string {
-	if len(s) <= max {
-		return s
-	}
-	// Обрезка могла разрезать многобайтовый UTF-8 символ — убираем хвост.
-	return strings.ToValidUTF8(s[:max], "")
 }
