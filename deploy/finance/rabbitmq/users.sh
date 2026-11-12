@@ -26,7 +26,7 @@ rabbitmqctl -q set_permissions -p / chain-service \
   '^(core\.events|withdrawals\.signed(\..+)?)$'
 
 # Ядро (C++ game backend): публикует запросы на вывод, читает депозиты и
-# результаты выводов. Имя очереди запросов withdrawals.requested — согласовать.
+# результаты выводов.
 upsert core "$CORE_PASS"
 rabbitmqctl -q set_permissions -p / core \
   '^withdrawals\.requested(\..+)?$' \

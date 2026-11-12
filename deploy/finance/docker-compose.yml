@@ -79,9 +79,8 @@ services:
     restart: unless-stopped
     logging: *logging
 
-  # C++ сервис подписи (пишет другой разработчик). Образ, переменные и формат
-  # ключа согласовать; здесь задана изоляция: без портов, только сеть с RabbitMQ,
-  # ключ — Docker secret, файловая система только для чтения, без привилегий.
+  # Сервис подписи: без портов, только сеть с RabbitMQ, ключ — Docker secret,
+  # файловая система только для чтения, без привилегий.
   signer:
     profiles: [signer]
     image: ${SIGNER_IMAGE:-signer:unset}
