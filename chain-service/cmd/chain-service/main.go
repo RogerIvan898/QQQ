@@ -71,13 +71,13 @@ func run() error {
 
 	m := metrics.New()
 
-	// MySQL: история выводов, ключи идемпотентности, курсор watcher.
-	db, err := store.Open(ctx, cfg.MySQLDSN, cfg.MySQLMaxOpenConns)
+	// PostgreSQL: история выводов, ключи идемпотентности, курсор watcher.
+	db, err := store.Open(ctx, cfg.PostgresDSN, cfg.PostgresMaxOpenConns)
 	if err != nil {
-		return fmt.Errorf("mysql: %w", err)
+		return fmt.Errorf("postgres: %w", err)
 	}
 	defer func() { _ = db.Close() }()
-	log.Info("mysql connected, schema applied")
+	log.Info("postgres connected, schema applied")
 
 	topology := buildTopology(cfg)
 	client := amqp.NewClient(amqp.ClientConfig{

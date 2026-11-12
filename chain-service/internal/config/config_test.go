@@ -8,7 +8,7 @@ import (
 func baseEnv(t *testing.T) {
 	t.Helper()
 	t.Setenv("RABBITMQ_URL", "amqp://chain-svc:secret@rabbit:5672/")
-	t.Setenv("MYSQL_DSN", "u:p@tcp(db:3306)/x")
+	t.Setenv("POSTGRES_DSN", "postgres://u:p@db:5432/x")
 	t.Setenv("TON_WALLET_ADDRESS", "EQhot")
 	t.Setenv("TON_DEPOSIT_ADDRESS", "EQdep")
 }

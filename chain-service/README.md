@@ -26,7 +26,7 @@ docker compose up --build
 
 RabbitMQ UI — http://localhost:15672 (`chain` / `chain`), метрики — http://localhost:9090/metrics. В compose стоит `TON_CLIENT=stub`: сеть не трогается, «отправка» и «подтверждение» успешны сразу.
 
-Локально (Go ≥ 1.26, RabbitMQ и MySQL 8):
+Локально (Go ≥ 1.26, RabbitMQ и PostgreSQL 14+):
 
 ```bash
 cp .env.example .env
@@ -64,8 +64,8 @@ go build ./... && go vet ./... && go test ./...
 
 ## Отправка выводов (broadcaster)
 
-- Читает `withdrawals.signed` **строго по одному** (prefetch 1, один воркер): кошелёк принимает seqno только по порядку. Временные ошибки (сеть, 429/5xx toncenter, MySQL, брокер) повторяются **на месте** с паузой 1s → 30s, пока не пройдут: сообщение не уходит в delay-очередь, и следующий seqno не обгоняет текущий. Прервать ожидание может только остановка сервиса — тогда сообщение возвращается в очередь.
-- Каждый вывод сохраняется в MySQL (`withdrawals`, одна строка на `request_id`: seqno, BOC, его sha256, статус `signed → sent → confirmed | failed`).
+- Читает `withdrawals.signed` **строго по одному** (prefetch 1, один воркер): кошелёк принимает seqno только по порядку. Временные ошибки (сеть, 429/5xx toncenter, PostgreSQL, брокер) повторяются **на месте** с паузой 1s → 30s, пока не пройдут: сообщение не уходит в delay-очередь, и следующий seqno не обгоняет текущий. Прервать ожидание может только остановка сервиса — тогда сообщение возвращается в очередь.
+- Каждый вывод сохраняется в PostgreSQL (`withdrawals`, одна строка на `request_id`: seqno, BOC, его sha256, статус `signed → sent → confirmed | failed`).
 - **Двойной отправки нет:** вывод в статусе `sent`/`confirmed`/`failed` повторно не отправляется; другой BOC для того же `request_id` не отправляется никогда (DLQ на разбор). Повторная отправка того же BOC безопасна — кошелёк примет seqno один раз.
 - Хэш сообщения считается из BOC и сохраняется **до** отправки. Отправка — `POST /api/v2/sendBocReturnHash`; 400 (битый BOC) — DLQ. Если отправка отклонена, сервис сначала ищет сообщение в сети по хэшу: если процесс упал между отправкой и записью `sent`, кошелёк уже принял этот seqno, и вывод считается отправленным. После отправки публикуется `sent`.
 - **Подтверждение.** Каждые `CONFIRM_POLL_INTERVAL` — **один** запрос последних `CONFIRM_SCAN_LIMIT` транзакций горячего кошелька (`TON_WALLET_ADDRESS`) и сверка с хэшами сообщений свежих выводов: расход лимита toncenter не зависит от числа ожидающих выводов. Нашлась и успешна — `confirmed`; прервана — `failed`.
@@ -87,9 +87,9 @@ go build ./... && go vet ./... && go test ./...
 - **Топология.** Exchange `core.events`; для каждой очереди `X` — `X.dlq` (`x-dead-letter-routing-key`); для `withdrawals.signed` — delay-очереди `withdrawals.signed.retry.5s/10s/20s`. По умолчанию quorum-очереди с at-least-once dead-lettering.
 - **Publisher confirms** с mandatory: nack, возврат или таймаут — ошибка.
 - **Consumer.** Только ручной ack. Постоянные ошибки → DLQ; временные → повтор с `x-retry-count`, после `MAX_RETRIES` → DLQ; если не удалось поставить повтор — возврат в очередь. Неизвестные ошибки считаются постоянными.
-- **Идемпотентность.** `message_id` в `processed_messages` (MySQL, TTL 24 ч, общая для реплик).
+- **Идемпотентность.** `message_id` в `processed_messages` (PostgreSQL, TTL 24 ч, общая для реплик).
 - **Graceful shutdown.** SIGINT/SIGTERM → отмена подписки → ожидание текущих сообщений до `SHUTDOWN_TIMEOUT` → закрытие каналов и соединения.
-- **Схема БД** применяется при старте; повторное создание индексов пропускается.
+- **Схема БД** применяется при старте (`CREATE … IF NOT EXISTS`), повторный запуск безопасен.
 
 ## HTTP (`METRICS_PORT`, по умолчанию 9090)
 
@@ -107,7 +107,7 @@ go build ./... && go vet ./... && go test ./...
 
 ## Переменные окружения
 
-Все переменные с пояснениями и значениями по умолчанию — в [`.env.example`](.env.example). Обязательны `RABBITMQ_URL`, `MYSQL_DSN`, а при `TON_CLIENT=toncenter` — `TON_WALLET_ADDRESS` и `TON_DEPOSIT_ADDRESS`.
+Все переменные с пояснениями и значениями по умолчанию — в [`.env.example`](.env.example). Обязательны `RABBITMQ_URL`, `POSTGRES_DSN`, а при `TON_CLIENT=toncenter` — `TON_WALLET_ADDRESS` и `TON_DEPOSIT_ADDRESS`.
 
 ## Структура
 
@@ -115,7 +115,7 @@ go build ./... && go vet ./... && go test ./...
 cmd/chain-service/main.go      запуск, graceful shutdown, healthcheck
 internal/config/               env → Config с валидацией
 internal/amqp/                 соединение и переподключение, топология, publisher confirms, consumer
-internal/store/                MySQL: схема, идемпотентность, история выводов, курсор watcher
+internal/store/                PostgreSQL: схема, идемпотентность, история выводов, курсор watcher
 internal/ton/                  клиент toncenter (отправка, подтверждения, депозиты) и заглушка
 internal/handler/              broadcaster, опрос подтверждений, watcher
 internal/metrics/              Prometheus и HTTP-сервер

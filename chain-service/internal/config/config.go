@@ -75,9 +75,9 @@ type Config struct {
 	WatcherStartLT      uint64        // WATCHER_START_LT
 	DepositAddress      string        // TON_DEPOSIT_ADDRESS: кошелёк, на который приходят депозиты
 
-	// MySQL
-	MySQLDSN          string // MYSQL_DSN
-	MySQLMaxOpenConns int    // MYSQL_MAX_OPEN_CONNS
+	// PostgreSQL
+	PostgresDSN          string // POSTGRES_DSN
+	PostgresMaxOpenConns int    // POSTGRES_MAX_OPEN_CONNS
 
 	// Сеть TON
 	TONClient        string        // TON_CLIENT: toncenter | stub
@@ -135,8 +135,8 @@ func Load() (*Config, error) {
 		WatcherStartLT:      r.uint64("WATCHER_START_LT", 0),
 		DepositAddress:      r.str("TON_DEPOSIT_ADDRESS", ""),
 
-		MySQLDSN:          r.str("MYSQL_DSN", ""),
-		MySQLMaxOpenConns: r.int("MYSQL_MAX_OPEN_CONNS", 10),
+		PostgresDSN:          r.str("POSTGRES_DSN", ""),
+		PostgresMaxOpenConns: r.int("POSTGRES_MAX_OPEN_CONNS", 10),
 
 		TONClient:        strings.ToLower(r.str("TON_CLIENT", "toncenter")),
 		ToncenterURL:     strings.TrimRight(r.str("TONCENTER_URL", "https://testnet.toncenter.com"), "/"),
@@ -200,11 +200,11 @@ func (c *Config) validate() error {
 		add("MODE: ожидается broadcaster|watcher|all, получено %q", c.Mode)
 	}
 
-	if c.MySQLDSN == "" {
-		add("MYSQL_DSN: обязательная переменная")
+	if c.PostgresDSN == "" {
+		add("POSTGRES_DSN: обязательная переменная")
 	}
-	if c.MySQLMaxOpenConns < 1 {
-		add("MYSQL_MAX_OPEN_CONNS: должно быть >= 1")
+	if c.PostgresMaxOpenConns < 1 {
+		add("POSTGRES_MAX_OPEN_CONNS: должно быть >= 1")
 	}
 	if c.Mode.Watches() && c.TONClient == "toncenter" && c.DepositAddress == "" {
 		add("TON_DEPOSIT_ADDRESS: обязательна для watcher с TON_CLIENT=toncenter")

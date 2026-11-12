@@ -1,4 +1,4 @@
-# Локальный стенд: RabbitMQ + MySQL + chain-service (broadcaster и watcher в одном процессе).
+# Локальный стенд: RabbitMQ + PostgreSQL + chain-service (broadcaster и watcher в одном процессе).
 # Сервис подписи здесь не поднимается: подписанные транзакции можно публиковать в withdrawals.signed вручную.
 #   docker compose up --build
 #   UI RabbitMQ: http://localhost:15672 (chain / chain), метрики: http://localhost:9090/metrics
@@ -21,19 +21,18 @@ services:
       retries: 10
       start_period: 20s
 
-  mysql:
-    image: mysql:8.4
+  postgres:
+    image: postgres:17-alpine
     environment:
-      MYSQL_DATABASE: chain
-      MYSQL_USER: chain
-      MYSQL_PASSWORD: chain
-      MYSQL_ROOT_PASSWORD: root
+      POSTGRES_DB: chain
+      POSTGRES_USER: chain
+      POSTGRES_PASSWORD: chain
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql-data:/var/lib/mysql
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uchain", "-pchain"]
+      test: ["CMD", "pg_isready", "-U", "chain", "-d", "chain"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -45,11 +44,11 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      mysql:
+      postgres:
         condition: service_healthy
     environment:
       RABBITMQ_URL: amqp://chain:chain@rabbitmq:5672/
-      MYSQL_DSN: chain:chain@tcp(mysql:3306)/chain
+      POSTGRES_DSN: postgres://chain:chain@postgres:5432/chain?sslmode=disable
       # Локально — заглушка сети. Для testnet: TON_CLIENT=toncenter, адреса
       # кошельков ниже и TONCENTER_API_KEY (ключ добавим позже).
       TON_CLIENT: stub
@@ -71,4 +70,4 @@ services:
 
 volumes:
   rabbitmq-data:
-  mysql-data:
+  postgres-data:

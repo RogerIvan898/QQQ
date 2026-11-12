@@ -1,5 +1,5 @@
-// Package store — хранилище сервиса в MySQL: ключи идемпотентности и
-// история выводов.
+// Package store — хранилище сервиса в PostgreSQL: ключи идемпотентности,
+// история выводов и курсор наблюдателя депозитов.
 package store
 
 import (
@@ -10,10 +10,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/go-sql-driver/mysql"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
 
 	"gitlab.com/company-group7340831/poker/chain-service/internal/amqp"
@@ -33,31 +33,25 @@ const (
 // queryTimeout — таймаут одного запроса для методов без ctx (Seen/Mark).
 const queryTimeout = 3 * time.Second
 
-// Open подключается к MySQL, проверяет соединение и применяет схему.
-// В DSN принудительно включаются parseTime и UTC.
+// Open подключается к PostgreSQL, проверяет соединение и применяет схему.
+// Сессия принудительно работает в UTC.
 func Open(ctx context.Context, dsn string, maxOpen int) (*sql.DB, error) {
-	cfg, err := mysql.ParseDSN(dsn)
+	cfg, err := pgx.ParseConfig(dsn)
 	if err != nil {
-		return nil, fmt.Errorf("parse MYSQL_DSN: %w", err)
+		return nil, fmt.Errorf("parse POSTGRES_DSN: %w", err)
 	}
-	cfg.ParseTime = true
-	cfg.Loc = time.UTC
-	if cfg.Params == nil {
-		cfg.Params = map[string]string{}
+	if cfg.RuntimeParams == nil {
+		cfg.RuntimeParams = map[string]string{}
 	}
-	cfg.Params["time_zone"] = "'+00:00'"
+	cfg.RuntimeParams["timezone"] = "UTC"
 
-	connector, err := mysql.NewConnector(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("mysql connector: %w", err)
-	}
-	db := sql.OpenDB(connector)
+	db := stdlib.OpenDB(*cfg)
 	db.SetMaxOpenConns(maxOpen)
 	db.SetMaxIdleConns(maxOpen)
 	db.SetConnMaxLifetime(30 * time.Minute)
 	db.SetConnMaxIdleTime(5 * time.Minute)
 
-	// MySQL в compose может подниматься дольше сервиса — ждём с паузами.
+	// PostgreSQL в compose может подниматься дольше сервиса — ждём с паузами.
 	var pingErr error
 	for attempt := 1; attempt <= 10; attempt++ {
 		pctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -75,7 +69,7 @@ func Open(ctx context.Context, dsn string, maxOpen int) (*sql.DB, error) {
 	}
 	if pingErr != nil {
 		_ = db.Close()
-		return nil, fmt.Errorf("mysql ping: %w", pingErr)
+		return nil, fmt.Errorf("postgres ping: %w", pingErr)
 	}
 
 	if err := migrate(ctx, db); err != nil {
@@ -85,45 +79,40 @@ func Open(ctx context.Context, dsn string, maxOpen int) (*sql.DB, error) {
 	return db, nil
 }
 
+// migrate применяет схему одним вызовом простого протокола: PostgreSQL
+// выполняет несколько операторов за раз, а IF NOT EXISTS делает повтор
+// при каждом старте безопасным.
 func migrate(ctx context.Context, db *sql.DB) error {
-	for _, stmt := range strings.Split(schema, ";") {
-		if !hasSQL(stmt) {
-			continue
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return fmt.Errorf("apply schema: %w", err)
+	}
+	defer conn.Close()
+
+	err = conn.Raw(func(driverConn any) error {
+		pc, ok := driverConn.(*stdlib.Conn)
+		if !ok {
+			return errors.New("unexpected driver connection type")
 		}
-		if _, err := db.ExecContext(ctx, stmt); err != nil {
-			// CREATE INDEX / ADD COLUMN без IF NOT EXISTS (его нет в MySQL 8.0):
-			// «уже существует» при повторном старте — не ошибка.
-			var me *mysql.MySQLError
-			if errors.As(err, &me) && (me.Number == 1060 || me.Number == 1061) {
-				continue
-			}
-			return fmt.Errorf("apply schema: %w", err)
-		}
+		_, err := pc.Conn().PgConn().Exec(ctx, schema).ReadAll()
+		return err
+	})
+	if err != nil {
+		return fmt.Errorf("apply schema: %w", err)
 	}
 	return nil
 }
 
-// hasSQL — есть ли в фрагменте что-то кроме комментариев и пробелов.
-func hasSQL(stmt string) bool {
-	for _, line := range strings.Split(stmt, "\n") {
-		line = strings.TrimSpace(line)
-		if line != "" && !strings.HasPrefix(line, "--") {
-			return true
-		}
-	}
-	return false
-}
-
-// dbErr помечает ошибку БД как временную: недоступность MySQL —
+// dbErr помечает ошибку БД как временную: недоступность PostgreSQL —
 // повод повторить обработку, а не выбрасывать сообщение в DLQ.
 func dbErr(op string, err error) error {
-	return amqp.Transient(fmt.Errorf("mysql %s: %w", op, err))
+	return amqp.Transient(fmt.Errorf("postgres %s: %w", op, err))
 }
 
 // ---------- идемпотентность ----------
 
-// Idempotency — amqp.IdempotencyStore поверх MySQL: общий для всех реплик
-// и переживает рестарт.
+// Idempotency — amqp.IdempotencyStore поверх PostgreSQL: общий для всех
+// реплик и переживает рестарт.
 //
 // Интерфейс не возвращает ошибок, поэтому при недоступной БД Seen
 // отвечает false (сообщение будет обработано). Это безопасно: от повторной
@@ -145,7 +134,7 @@ func (s *Idempotency) Seen(messageID string) bool {
 	defer cancel()
 	var one int
 	err := s.db.QueryRowContext(ctx,
-		`SELECT 1 FROM processed_messages WHERE message_id = ? AND expires_at > UTC_TIMESTAMP(3)`,
+		`SELECT 1 FROM processed_messages WHERE message_id = $1 AND expires_at > now()`,
 		messageID).Scan(&one)
 	switch {
 	case err == nil:
@@ -163,8 +152,8 @@ func (s *Idempotency) Mark(messageID string) {
 	ctx, cancel := context.WithTimeout(context.Background(), queryTimeout)
 	defer cancel()
 	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO processed_messages (message_id, expires_at) VALUES (?, ?)
-		 ON DUPLICATE KEY UPDATE expires_at = VALUES(expires_at)`,
+		`INSERT INTO processed_messages (message_id, expires_at) VALUES ($1, $2)
+		 ON CONFLICT (message_id) DO UPDATE SET expires_at = EXCLUDED.expires_at`,
 		messageID, time.Now().UTC().Add(s.ttl))
 	if err != nil {
 		s.log.Error("idempotency mark failed", zap.String("message_id", messageID), zap.Error(err))
@@ -187,14 +176,16 @@ func (s *Idempotency) Run(ctx context.Context, interval time.Duration) {
 
 // cleanup удаляет просроченные ключи пачками, пока удаляются полные пачки:
 // одной пачки за интервал не хватило бы при большом потоке, а один
-// огромный DELETE надолго держал бы блокировки.
+// огромный DELETE надолго держал бы блокировки. В PostgreSQL у DELETE нет
+// LIMIT, поэтому пачка выбирается подзапросом по первичному ключу.
 func (s *Idempotency) cleanup(ctx context.Context) int64 {
 	const batch = 10000
 	var total int64
 	for ctx.Err() == nil {
 		qctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		res, err := s.db.ExecContext(qctx,
-			`DELETE FROM processed_messages WHERE expires_at <= UTC_TIMESTAMP(3) LIMIT ?`, batch)
+			`DELETE FROM processed_messages WHERE message_id IN (
+			   SELECT message_id FROM processed_messages WHERE expires_at <= now() LIMIT $1)`, batch)
 		cancel()
 		if err != nil {
 			if ctx.Err() == nil {
@@ -247,7 +238,7 @@ const withdrawalCols = `request_id, user_id, amount_nano, asset, to_address, seq
 
 // Get возвращает вывод по request_id или nil, если его нет.
 func (r *Withdrawals) Get(ctx context.Context, requestID string) (*Withdrawal, error) {
-	row := r.db.QueryRowContext(ctx, `SELECT `+withdrawalCols+` FROM withdrawals WHERE request_id = ?`, requestID)
+	row := r.db.QueryRowContext(ctx, `SELECT `+withdrawalCols+` FROM withdrawals WHERE request_id = $1`, requestID)
 	w, err := scanWithdrawal(row)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -262,11 +253,12 @@ func (r *Withdrawals) Get(ctx context.Context, requestID string) (*Withdrawal, e
 // false — строка с таким request_id уже есть (её нужно перечитать).
 func (r *Withdrawals) InsertSigned(ctx context.Context, w Withdrawal) (bool, error) {
 	res, err := r.db.ExecContext(ctx,
-		`INSERT IGNORE INTO withdrawals
+		`INSERT INTO withdrawals
 		   (request_id, user_id, amount_nano, asset, to_address, seqno, boc, boc_hash, msg_hash, status)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		 ON CONFLICT (request_id) DO NOTHING`,
 		w.RequestID, nullInt(w.UserID), nullUint(w.AmountNano), nullStr(w.Asset), nullStr(w.ToAddress),
-		w.Seqno, w.BOC, BOCHash(w.BOC), nullStr(w.MsgHash), StatusSigned)
+		int64(w.Seqno), w.BOC, BOCHash(w.BOC), nullStr(w.MsgHash), StatusSigned)
 	if err != nil {
 		return false, dbErr("insert withdrawal", err)
 	}
@@ -280,8 +272,9 @@ func (r *Withdrawals) InsertSigned(ctx context.Context, w Withdrawal) (bool, err
 // MarkSent переводит signed → sent. Повторный вызов для sent безопасен.
 func (r *Withdrawals) MarkSent(ctx context.Context, requestID, msgHash string) error {
 	_, err := r.db.ExecContext(ctx,
-		`UPDATE withdrawals SET status = ?, msg_hash = ?, sent_at = COALESCE(sent_at, UTC_TIMESTAMP(3))
-		 WHERE request_id = ? AND status IN (?, ?)`,
+		`UPDATE withdrawals
+		    SET status = $1, msg_hash = $2, sent_at = COALESCE(sent_at, now()), updated_at = now()
+		  WHERE request_id = $3 AND status IN ($4, $5)`,
 		StatusSent, msgHash, requestID, StatusSigned, StatusSent)
 	if err != nil {
 		return dbErr("mark sent", err)
@@ -292,7 +285,8 @@ func (r *Withdrawals) MarkSent(ctx context.Context, requestID, msgHash string) e
 // MarkConfirmed переводит sent → confirmed.
 func (r *Withdrawals) MarkConfirmed(ctx context.Context, requestID, txHash string) error {
 	_, err := r.db.ExecContext(ctx,
-		`UPDATE withdrawals SET status = ?, tx_hash = ? WHERE request_id = ? AND status = ?`,
+		`UPDATE withdrawals SET status = $1, tx_hash = $2, updated_at = now()
+		  WHERE request_id = $3 AND status = $4`,
 		StatusConfirmed, txHash, requestID, StatusSent)
 	if err != nil {
 		return dbErr("mark confirmed", err)
@@ -303,7 +297,8 @@ func (r *Withdrawals) MarkConfirmed(ctx context.Context, requestID, txHash strin
 // MarkFailed переводит sent → failed.
 func (r *Withdrawals) MarkFailed(ctx context.Context, requestID, txHash, reason string) error {
 	_, err := r.db.ExecContext(ctx,
-		`UPDATE withdrawals SET status = ?, tx_hash = ?, error = ? WHERE request_id = ? AND status = ?`,
+		`UPDATE withdrawals SET status = $1, tx_hash = $2, error = $3, updated_at = now()
+		  WHERE request_id = $4 AND status = $5`,
 		StatusFailed, nullStr(txHash), reason, requestID, StatusSent)
 	if err != nil {
 		return dbErr("mark failed", err)
@@ -315,7 +310,7 @@ func (r *Withdrawals) MarkFailed(ctx context.Context, requestID, txHash, reason 
 func (r *Withdrawals) ListSent(ctx context.Context, sentAfter time.Time, limit int) ([]Withdrawal, error) {
 	return r.list(ctx, "list sent",
 		`SELECT `+withdrawalCols+` FROM withdrawals
-		 WHERE status = ? AND sent_at > ? ORDER BY sent_at LIMIT ?`,
+		 WHERE status = $1 AND sent_at > $2 ORDER BY sent_at LIMIT $3`,
 		StatusSent, sentAfter.UTC(), limit)
 }
 
@@ -324,7 +319,7 @@ func (r *Withdrawals) ListSent(ctx context.Context, sentAfter time.Time, limit i
 func (r *Withdrawals) ListStale(ctx context.Context, sentBefore time.Time, afterID string, limit int) ([]Withdrawal, error) {
 	return r.list(ctx, "list stale",
 		`SELECT `+withdrawalCols+` FROM withdrawals
-		 WHERE status = ? AND sent_at <= ? AND request_id > ? ORDER BY request_id LIMIT ?`,
+		 WHERE status = $1 AND sent_at <= $2 AND request_id > $3 ORDER BY request_id LIMIT $4`,
 		StatusSent, sentBefore.UTC(), afterID, limit)
 }
 
@@ -354,21 +349,23 @@ type scanner interface{ Scan(dest ...any) error }
 func scanWithdrawal(s scanner) (*Withdrawal, error) {
 	var (
 		w                                   Withdrawal
+		seqno                               int64
 		userID                              sql.NullInt64
 		amount                              sql.NullInt64
 		asset, to, msgHash, txHash, errText sql.NullString
 		sentAt                              sql.NullTime
 	)
-	if err := s.Scan(&w.RequestID, &userID, &amount, &asset, &to, &w.Seqno, &w.BOC, &w.BOCHash,
+	if err := s.Scan(&w.RequestID, &userID, &amount, &asset, &to, &seqno, &w.BOC, &w.BOCHash,
 		&w.Status, &msgHash, &txHash, &errText, &sentAt); err != nil {
 		return nil, err
 	}
+	w.Seqno = uint32(seqno)
 	w.UserID = userID.Int64
 	w.AmountNano = uint64(amount.Int64)
 	w.Asset, w.ToAddress = asset.String, to.String
 	w.MsgHash, w.TxHash, w.Error = msgHash.String, txHash.String, errText.String
 	if sentAt.Valid {
-		w.SentAt = sentAt.Time
+		w.SentAt = sentAt.Time.UTC()
 	}
 	return &w, nil
 }
@@ -379,7 +376,7 @@ func nullUint(v uint64) any {
 	if v == 0 {
 		return nil
 	}
-	return v
+	return int64(v)
 }
 
 // ---------- курсор наблюдателя ----------
@@ -393,23 +390,24 @@ func NewCursors(db *sql.DB) *Cursors { return &Cursors{db: db} }
 
 // Load возвращает сохранённый lt; ok=false — курсора ещё нет.
 func (c *Cursors) Load(ctx context.Context, account string) (uint64, bool, error) {
-	var lt uint64
-	err := c.db.QueryRowContext(ctx, `SELECT last_lt FROM watcher_cursors WHERE account = ?`, account).Scan(&lt)
+	var lt int64
+	err := c.db.QueryRowContext(ctx, `SELECT last_lt FROM watcher_cursors WHERE account = $1`, account).Scan(&lt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return 0, false, nil
 	}
 	if err != nil {
 		return 0, false, dbErr("load cursor", err)
 	}
-	return lt, true, nil
+	return uint64(lt), true, nil
 }
 
 // Save сохраняет lt. Курсор только растёт: старое значение не перезапишет новое.
 func (c *Cursors) Save(ctx context.Context, account string, lt uint64) error {
 	_, err := c.db.ExecContext(ctx,
-		`INSERT INTO watcher_cursors (account, last_lt) VALUES (?, ?)
-		 ON DUPLICATE KEY UPDATE last_lt = GREATEST(last_lt, VALUES(last_lt))`,
-		account, lt)
+		`INSERT INTO watcher_cursors (account, last_lt) VALUES ($1, $2)
+		 ON CONFLICT (account) DO UPDATE
+		   SET last_lt = GREATEST(watcher_cursors.last_lt, EXCLUDED.last_lt), updated_at = now()`,
+		account, int64(lt))
 	if err != nil {
 		return dbErr("save cursor", err)
 	}

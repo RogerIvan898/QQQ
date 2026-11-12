@@ -19,7 +19,7 @@ import (
 	"gitlab.com/company-group7340831/poker/chain-service/internal/ton"
 )
 
-// fakeRepo — WithdrawalRepo в памяти с той же семантикой переходов, что у MySQL.
+// fakeRepo — WithdrawalRepo в памяти с той же семантикой переходов, что у PostgreSQL.
 type fakeRepo struct {
 	mu   sync.Mutex
 	rows map[string]*store.Withdrawal
