@@ -145,8 +145,8 @@ chain-service:docker:
 # Cloudflare variables are set (Settings > CI/CD > Variables, masked + protected):
 #   CLOUDFLARE_API_TOKEN   token with "Cloudflare Pages: Edit"
 #   CLOUDFLARE_ACCOUNT_ID
-#   CF_PAGES_PROJECT       Pages project name (create it once in the dashboard,
-#                          "Direct Upload", production branch = main)
+#   CF_PAGES_PROJECT       Pages project name (the job creates it if missing;
+#                          a Worker with the same name is a different thing)
 # The build reads VITE_APP_URL, VITE_API_URL, VITE_MOCK_SERVER=false and
 # VITE_TON_NETWORK from the same CI/CD variables. Rules MUST match frontend:build.
 frontend:cloudflare-pages:
@@ -156,6 +156,8 @@ frontend:cloudflare-pages:
   interruptible: false
   script:
     - '[ ! -e frontend/dist/404.html ] || { echo "404.html disables SPA fallback on Pages"; exit 1; }'
+    # Creates the Pages project on the first run; later runs fail here harmlessly ("already exists").
+    - npx --yes wrangler@4 pages project create "$CF_PAGES_PROJECT" --production-branch="$CI_DEFAULT_BRANCH" || true
     - npx --yes wrangler@4 pages deploy frontend/dist --project-name="$CF_PAGES_PROJECT" --branch="$CI_COMMIT_BRANCH" --commit-hash="$CI_COMMIT_SHA"
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
