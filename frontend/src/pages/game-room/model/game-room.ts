@@ -22,7 +22,11 @@ sample({
 
 sample({
   clock: GamePageGate.close,
-  target: [gameSessionsModel.sessionEnded, gameModel.disconnectGame],
+  target: [
+    gameSessionsModel.sessionEnded,
+    gameModel.disconnectGame,
+    handHistoryModel.tableLeft,
+  ],
 });
 
 GamePageGate.open.watch(() => setTonConnectPaused(true));

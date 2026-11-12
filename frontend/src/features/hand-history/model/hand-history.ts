@@ -4,47 +4,64 @@ import { parseCard, type CardType as Card } from 'entities/card';
 import { gameModel, SERVER_EVENTS, type ServerGameEvent } from 'entities/game';
 import type { PlayerType as Player } from 'entities/player';
 import { sessionModel } from 'entities/session';
-import { readJson, writeJson, writeStorage } from 'shared/lib/storage';
+import {
+  readSessionJson,
+  removeStorageByPrefix,
+  writeSessionJson,
+} from 'shared/lib/storage';
 
 import type { HandAction, HandRecord, HandSeat } from './types';
 
-const STORAGE_PREFIX = 'poker:hand-history:';
+// История живёт, пока игрок за столом: переживает перезагрузку страницы
+// (sessionStorage), но стирается при выходе из-за стола.
+const STORAGE_KEY = 'poker:hand-history';
 const MAX_HANDS_PER_ROOM = 50;
 
-const storageKey = (roomId: string) => `${STORAGE_PREFIX}${roomId}`;
+interface Saved {
+  roomId: string;
+  hands: HandRecord[];
+}
 
-writeStorage('poker:hand-history', null);
+// Старый формат: по ключу на стол в localStorage, без очистки.
+removeStorageByPrefix(STORAGE_KEY);
 
 const loadHands = (roomId: string | null): HandRecord[] => {
   if (!roomId) {
     return [];
   }
 
-  const parsed = readJson<unknown>(storageKey(roomId), []);
+  const saved = readSessionJson<Partial<Saved> | null>(STORAGE_KEY, null);
 
-  return Array.isArray(parsed) ? (parsed as HandRecord[]) : [];
+  return saved?.roomId === roomId && Array.isArray(saved.hands)
+    ? saved.hands
+    : [];
 };
 
 const saveHands = (roomId: string, hands: HandRecord[]) => {
-  writeJson(storageKey(roomId), hands);
+  writeSessionJson(STORAGE_KEY, { roomId, hands } satisfies Saved);
 };
 
 export const tableEntered = createEvent<string | null>();
+export const tableLeft = createEvent();
 const handRecorded = createEvent<HandRecord>();
 
-const $roomId = createStore<string | null>(null).on(
-  tableEntered,
-  (_, roomId) => roomId
-);
+const $roomId = createStore<string | null>(null)
+  .on(tableEntered, (_, roomId) => roomId)
+  .reset(tableLeft);
 
 export const $hands = createStore<HandRecord[]>([])
   .on(tableEntered, (_, roomId) => loadHands(roomId))
-  .on(handRecorded, (_, hand) =>
-    [
-      hand,
-      ...loadHands(hand.roomId).filter(saved => saved.id !== hand.id),
-    ].slice(0, MAX_HANDS_PER_ROOM)
-  );
+  .on(handRecorded, (hands, hand) =>
+    [hand, ...hands.filter(saved => saved.id !== hand.id)].slice(
+      0,
+      MAX_HANDS_PER_ROOM
+    )
+  )
+  .reset(tableLeft);
+
+tableLeft.watch(() => {
+  writeSessionJson(STORAGE_KEY, null);
+});
 
 handRecorded.watch(hand => {
   if (hand.roomId) {
