@@ -12,7 +12,7 @@ stages:
   - scan
 
 # Compute-minute budget (free tier, 400 min/month):
-#   push to main    -> build only: frontend build, docker images, pages
+#   push to main    -> build only: frontend build, docker images, Cloudflare Pages
 #   push to release -> everything: format, lint, audit, tests, secret detection,
 #                      SAST, dependency and container scanning
 #   schedule / tag  -> everything as well
@@ -163,31 +163,6 @@ frontend:cloudflare-pages:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
     - if: $CLOUDFLARE_API_TOKEN == null || $CLOUDFLARE_ACCOUNT_ID == null || $CF_PAGES_PROJECT == null
-      when: never
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      changes: [frontend/**/*, .gitlab-ci.yml]
-
-# ---------- GitLab Pages ----------
-# Rules MUST match frontend:build (same changes), otherwise "needs" points to a
-# job that doesn't exist and the whole pipeline fails to create.
-pages:
-  stage: docker
-  needs: [frontend:build]
-  interruptible: false
-  script:
-    - mkdir -p public
-    - cp -r frontend/dist/* public/
-    # The manifest from the build points at VITE_APP_URL; on Pages it must point
-    # at the Pages address, otherwise TON Connect wallets reject it.
-    - |
-      APP_URL="${CI_PAGES_URL%/}"
-      cat > public/tonconnect-manifest.json <<EOF
-      {"url":"$APP_URL","name":"GRAM Poker","iconUrl":"$APP_URL/ton-icon.png"}
-      EOF
-  artifacts:
-    paths: [public]
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes: [frontend/**/*, .gitlab-ci.yml]
