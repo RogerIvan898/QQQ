@@ -332,7 +332,7 @@
   /* Rows off screen skip layout and paint; `auto` remembers the real
      height once a row has been rendered. */
   content-visibility: auto;
-  contain-intrinsic-size: auto 58px;
+  contain-intrinsic-height: auto 64px;
   background: transparent;
   border: none;
   color: inherit;
