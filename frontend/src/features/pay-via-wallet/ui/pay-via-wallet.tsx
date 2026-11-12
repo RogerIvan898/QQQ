@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
-import { Address, beginCell } from '@ton/core';
 import { useUnit } from 'effector-react';
 import { Loader2, Wallet } from 'lucide-react';
 
@@ -54,6 +53,9 @@ export const PayViaWalletButton = ({
       alert(t`Invalid amount`);
       return;
     }
+
+    // Loaded on click: @ton/core is ~200 kB and only needed to send.
+    const { Address, beginCell } = await import('@ton/core');
 
     if (
       !Address.isFriendly(depositAddress.trim()) &&

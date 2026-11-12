@@ -30,7 +30,6 @@
     "@tanstack/react-router": "^1.170.23",
     "@ton/core": "^0.63.1",
     "@tonconnect/ui-react": "^3.0.2",
-    "axios": "^1.20.0",
     "buffer": "^6.0.3",
     "effector": "^23.4.4",
     "effector-react": "^23.3.0",

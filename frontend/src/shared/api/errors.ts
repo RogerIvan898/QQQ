@@ -1,5 +1,3 @@
-import { AxiosError } from 'axios';
-
 export class ApiError extends Error {
   readonly status: number | null;
   readonly code: string;
@@ -34,19 +32,17 @@ export const toApiError = (error: unknown): ApiError => {
     return error;
   }
 
-  if (error instanceof AxiosError) {
-    if (error.code === AxiosError.ECONNABORTED || error.code === 'ETIMEDOUT') {
-      return new ApiError('timeout', null, error.message);
-    }
+  // Non-2xx response handed over by the client as { status, body }.
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'status' in error &&
+    typeof error.status === 'number'
+  ) {
+    const { status } = error;
+    const body = 'body' in error ? error.body : undefined;
 
-    if (!error.response) {
-      return new ApiError('network', null, error.message);
-    }
-
-    const { status } = error.response;
-    const data: unknown = error.response.data;
-
-    return new ApiError(bodyCode(data) ?? `http_${status}`, status);
+    return new ApiError(bodyCode(body) ?? `http_${status}`, status);
   }
 
   return new ApiError(
