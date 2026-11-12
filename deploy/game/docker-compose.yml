@@ -1,0 +1,36 @@
+# VPS 1 — игровая: C++ game backend за Cloudflare Tunnel.
+# Наружу не открыт ни один порт: cloudflared сам подключается к Cloudflare
+# и доводит до бэкенда трафик api.<домен> (HTTP API и WebSocket).
+#   cp .env.example .env && nano .env
+#   docker compose pull && docker compose up -d
+services:
+  backend:
+    image: ${BACKEND_IMAGE:-registry.gitlab.com/company-group7340831/poker/backend:latest}
+    environment:
+      PORT: "8080"
+      BOT_TOKEN: ${BOT_TOKEN:?BOT_TOKEN is required}
+      # Origin фронта на Cloudflare Pages (без пути), через запятую, если их несколько.
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?ALLOWED_ORIGINS is required}
+    # Порт не публикуется: доступен только cloudflared внутри сети compose.
+    expose:
+      - "8080"
+    networks: [edge]
+    restart: unless-stopped
+    logging: &logging
+      driver: json-file
+      options: { max-size: "20m", max-file: "5" }
+
+  cloudflared:
+    image: cloudflare/cloudflared:2024.12.2
+    command: tunnel --no-autoupdate run
+    environment:
+      # Zero Trust > Networks > Tunnels > Create tunnel > Docker: токен из команды.
+      # Public hostname: api.<домен> -> http://backend:8080
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?TUNNEL_TOKEN is required}
+    depends_on: [backend]
+    networks: [edge]
+    restart: unless-stopped
+    logging: *logging
+
+networks:
+  edge:

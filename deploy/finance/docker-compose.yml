@@ -1,0 +1,112 @@
+# VPS 2 — финансовая: RabbitMQ, PostgreSQL, chain-service и сервис подписи.
+# Публичных портов нет:
+#   - RabbitMQ 5672 слушает только приватный адрес (PRIVATE_IP) для игровой VPS;
+#   - консоль RabbitMQ и метрики chain-service — только 127.0.0.1 (SSH-туннель);
+#   - PostgreSQL наружу не публикуется вовсе.
+# Сервис подписи сидит в отдельной сети и видит только RabbitMQ: ни PostgreSQL,
+# ни chain-service ему недоступны.
+#   cp .env.example .env && cp chain-service.env.example chain-service.env
+#   docker compose up -d
+#   docker compose exec rabbitmq sh /etc/rabbitmq/users.sh   # один раз и при смене паролей
+#   docker compose --profile signer up -d                    # когда готов образ подписанта
+services:
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    hostname: rabbitmq
+    environment:
+      # Администратор только для консоли; сервисы ходят под своими пользователями.
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_ADMIN_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_ADMIN_PASS:?RABBITMQ_ADMIN_PASS is required}
+      # Читает rabbitmq/users.sh.
+      CHAIN_SERVICE_PASS: ${RABBITMQ_CHAIN_SERVICE_PASS:?RABBITMQ_CHAIN_SERVICE_PASS is required}
+      CORE_PASS: ${RABBITMQ_CORE_PASS:?RABBITMQ_CORE_PASS is required}
+      SIGNER_PASS: ${RABBITMQ_SIGNER_PASS:?RABBITMQ_SIGNER_PASS is required}
+    ports:
+      - "${PRIVATE_IP:?PRIVATE_IP is required}:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - ./rabbitmq/users.sh:/etc/rabbitmq/users.sh:ro
+    networks: [backend, signer]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+    logging: &logging
+      driver: json-file
+      options: { max-size: "20m", max-file: "5" }
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: chain
+      POSTGRES_USER: chain
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "chain", "-d", "chain"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    logging: *logging
+
+  chain-service:
+    image: ${CHAIN_SERVICE_IMAGE:-registry.gitlab.com/company-group7340831/poker/chain-service:latest}
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+      postgres: { condition: service_healthy }
+    # Сеть TON, адреса кошельков, ключ toncenter: копия chain-service.env.example.
+    env_file: chain-service.env
+    environment:
+      # Свой пользователь RabbitMQ: его имя уходит в user_id каждого сообщения,
+      # и ядро принимает депозиты и результаты выводов только от него.
+      RABBITMQ_URL: amqp://chain-service:${RABBITMQ_CHAIN_SERVICE_PASS}@rabbitmq:5672/
+      # Соединение внутри сети compose на той же машине, TLS не нужен.
+      POSTGRES_DSN: postgres://chain:${POSTGRES_PASSWORD}@postgres:5432/chain?sslmode=disable
+      METRICS_PORT: "9090"
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks: [backend]
+    # Больше SHUTDOWN_TIMEOUT (30s), чтобы Docker не убил процесс посреди drain.
+    stop_grace_period: 40s
+    restart: unless-stopped
+    logging: *logging
+
+  # C++ сервис подписи (пишет другой разработчик). Образ, переменные и формат
+  # ключа согласовать; здесь задана изоляция: без портов, только сеть с RabbitMQ,
+  # ключ — Docker secret, файловая система только для чтения, без привилегий.
+  signer:
+    profiles: [signer]
+    image: ${SIGNER_IMAGE:-signer:unset}
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+    environment:
+      RABBITMQ_URL: amqp://signer:${RABBITMQ_SIGNER_PASS}@rabbitmq:5672/
+      SIGNER_KEY_FILE: /run/secrets/signer_key
+    secrets: [signer_key]
+    networks: [signer]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    logging: *logging
+
+secrets:
+  signer_key:
+    # chmod 400. Ключ хранится зашифрованным; расшифровку делает сервис подписи.
+    file: ./secrets/signer_key
+
+networks:
+  backend:
+  signer:
+
+volumes:
+  rabbitmq-data:
+  postgres-data:

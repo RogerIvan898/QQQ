@@ -1,0 +1,20 @@
+# Cloudflare Pages: заголовки ответа (заменяют прежние nginx.conf и security-headers.conf).
+# Если заголовок задан в нескольких правилах, Pages склеивает значения через запятую,
+# поэтому Cache-Control указан только для /assets/*. Остальные файлы Pages по умолчанию
+# отдаёт с "max-age=0, must-revalidate": после деплоя index.html и
+# tonconnect-manifest.json всегда свежие и не ссылаются на удалённые чанки.
+# SPA fallback (любой путь -> index.html) Pages делает сам, пока в сборке нет 404.html.
+
+/*
+  # Только наши скрипты и SDK Telegram, без inline и eval: внедрённый <script> не выполнится.
+  # Inline-стили разрешены (TON Connect UI и style-атрибуты React). connect-src открыт для
+  # любых https/wss: API, игровой сокет и мосты кошельков TON Connect на других доменах.
+  # Встраивать приложение во фрейм может только Telegram Web.
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://telegram.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: wss:; worker-src 'self' blob:; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self' https://web.telegram.org https://*.telegram.org
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), clipboard-write=(self)
+
+# Имена с хэшем содержимого: можно кэшировать навсегда.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

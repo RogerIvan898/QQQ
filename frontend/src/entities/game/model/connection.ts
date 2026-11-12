@@ -9,7 +9,7 @@ import { createSocket } from 'shared/lib/websocket';
 
 import { pokerSoundEngine } from '../lib';
 
-import { GAME_SOUNDS, SERVER_EVENTS } from './constants';
+import { CLIENT_COMMANDS, GAME_SOUNDS, SERVER_EVENTS } from './constants';
 import {
   enqueueServerEvent,
   markGameQueueLive,
@@ -168,10 +168,20 @@ const connectNow = (wsUrl: string, id: number) => {
   queueMicrotask(markGameQueueLive);
 };
 
+// Below Cloudflare's 100 s idle limit with room for a slow tick in the background.
+const KEEPALIVE_MS = 30_000;
+
 const createGameSocket = (wsUrl: string, id: number): WebSocket => {
+  let keepaliveTimer: number | undefined;
+
   const socket = createSocket(wsUrl, {
     onOpen: () => {
       window.clearTimeout(connectTimer);
+      keepaliveTimer = window.setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: CLIENT_COMMANDS.PING }));
+        }
+      }, KEEPALIVE_MS);
       reconnectAttempt = 0;
       connectionLost(false);
     },
@@ -189,6 +199,7 @@ const createGameSocket = (wsUrl: string, id: number): WebSocket => {
     },
     onClose: () => {
       window.clearTimeout(connectTimer);
+      window.clearInterval(keepaliveTimer);
 
       if (openSocket !== socket) {
         return;

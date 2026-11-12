@@ -1,0 +1,6 @@
+.env
+chain-service.env
+backups/
+backup.log
+finance/secrets/*
+!finance/secrets/.gitkeep

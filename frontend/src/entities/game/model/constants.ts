@@ -38,6 +38,9 @@ export const CLIENT_COMMANDS = {
   PLAYER_ACTION: 'CMD_PLAYER_ACTION',
   REVEAL_HOLES: 'CMD_REVEAL_HOLES',
   SIT_IN: 'CMD_SIT_IN',
+  // Keepalive: the server ignores it. Cloudflare closes a WebSocket after
+  // 100 s without traffic, and a quiet table can stay silent that long.
+  PING: 'CMD_PING',
 } as const;
 
 export const GAME_SOUNDS = [

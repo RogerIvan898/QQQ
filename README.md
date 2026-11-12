@@ -5,6 +5,8 @@ Telegram Mini App покер-рум на TON. Монорепа: фронтенд
 ```
 frontend/   React 19 + Vite + effector, TanStack Router, Lingui (i18n), TON Connect
 backend/    C++ сервер (CMake) — в разработке
+chain-service/  Go: отправка выводов в TON и наблюдение за депозитами
+deploy/     продакшен: compose для двух VPS, Cloudflare Tunnel и Pages
 .gitlab-ci.yml
 ```
 
@@ -42,17 +44,17 @@ Pre-commit хук (husky + lint-staged) форматирует и линтит �
 
 | Когда | Что бежит |
 |---|---|
-| пуш в `main` | `frontend:build` (prettier, eslint, `bun audit`, тесты, сборка — одна джоба), secret detection, docker-образ |
+| пуш в `main` | `frontend:build` (prettier, eslint, `bun audit`, тесты, сборка — одна джоба), secret detection, docker-образы, деплой фронта на Cloudflare Pages |
 | пуш в `dev`, другие ветки, merge request | ничего; при необходимости вручную — **Build → Pipelines → Run pipeline** |
 | расписание, git-тег | SAST, dependency scanning, container scanning (+ сборка и образ на теге) |
 
 Расписание для сканеров: **Build → Pipeline schedules → New schedule**, ветка `main`, например раз в неделю.
 
-Образы: `registry.gitlab.com/company-group7340831/poker/<frontend|backend>` с тегом `:latest` и `:<git-tag>` для релизов. Артефакт `frontend/dist` живёт 1 день.
+Образы: `registry.gitlab.com/company-group7340831/poker/<backend|chain-service>` с тегом `:latest` и `:<git-tag>` для релизов. Артефакт `frontend/dist` живёт 1 день.
 
-Фронтенд-образ — nginx со статикой из `dist/`; `/api` и `/ws` будут проксироваться на бекенд.
+Фронтенд образа не имеет: статика из `dist/` выкладывается на Cloudflare Pages джобой `frontend:cloudflare-pages` (заголовки и кэш — [`frontend/public/_headers`](frontend/public/_headers)). Как развернуть всё — [`deploy/README.md`](deploy/README.md).
 
-Переменные сборки задаются в **Settings → CI/CD → Variables**: `VITE_APP_URL` (обязательна), `VITE_API_URL`.
+Переменные сборки задаются в **Settings → CI/CD → Variables**: `VITE_APP_URL`, `VITE_API_URL`, `VITE_MOCK_SERVER=false`, `VITE_TON_NETWORK`, а для деплоя — `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CF_PAGES_PROJECT`.
 
 ## Ветки
 
