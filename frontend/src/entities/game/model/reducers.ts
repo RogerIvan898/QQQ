@@ -66,23 +66,22 @@ const reduceHandStarted = (
 ): T.GameState => {
   const { smallBlindSeat, bigBlindSeat, initialBets } = payload;
 
-  const resetPlayers = Object.keys(state.players).reduce(
-    (acc, key) => {
-      acc[key] = {
-        ...state.players[key],
-        status: statusForNewHand(
-          state.players[key],
-          initialBets[Number(key)] || 0
-        ),
-        committed: initialBets[Number(key)] || 0,
-        hand: null,
-        lastAction: null,
-        lastActionAmount: null,
-      };
+  const resetPlayers = Object.fromEntries(
+    Object.entries(state.players).map(([seat, player]) => {
+      const blind = initialBets[Number(seat)] || 0;
 
-      return acc;
-    },
-    {} as Record<string, Player>
+      return [
+        seat,
+        {
+          ...player,
+          status: statusForNewHand(player, blind),
+          committed: blind,
+          hand: null,
+          lastAction: null,
+          lastActionAmount: null,
+        },
+      ];
+    })
   );
 
   return {
@@ -149,23 +148,23 @@ const reduceStreetConcluded = (
 ): T.GameState => {
   // Players whose fields don't change keep their object, so their seats
   // (subscribed by reference) don't re-render at every street end.
-  const clearedPlayers = Object.keys(state.players).reduce(
-    (acc, key) => {
-      const player = state.players[key];
+  const clearedPlayers = Object.fromEntries(
+    Object.entries(state.players).map(([seat, player]) => {
       const folded = player.lastAction === PlayerAction.FOLD;
       const lastAction = folded ? PlayerAction.FOLD : null;
       const lastActionAmount = folded ? player.lastActionAmount : null;
-
-      acc[key] =
+      const unchanged =
         player.committed === 0 &&
         player.lastAction === lastAction &&
-        player.lastActionAmount === lastActionAmount
-          ? player
-          : { ...player, committed: 0, lastAction, lastActionAmount };
+        player.lastActionAmount === lastActionAmount;
 
-      return acc;
-    },
-    {} as Record<string, Player>
+      return [
+        seat,
+        unchanged
+          ? player
+          : { ...player, committed: 0, lastAction, lastActionAmount },
+      ];
+    })
   );
 
   return {

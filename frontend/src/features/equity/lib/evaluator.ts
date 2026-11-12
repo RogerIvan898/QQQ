@@ -3,7 +3,7 @@ const RANK_BITS = 4;
 const SLOT_COUNT = 5;
 const RANK_MASK_SIZE = 1 << 13;
 
-const HandCategory = {
+export const HandCategory = {
   HighCard: 0,
   Pair: 1,
   TwoPair: 2,

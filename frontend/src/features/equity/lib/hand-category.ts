@@ -4,7 +4,7 @@ import { msg } from '@lingui/core/macro';
 import type { CardType as Card } from 'entities/card';
 
 import { cardToInt } from './card-int';
-import { evaluateHand } from './evaluator';
+import { evaluateHand, HandCategory } from './evaluator';
 
 const CATEGORY_LABELS: MessageDescriptor[] = [
   msg`High card`,
@@ -33,6 +33,36 @@ export const handCategoryLabel = (
   return CATEGORY_LABELS[score >> CATEGORY_SHIFT] ?? null;
 };
 
+// How many cards of each scored rank slot make up the five, per category.
+const SLOT_COUNTS: Partial<Record<number, number[]>> = {
+  [HandCategory.HighCard]: [1, 1, 1, 1, 1],
+  [HandCategory.Pair]: [2, 1, 1, 1],
+  [HandCategory.TwoPair]: [2, 2, 1],
+  [HandCategory.Trips]: [3, 1, 1],
+  [HandCategory.Flush]: [1, 1, 1, 1, 1],
+  [HandCategory.FullHouse]: [3, 2],
+  [HandCategory.Quads]: [4, 1],
+};
+
+const RANK_BITS = 4;
+const TOP_SLOT_SHIFT = 16;
+
+const flushSuit = (ints: readonly number[]) => {
+  const counts = [0, 0, 0, 0];
+
+  for (const card of ints) {
+    counts[card & 3] += 1;
+  }
+
+  return counts.findIndex(count => count >= 5);
+};
+
+/**
+ * The five cards behind the best hand. The evaluator's score already holds
+ * the category and the ranks that matter (slot by slot), so the cards are
+ * picked by rank — and by suit for flushes — instead of scoring all 21
+ * five-card subsets.
+ */
 export const bestFiveCards = (
   hole: readonly Card[],
   board: readonly Card[]
@@ -44,32 +74,57 @@ export const bestFiveCards = (
   }
 
   const ints = cards.map(cardToInt);
-  let best: number[] | null = null;
-  let bestScore = -1;
+  const score = evaluateHand(ints);
+  const category = score >> CATEGORY_SHIFT;
+  const slot = (index: number) =>
+    (score >> (TOP_SLOT_SHIFT - RANK_BITS * index)) & 0xf;
+  const isStraight =
+    category === HandCategory.Straight ||
+    category === HandCategory.StraightFlush;
+  const suit =
+    category === HandCategory.Flush || category === HandCategory.StraightFlush
+      ? flushSuit(ints)
+      : -1;
 
-  for (let a = 0; a < cards.length; a += 1)
-    for (let b = a + 1; b < cards.length; b += 1)
-      for (let c = b + 1; c < cards.length; c += 1)
-        for (let d = c + 1; d < cards.length; d += 1)
-          for (let e = d + 1; e < cards.length; e += 1) {
-            const score = evaluateHand([
-              ints[a],
-              ints[b],
-              ints[c],
-              ints[d],
-              ints[e],
-            ]);
+  // A straight stores only its top rank; the wheel wraps to the ace.
+  const wanted = isStraight
+    ? [0, 1, 2, 3, 4].map(step => ({
+        rank: (slot(0) - step + 13) % 13,
+        count: 1,
+      }))
+    : (SLOT_COUNTS[category] ?? []).map((count, index) => ({
+        rank: slot(index),
+        count,
+      }));
 
-            if (score > bestScore) {
-              bestScore = score;
-              best = [a, b, c, d, e];
-            }
-          }
+  const picked = new Set<number>();
 
-  return best ? best.map(index => cards[index]) : null;
+  for (const { rank, count } of wanted) {
+    let left = count;
+
+    for (let index = 0; index < ints.length && left > 0; index += 1) {
+      const card = ints[index];
+
+      if (
+        !picked.has(index) &&
+        card >> 2 === rank &&
+        (suit === -1 || (card & 3) === suit)
+      ) {
+        picked.add(index);
+        left -= 1;
+      }
+    }
+  }
+
+  return [...picked].sort((a, b) => a - b).map(index => cards[index]);
 };
 
-const WHOLE_HAND_CATEGORIES = new Set([4, 5, 6, 8]);
+const WHOLE_HAND_CATEGORIES = new Set<number>([
+  HandCategory.Straight,
+  HandCategory.Flush,
+  HandCategory.FullHouse,
+  HandCategory.StraightFlush,
+]);
 
 export const madeHandCards = (
   hole: readonly Card[],
@@ -83,7 +138,7 @@ export const madeHandCards = (
 
   const category = evaluateHand(best.map(cardToInt)) >> CATEGORY_SHIFT;
 
-  if (category === 0) {
+  if (category === HandCategory.HighCard) {
     return null;
   }
 
