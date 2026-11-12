@@ -12,6 +12,9 @@
   position: absolute;
   transform: translate(-50%, -50%);
   pointer-events: auto;
+  /* A badge or card change relayouts this seat only, not the whole table.
+     No paint containment: cards and badges intentionally overflow the box. */
+  contain: layout style;
 
   transition: translate 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -22,28 +25,11 @@
   }
 }
 
+/* Motion comes from the Web Animations API (ChipFlight in players-layer.tsx). */
 .flightX {
   position: absolute;
   z-index: 30;
   pointer-events: none;
-  will-change: transform, opacity;
-  transition:
-    transform 700ms cubic-bezier(0.45, 0, 0.25, 1),
-    opacity 320ms ease-in 380ms;
-}
-
-.flightY {
-  will-change: transform;
-  transition: transform 700ms cubic-bezier(0.6, -0.25, 0.4, 1);
-}
-
-.arrived {
-  transform: translateX(var(--dx));
-  opacity: 0;
-}
-
-.arrived > .flightY {
-  transform: translateY(var(--dy));
 }
 
 .potFlight {
@@ -85,14 +71,6 @@
 
 .collectFlight {
   z-index: 28;
-  transition:
-    transform 420ms cubic-bezier(0.55, 0, 0.2, 1),
-    opacity 200ms ease-in 220ms;
-}
-
-.collectFlight > .flightY {
-  transition-duration: 420ms;
-  transition-timing-function: cubic-bezier(0.55, 0, 0.2, 1);
 }
 
 .collectFlight .potFlight {
@@ -106,11 +84,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .flightX,
-  .flightY {
-    transition-duration: 0.01ms;
-  }
-
   .potFlight {
     animation: none;
   }

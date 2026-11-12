@@ -23,6 +23,8 @@ export const $equity = createStore<EquityState | null>(null).on(
 
 let worker: Worker | null = null;
 let requestId = 0;
+// Id of the request the worker is still computing, or null when idle.
+let busyId: number | null = null;
 
 let pendingSeats: number[] = [];
 let active = false;
@@ -77,6 +79,8 @@ const getWorker = () => {
       type: 'module',
     });
     worker.onmessage = (event: MessageEvent<EquityResponse>) => {
+      busyId = null;
+
       if (event.data.id !== requestId || !active) {
         return;
       }
@@ -101,7 +105,24 @@ const getWorker = () => {
   return worker;
 };
 
+/**
+ * A worker can't be interrupted mid-loop, and a preflop multiway enumeration
+ * runs for tens of milliseconds. When its answer is no longer wanted (a new
+ * card or the hand is over), kill it instead of letting it finish and queue
+ * the fresh request behind it.
+ */
+const dropBusyWorker = () => {
+  if (busyId === null || !worker) {
+    return;
+  }
+
+  worker.terminate();
+  worker = null;
+  busyId = null;
+};
+
 const stop = () => {
+  dropBusyWorker();
   clearHideTimer();
   clearRevealTimer();
   active = false;
@@ -131,9 +152,12 @@ const recalculate = () => {
     hands: contenders.map(player => (player.hand ?? []).map(toInt)),
     board: state.community.map(toInt),
   };
+  dropBusyWorker();
+
   const target = getWorker();
 
   if (target) {
+    busyId = request.id;
     target.postMessage(request);
   } else {
     const result = computeEquity(request.hands, request.board);

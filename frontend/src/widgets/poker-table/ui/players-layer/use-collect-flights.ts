@@ -1,7 +1,5 @@
 import React from 'react';
 
-import { afterNextPaint } from 'shared/utils/after-next-paint';
-
 import { getPotCenter } from './get-pot-center';
 import type { CollectFlight } from './types';
 
@@ -12,12 +10,10 @@ export const useCollectFlights = (
   const [collectFlights, setCollectFlights] = React.useState<
     CollectFlight[] | null
   >(null);
-  const [collectAtPot, setCollectAtPot] = React.useState(false);
 
   React.useLayoutEffect(() => {
     if (!collecting || !tableElement) {
       setCollectFlights(null);
-      setCollectAtPot(false);
       return;
     }
 
@@ -30,7 +26,6 @@ export const useCollectFlights = (
 
     const { x: toX, y: toY } = getPotCenter(tableElement, tableRect);
 
-    setCollectAtPot(false);
     setCollectFlights(
       bets.map(bet => {
         const betRect = bet.getBoundingClientRect();
@@ -45,9 +40,7 @@ export const useCollectFlights = (
         };
       })
     );
-
-    return afterNextPaint(() => setCollectAtPot(true));
   }, [collecting, tableElement]);
 
-  return { collectFlights, collectAtPot };
+  return collectFlights;
 };

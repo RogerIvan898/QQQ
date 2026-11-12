@@ -329,6 +329,10 @@
   gap: 10px;
   width: 100%;
   padding: 10px 8px 10px 12px;
+  /* Rows off screen skip layout and paint; `auto` remembers the real
+     height once a row has been rendered. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 58px;
   background: transparent;
   border: none;
   color: inherit;

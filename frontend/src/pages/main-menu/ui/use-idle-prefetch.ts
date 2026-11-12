@@ -3,8 +3,7 @@ import React from 'react';
 import { useRouter } from '@tanstack/react-router';
 
 import { walletModel } from 'entities/wallet';
-
-const IDLE_FALLBACK_MS = 1500;
+import { runWhenIdle } from 'shared/utils/schedule';
 
 export const loadDepositDialog = () => import('widgets/deposit-dialog');
 export const loadWithdrawModal = () => import('widgets/withdraw');
@@ -23,14 +22,6 @@ export const useIdlePrefetch = () => {
       }
     };
 
-    if (typeof window.requestIdleCallback !== 'function') {
-      const timer = window.setTimeout(prefetch, IDLE_FALLBACK_MS);
-
-      return () => window.clearTimeout(timer);
-    }
-
-    const handle = window.requestIdleCallback(prefetch);
-
-    return () => window.cancelIdleCallback(handle);
+    return runWhenIdle(prefetch);
   }, [router]);
 };

@@ -2,7 +2,6 @@ import React from 'react';
 
 import { SERVER_EVENTS, gameModel, type ServerGameEvent } from 'entities/game';
 import { POT_FLIGHT_MS, winRevealMs } from 'shared/config/table-timing';
-import { afterNextPaint } from 'shared/utils/after-next-paint';
 
 import { getPotCenter } from './get-pot-center';
 import type { SeatLayout } from './seating';
@@ -18,7 +17,6 @@ export const usePotFlights = (
   >({});
   const [flights, setFlights] = React.useState<PotFlight[] | null>(null);
   const [flightId, setFlightId] = React.useState(0);
-  const [atWinner, setAtWinner] = React.useState(false);
   const revealTimer = React.useRef<number | null>(null);
 
   const clearReveal = () => {
@@ -32,7 +30,6 @@ export const usePotFlights = (
     if (event.type === SERVER_EVENTS.HAND_STARTED) {
       clearReveal();
       setFlights(null);
-      setAtWinner(false);
       onHidePot(false);
       return;
     }
@@ -84,7 +81,6 @@ export const usePotFlights = (
     revealTimer.current = window.setTimeout(() => {
       revealTimer.current = null;
       setFlights(next);
-      setAtWinner(false);
       setFlightId(id => id + 1);
       onHidePot(true);
     }, winRevealMs(gameModel.$showdownThisHand.getState()));
@@ -99,14 +95,10 @@ export const usePotFlights = (
       return;
     }
 
-    const cancelStart = afterNextPaint(() => setAtWinner(true));
     const done = window.setTimeout(() => setFlights(null), POT_FLIGHT_MS);
 
-    return () => {
-      cancelStart();
-      window.clearTimeout(done);
-    };
+    return () => window.clearTimeout(done);
   }, [flightId, flights]);
 
-  return { wins, flights, flightId, atWinner };
+  return { wins, flights, flightId };
 };

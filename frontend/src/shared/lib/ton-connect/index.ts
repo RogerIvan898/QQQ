@@ -2,6 +2,7 @@ import type { TonConnectUI, Wallet } from '@tonconnect/ui-react';
 import { createEvent, createStore } from 'effector';
 
 import { getTonConnectManifestUrl } from 'shared/config/tonconnect';
+import { runWhenIdle } from 'shared/utils/schedule';
 
 export interface TonWalletInfo {
   address: string;
@@ -86,11 +87,7 @@ export const preloadTonConnect = () => {
     );
   };
 
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(start, { timeout: 3000 });
-  } else {
-    setTimeout(start, 1500);
-  }
+  runWhenIdle(start);
 };
 
 export const setTonConnectPaused = (paused: boolean) => {

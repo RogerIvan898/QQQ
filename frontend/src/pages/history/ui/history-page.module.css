@@ -134,6 +134,10 @@
   align-items: center;
   gap: 10px;
   padding: 12px 12px 12px 14px;
+  /* Rows off screen skip layout and paint; `auto` remembers the real
+     height once a row has been rendered. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 72px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);

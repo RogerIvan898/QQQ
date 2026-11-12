@@ -5,6 +5,7 @@ import { gameModel, SERVER_EVENTS, type ServerGameEvent } from 'entities/game';
 import type { PlayerType as Player } from 'entities/player';
 import { sessionModel } from 'entities/session';
 import { readJson, removeStorageByPrefix, writeJson } from 'shared/lib/storage';
+import { runInBackground } from 'shared/utils/schedule';
 
 import type { HandAction, HandRecord, HandSeat } from './types';
 
@@ -56,8 +57,9 @@ export const $hands = createStore<HandRecord[]>([])
   )
   .reset(tableLeft);
 
-// Serializing up to 50 hands is deferred to idle time: HAND_COMPLETED lands
-// right as the pot flies to the winner, and a sync write there can drop frames.
+// Serializing up to 50 hands runs at background priority: HAND_COMPLETED
+// lands right as the pot flies to the winner, and a sync write there can drop
+// frames.
 let pendingSave: { roomId: string; cancel: () => void } | null = null;
 
 const flushSave = () => {
@@ -74,19 +76,10 @@ const flushSave = () => {
 
 const scheduleSave = (roomId: string) => {
   pendingSave?.cancel();
-
-  if (typeof window.requestIdleCallback === 'function') {
-    const handle = window.requestIdleCallback(flushSave, { timeout: 2000 });
-
-    pendingSave = { roomId, cancel: () => window.cancelIdleCallback(handle) };
-  } else {
-    const timer = window.setTimeout(flushSave, 500);
-
-    pendingSave = { roomId, cancel: () => window.clearTimeout(timer) };
-  }
+  pendingSave = { roomId, cancel: runInBackground(flushSave) };
 };
 
-// Reload or close before the idle callback fires: write right away.
+// Reload or close before the background task runs: write right away.
 window.addEventListener('pagehide', flushSave);
 
 tableLeft.watch(() => {
