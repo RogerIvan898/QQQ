@@ -1,9 +1,6 @@
+import { DAY_MS, startOfDay } from 'shared/utils/date';
+
 import type { GameSession, SessionPeriod } from './types';
-
-const DAY_MS = 86_400_000;
-
-const startOfDay = (date: Date) =>
-  new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
 export interface PeriodRange {
   from: number;

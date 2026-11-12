@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 
 import { DEALER_MOVE_MS } from 'shared/config/table-timing';
+import { prefersReducedMotion } from 'shared/lib/motion';
 import { cn } from 'shared/utils/cn';
 
 import styles from './dealer-button.module.css';
@@ -79,9 +80,7 @@ export const DealerButton = ({ className, compact = false }: Props) => {
 
     const from = freshSpot();
     const box = element.getBoundingClientRect();
-    const reduce = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
-    ).matches;
+    const reduce = prefersReducedMotion();
 
     if (from && !reduce) {
       element.firstElementChild

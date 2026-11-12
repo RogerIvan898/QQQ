@@ -1,9 +1,8 @@
 import React from 'react';
 
-const DURATION_MS = 450;
+import { prefersReducedMotion } from 'shared/lib/motion';
 
-const prefersReducedMotion = () =>
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const DURATION_MS = 450;
 
 export const useAnimatedText = <T extends HTMLElement>(
   target: number,

@@ -7,6 +7,7 @@ import { gameModel } from 'entities/game';
 import { sessionModel } from 'entities/session';
 import { $raisePanelRect } from 'features/player-actions';
 import { useChipFormatter } from 'shared/lib/display-settings';
+import { prefersReducedMotion } from 'shared/lib/motion';
 import { GramMark } from 'shared/ui/gram';
 import { cn } from 'shared/utils/cn';
 
@@ -74,9 +75,7 @@ const ChipFlight = ({ amount, fromX, fromY, toX, toY, kind }: FlightProps) => {
       return;
     }
 
-    const reduced = window.matchMedia(
-      '(prefers-reduced-motion: reduce)'
-    ).matches;
+    const reduced = prefersReducedMotion();
     const timing = FLIGHT_TIMING[kind];
     const options = ({ duration, easing, delay = 0 }: Phase) => ({
       duration: reduced ? 1 : duration,

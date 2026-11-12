@@ -1,4 +1,5 @@
 import { canPlaySound, getAudioContext } from 'shared/lib/audio';
+import { clamp } from 'shared/utils/math';
 
 import { ACTION_SOUND_RECIPES } from './constants';
 import type { PokerSoundAction } from './types';
@@ -44,7 +45,7 @@ class PokerSoundEngine {
   }
 
   setVolume(value: number) {
-    this.masterVolume = Math.max(0, Math.min(1, value));
+    this.masterVolume = clamp(value, 0, 1);
 
     if (this.masterGain && this.context) {
       this.masterGain.gain.setTargetAtTime(

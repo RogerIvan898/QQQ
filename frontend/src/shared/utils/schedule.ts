@@ -11,10 +11,13 @@ interface PostTaskScheduler {
   ) => Promise<unknown>;
 }
 
-const getScheduler = () =>
-  (globalThis as { scheduler?: Partial<PostTaskScheduler> }).scheduler?.postTask
-    ? (globalThis as unknown as { scheduler: PostTaskScheduler }).scheduler
-    : null;
+const getScheduler = (): PostTaskScheduler | null => {
+  const { scheduler } = globalThis as {
+    scheduler?: Partial<PostTaskScheduler>;
+  };
+
+  return scheduler?.postTask ? (scheduler as PostTaskScheduler) : null;
+};
 
 const postBackground = (task: () => void, delay = 0): Cancel | null => {
   const scheduler = getScheduler();

@@ -2,13 +2,14 @@ import React from 'react';
 
 import { useStoreMap, useUnit } from 'effector-react';
 
-import { highlightHidden, highlightShown, type CardType } from 'entities/card';
+import { highlightHidden, highlightShown } from 'entities/card';
 import { gameModel } from 'entities/game';
 import { Player, PlayerStatus, type SeatDirection } from 'entities/player';
 import { bestFiveCards, madeHandCards } from 'features/equity';
 import { BB_POST_MS, SB_POST_MS } from 'shared/config/table-timing';
 import { useElapsed } from 'shared/hooks/use-elapsed';
 
+import { NO_CARDS } from './constants';
 import styles from './players-layer.module.css';
 import { SeatCombination } from './seat-combination';
 import { SeatEquity } from './seat-equity';
@@ -25,8 +26,6 @@ interface Props {
   winId?: number;
   ref?: React.Ref<HTMLDivElement>;
 }
-
-const NO_CARDS: CardType[] = [];
 
 const dealOrderFrom = (
   seat: number,

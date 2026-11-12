@@ -4,6 +4,7 @@ import { useLingui } from '@lingui/react/macro';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { cn } from 'shared/utils/cn';
+import { clamp } from 'shared/utils/math';
 
 import styles from './chip-group.module.css';
 
@@ -86,7 +87,7 @@ export const ChipGroup = <T extends string>({
     }
 
     const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
-    const current = Math.min(Math.max(track.scrollLeft, 0), maxScroll);
+    const current = clamp(track.scrollLeft, 0, maxScroll);
     const wanted = current + direction * track.clientWidth * PAGE_SHARE;
     const chipStarts = [...track.children].map(
       chip => (chip as HTMLElement).offsetLeft - track.offsetLeft
@@ -96,7 +97,7 @@ export const ChipGroup = <T extends string>({
         Math.abs(start - wanted) < Math.abs(best - wanted) ? start : best,
       wanted
     );
-    const target = Math.min(Math.max(snapped, 0), maxScroll);
+    const target = clamp(snapped, 0, maxScroll);
 
     track.scrollTo({ left: target, behavior: 'smooth' });
   };

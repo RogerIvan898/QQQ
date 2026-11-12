@@ -23,6 +23,7 @@ import {
   type TransactionType,
 } from 'entities/wallet';
 import { cn } from 'shared/utils/cn';
+import { DAY_MS, startOfDay } from 'shared/utils/date';
 import { dateTimeFormat, formatBalance } from 'shared/utils/format';
 
 import { TransactionDetails } from './transaction-details';
@@ -111,18 +112,6 @@ const FILTERS = [
   TransactionType | null,
   MessageDescriptor,
 ])[];
-
-const DAY_MS = 86_400_000;
-
-const startOfDay = (iso: string) => {
-  const date = new Date(iso);
-
-  return new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate()
-  ).getTime();
-};
 
 const groupByDay = (items: Transaction[]) => {
   const groups: { day: number; items: Transaction[] }[] = [];

@@ -5,13 +5,12 @@ import type { CardType as Card } from 'entities/card';
 import { gameModel } from 'entities/game';
 import { handCategoryLabel } from 'features/equity';
 
+import { NO_CARDS } from './constants';
 import styles from './players-layer.module.css';
 
 interface Props {
   hand: readonly Card[] | null;
 }
-
-const NO_CARDS: Card[] = [];
 
 export const SeatCombination = ({ hand }: Props) => {
   const { i18n } = useLingui();

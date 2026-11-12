@@ -1,5 +1,6 @@
 import type { CardType as Card } from 'entities/card';
 import type { GameStreet } from 'entities/game';
+import { clamp } from 'shared/utils/math';
 
 import type { HandAction, HandRecord } from '../model/types';
 
@@ -83,7 +84,7 @@ export const replayState = (
   timeline: ReplayStep[],
   stepIndex: number
 ): ReplayState => {
-  const index = Math.max(0, Math.min(stepIndex, timeline.length - 1));
+  const index = clamp(stepIndex, 0, timeline.length - 1);
   const seats = new Map<number, ReplaySeat>(
     hand.seats.map(seat => [
       seat.seat,

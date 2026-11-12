@@ -5,7 +5,7 @@ import { useRouter } from '@tanstack/react-router';
 import { walletModel } from 'entities/wallet';
 import { runWhenIdle } from 'shared/utils/schedule';
 
-export const loadDepositDialog = () => import('widgets/deposit-dialog');
+const loadDepositDialog = () => import('widgets/deposit-dialog');
 export const loadWithdrawModal = () => import('widgets/withdraw');
 
 export const useIdlePrefetch = () => {

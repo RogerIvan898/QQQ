@@ -5,6 +5,7 @@ import { useLingui } from '@lingui/react/macro';
 import { X } from 'lucide-react';
 
 import { usePresence } from 'shared/hooks/use-presence';
+import { prefersReducedMotion } from 'shared/lib/motion';
 import { cn } from 'shared/utils/cn';
 
 import styles from './snackbar.module.css';
@@ -49,7 +50,7 @@ export const Snackbar = ({
       return;
     }
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (prefersReducedMotion()) {
       return;
     }
 

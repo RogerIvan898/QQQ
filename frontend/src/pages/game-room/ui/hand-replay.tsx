@@ -32,6 +32,7 @@ import {
 } from 'shared/lib/display-settings';
 import { cn } from 'shared/utils/cn';
 import { dateTimeFormat, formatCompactNumber } from 'shared/utils/format';
+import { clamp } from 'shared/utils/math';
 import { PokerBoard } from 'widgets/poker-table';
 
 import styles from './hand-replay.module.css';
@@ -127,7 +128,7 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
 
   const go = (next: number) => {
     setPlaying(false);
-    setStep(Math.max(0, Math.min(lastStep, next)));
+    setStep(clamp(next, 0, lastStep));
   };
 
   const togglePlay = () => {
