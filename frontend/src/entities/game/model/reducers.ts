@@ -147,20 +147,22 @@ const reduceStreetConcluded = (
   state: T.GameState,
   payload: T.StreetConcludedEvent['payload']
 ): T.GameState => {
+  // Players whose fields don't change keep their object, so their seats
+  // (subscribed by reference) don't re-render at every street end.
   const clearedPlayers = Object.keys(state.players).reduce(
     (acc, key) => {
-      acc[key] = {
-        ...state.players[key],
-        committed: 0,
-        lastAction:
-          state.players[key].lastAction === PlayerAction.FOLD
-            ? PlayerAction.FOLD
-            : null,
-        lastActionAmount:
-          state.players[key].lastAction === PlayerAction.FOLD
-            ? state.players[key].lastActionAmount
-            : null,
-      };
+      const player = state.players[key];
+      const folded = player.lastAction === PlayerAction.FOLD;
+      const lastAction = folded ? PlayerAction.FOLD : null;
+      const lastActionAmount = folded ? player.lastActionAmount : null;
+
+      acc[key] =
+        player.committed === 0 &&
+        player.lastAction === lastAction &&
+        player.lastActionAmount === lastActionAmount
+          ? player
+          : { ...player, committed: 0, lastAction, lastActionAmount };
+
       return acc;
     },
     {} as Record<string, Player>

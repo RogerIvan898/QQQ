@@ -2,7 +2,7 @@ import React from 'react';
 
 import { useStoreMap, useUnit } from 'effector-react';
 
-import { highlightHidden, highlightShown } from 'entities/card';
+import { highlightHidden, highlightShown, type CardType } from 'entities/card';
 import { gameModel } from 'entities/game';
 import { Player, PlayerStatus, type SeatDirection } from 'entities/player';
 import { bestFiveCards, madeHandCards } from 'features/equity';
@@ -25,6 +25,8 @@ interface Props {
   winId?: number;
   ref?: React.Ref<HTMLDivElement>;
 }
+
+const NO_CARDS: CardType[] = [];
 
 const dealOrderFrom = (
   seat: number,
@@ -78,15 +80,28 @@ const SeatView = ({
     keys: [seat],
     fn: (holes, [index]) => holes[index] ?? null,
   });
-  const [round, myCards, handNumber, handStartedAt, dealerSeat, turnTiming] =
-    useUnit([
-      gameModel.$round,
-      gameModel.$myCards,
+  // Board and own cards matter only to the viewer's seat; the other seats
+  // subscribe to a constant so a dealt card doesn't re-render all of them.
+  const myCards = useStoreMap({
+    store: gameModel.$myCards,
+    keys: [isViewer],
+    fn: (cards, [viewer]) => (viewer ? cards : null),
+  });
+  const community = useStoreMap({
+    store: gameModel.$community,
+    keys: [isViewer],
+    fn: (cards, [viewer]) => (viewer ? cards : NO_CARDS),
+  });
+  const preflop = useStoreMap(gameModel.$round, round => round === 'PREFLOP');
+  const [handNumber, handStartedAt, dealerSeat, turnTiming, showdown] = useUnit(
+    [
       gameModel.$handNumber,
       gameModel.$handStartedAt,
       gameModel.$dealerSeat,
       gameModel.$turnTiming,
-    ]);
+      gameModel.$showdownThisHand,
+    ]
+  );
   const seatCount = useStoreMap(
     gameModel.$players,
     players => Object.keys(players).length
@@ -96,10 +111,6 @@ const SeatView = ({
   const postAt = blindSeat ? SB_POST_MS : bigBlindSeat ? BB_POST_MS : null;
   const blindShown = useElapsed(handStartedAt, postAt ?? 0);
 
-  const [community, showdown] = useUnit([
-    gameModel.$community,
-    gameModel.$showdownThisHand,
-  ]);
   const liveHand = isViewer ? myCards : null;
   const folded = player?.status === PlayerStatus.FOLDED;
 
@@ -129,15 +140,11 @@ const SeatView = ({
 
   const hand = isViewer && myCards ? myCards : (revealed ?? player.hand);
   const blindHidden =
-    postAt !== null &&
-    !blindShown &&
-    round === 'PREFLOP' &&
-    player.committed > 0;
+    postAt !== null && !blindShown && preflop && player.committed > 0;
   const shownPlayer = blindHidden
     ? { ...player, committed: 0, stack: player.stack + player.committed }
     : player;
-  const blindPosted =
-    !blindHidden && round === 'PREFLOP' && player.committed > 0;
+  const blindPosted = !blindHidden && preflop && player.committed > 0;
   const blindRole = !blindPosted
     ? null
     : blindSeat

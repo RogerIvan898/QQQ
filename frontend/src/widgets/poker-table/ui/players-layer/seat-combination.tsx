@@ -1,5 +1,5 @@
 import { useLingui } from '@lingui/react';
-import { useUnit } from 'effector-react';
+import { useStoreMap } from 'effector-react';
 
 import type { CardType as Card } from 'entities/card';
 import { gameModel } from 'entities/game';
@@ -11,9 +11,17 @@ interface Props {
   hand: readonly Card[] | null;
 }
 
+const NO_CARDS: Card[] = [];
+
 export const SeatCombination = ({ hand }: Props) => {
   const { i18n } = useLingui();
-  const community = useUnit(gameModel.$community);
+  // Seats without visible cards (most of them, most of the time) don't need
+  // the board, so they don't re-render on every dealt card.
+  const community = useStoreMap({
+    store: gameModel.$community,
+    keys: [hand !== null],
+    fn: (cards, [shown]) => (shown ? cards : NO_CARDS),
+  });
   const label = hand ? handCategoryLabel(hand, community) : null;
 
   if (!label) {

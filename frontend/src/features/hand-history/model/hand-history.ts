@@ -56,13 +56,48 @@ export const $hands = createStore<HandRecord[]>([])
   )
   .reset(tableLeft);
 
+// Serializing up to 50 hands is deferred to idle time: HAND_COMPLETED lands
+// right as the pot flies to the winner, and a sync write there can drop frames.
+let pendingSave: { roomId: string; cancel: () => void } | null = null;
+
+const flushSave = () => {
+  const pending = pendingSave;
+
+  if (!pending) {
+    return;
+  }
+
+  pending.cancel();
+  pendingSave = null;
+  saveHands(pending.roomId, $hands.getState());
+};
+
+const scheduleSave = (roomId: string) => {
+  pendingSave?.cancel();
+
+  if (typeof window.requestIdleCallback === 'function') {
+    const handle = window.requestIdleCallback(flushSave, { timeout: 2000 });
+
+    pendingSave = { roomId, cancel: () => window.cancelIdleCallback(handle) };
+  } else {
+    const timer = window.setTimeout(flushSave, 500);
+
+    pendingSave = { roomId, cancel: () => window.clearTimeout(timer) };
+  }
+};
+
+// Reload or close before the idle callback fires: write right away.
+window.addEventListener('pagehide', flushSave);
+
 tableLeft.watch(() => {
+  pendingSave?.cancel();
+  pendingSave = null;
   writeJson(STORAGE_KEY, null);
 });
 
 handRecorded.watch(hand => {
   if (hand.roomId) {
-    saveHands(hand.roomId, $hands.getState());
+    scheduleSave(hand.roomId);
   }
 });
 
