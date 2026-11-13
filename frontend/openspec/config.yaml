@@ -1,0 +1,73 @@
+schema: spec-driven
+
+context: |
+  Product: GRAM Poker, a Telegram Mini App (Texas Hold'em, real money in TON).
+  This repo folder is the web client only. Backend game server is C++ (../backend,
+  WebSocket, Boost), chain/payments service is Go (../chain-service). Write all
+  artifacts in English; UI strings are translated (en, ru).
+
+  Architecture (Feature-Sliced Design, imports only downward):
+    app -> pages -> widgets -> features -> entities -> shared
+    Path aliases: app/, pages/, widgets/, features/, entities/, shared/.
+    Slices expose a public index.ts; never deep-import another slice's internals.
+    State: effector stores/events/effects in model/; React reads them via
+    effector-react (useUnit, useStoreMap with keys for per-seat slices).
+    Game flow: WebSocket delta events -> entities/game event-queue (serializes
+    animations, fast-forwards when hidden or backlogged) -> reducers -> stores.
+    The server is authoritative; the client never decides game outcomes.
+    Routing: TanStack Router file routes (src/app/routes, autoCodeSplitting).
+
+  Tech stack (pinned major versions):
+    React 19 + React Compiler, TypeScript (build: @typescript/native tsc -b),
+    Vite 8 / rolldown, effector 23, TanStack Router, Lingui 6 (macros, en/ru),
+    CSS Modules + design tokens (shared/styles/theme.css), lucide-react icons,
+    TON Connect UI and @ton/core (loaded lazily, never on the critical path),
+    MSW mock server (dev and VITE_MOCK_SERVER builds only), Bun 1.4.4 for
+    scripts and tests, ESLint + Prettier, husky + lint-staged.
+    Hosting: Cloudflare Pages; CI on GitLab, pipelines only for main and tags.
+
+  Constraints:
+    - Runs inside Telegram WebView: mobile-first, iOS Safari 15+ and Android
+      Chromium; respect Telegram safe-area vars (--tg-safe-area-*).
+    - Production accepts only wss:// game sockets and HTTPS APIs.
+    - Bundle budget: keep the initial load near ~120 kB gzip; heavy libs
+      (TON Connect, @ton/core, dialogs, game route) must stay lazy chunks.
+    - Hot paths (table, seats, chip flights) must not re-render all seats per
+      event; animate transform/opacity only; no layout thrash.
+    - Heavy CPU work (equity) runs in the Web Worker; stale runs are cancelled.
+    - No SharedArrayBuffer/COOP-COEP (Telegram iframe), no new runtime deps
+      without a bundle-size note in the design.
+    - Never put secrets, tokens or personal data into URLs, logs or storage keys.
+
+  Code conventions:
+    - Styling: CSS Modules only; colors/radii/focus from tokens (--color-*,
+      --radius-sm/md/lg/xl, --focus-ring); compact layout media query is
+      `(max-width: 768px), (orientation: portrait) and (max-width: 1100px)`.
+      Reuse shared/ui/icon-button and shared/ui/button/solid-button via composes.
+    - Shared helpers over local copies: clamp (shared/utils/math), startOfDay
+      (shared/utils/date), prefersReducedMotion (shared/lib/motion),
+      runInBackground/runWhenIdle (shared/utils/schedule), useDismiss.
+    - Every user-visible string goes through Lingui (t``, msg``, <Trans>); run
+      i18n:extract/compile when strings change.
+    - No `any`, no ts-ignore; API errors are ApiError from shared/api.
+    - Production build strips console.*; do not rely on logs for behavior.
+    - Commits: one-line conventional subject (feat|fix|perf|refactor|style|ci
+      (scope): ...), no body, no Co-Authored-By. Work lands on `dev`; `main`
+      is protected and updated only on explicit request.
+
+rules:
+  proposal:
+    - State impact on bundle size and on table render/animation performance
+    - State what is out of scope (backend/contract changes are separate)
+  design:
+    - Name the FSD layer and slice for every new module
+    - Call out any change to the WebSocket or REST contract with the C++/Go backends
+  tasks:
+    - Include verification steps (tsc -b, eslint, bun run test, vite build)
+    - Keep each task small enough for one reviewable commit
+
+operations:
+  apply:
+    guidance:
+      - Touch only files the change needs; other sessions may edit the tree
+      - Report the full commit hash after each commit
