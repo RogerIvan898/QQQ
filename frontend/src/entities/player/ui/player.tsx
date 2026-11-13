@@ -67,6 +67,9 @@ interface Props {
   onWinningChange?: (winning: boolean) => void;
 
   showdown?: boolean;
+
+  /** Card backs to show while the hand is hidden (2 Hold'em, 4 Omaha). */
+  holeCount?: number;
 }
 
 const DEAL_STEP_MS = 70;
@@ -93,6 +96,7 @@ const PlayerView = ({
   dealOrder = 0,
   onWinningChange,
   showdown = true,
+  holeCount = 2,
 }: Props) => {
   const { status, stack, name } = player;
   const hand = handOverride === undefined ? player.hand : handOverride;
@@ -186,6 +190,7 @@ const PlayerView = ({
             <PlayerCards
               key={cardsKey}
               cards={cardsInView}
+              backCount={holeCount}
               needSound={currentPlayer && Boolean(cardsInView)}
               large={currentPlayer}
               dealDelayMs={dealOrder * DEAL_STEP_MS}

@@ -5,6 +5,7 @@ import { useUnit } from 'effector-react';
 import { ChevronRight, Spade, X } from 'lucide-react';
 
 import { MiniCard } from 'entities/card';
+import { HOLE_CARDS } from 'shared/config/game-variant';
 import { useDismiss } from 'shared/hooks/use-dismiss';
 import { useMediaQuery } from 'shared/hooks/use-media-query';
 import { usePresence } from 'shared/hooks/use-presence';
@@ -110,16 +111,14 @@ export const HandHistorySheet = ({ open, onClose, onSelect }: Props) => {
                     onClick={() => onSelect(hand)}
                   >
                     <span className={styles.cards}>
-                      {hand.myCards ? (
-                        hand.myCards.map((card, index) => (
-                          <MiniCard key={index} card={card} />
-                        ))
-                      ) : (
-                        <>
-                          <MiniCard card={null} />
-                          <MiniCard card={null} />
-                        </>
-                      )}
+                      {hand.myCards
+                        ? hand.myCards.map((card, index) => (
+                            <MiniCard key={index} card={card} />
+                          ))
+                        : Array.from(
+                            { length: HOLE_CARDS[hand.game ?? 'nlh'] },
+                            (_, index) => <MiniCard key={index} card={null} />
+                          )}
                     </span>
                     <span className={styles.main}>
                       <span className={styles.title}>

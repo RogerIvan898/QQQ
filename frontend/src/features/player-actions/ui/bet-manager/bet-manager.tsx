@@ -29,6 +29,8 @@ interface Props {
   preflop: boolean;
   onCancel: () => void;
   variant: 'bet' | 'raise';
+  /** Pot-limit cap below the stack: the top preset is the pot, not all-in. */
+  potLimited?: boolean;
 }
 
 export const BetManager = ({
@@ -41,6 +43,7 @@ export const BetManager = ({
   preflop,
   onCancel,
   variant,
+  potLimited = false,
 }: Props) => {
   const { t } = useLingui();
   const [amount, setAmount] = useState(minAmount);
@@ -114,8 +117,8 @@ export const BetManager = ({
     commit(draftValue ?? amount);
   };
 
-  const maxLabel = t`All in`;
   const potLabel = t`Pot`;
+  const maxLabel = potLimited ? potLabel : t`All in`;
   const allInLabel = t`All in`;
   const betLabel = t`Bet`;
   const raiseLabel = t`Raise`;
@@ -142,11 +145,19 @@ export const BetManager = ({
           label: '3/4 Pot',
           value: potRaiseTo(0.75, pot, callAmount, committed),
         },
-        { label: potLabel, value: potRaiseTo(1, pot, callAmount, committed) },
+        // Pot-limited, the maximum is the pot raise itself.
+        ...(potLimited
+          ? []
+          : [
+              {
+                label: potLabel,
+                value: potRaiseTo(1, pot, callAmount, committed),
+              },
+            ]),
         { label: maxLabel, value: maxAmount },
       ];
 
-  const isAllIn = amount >= maxAmount;
+  const isAllIn = !potLimited && amount >= maxAmount;
   const belowMin = draftValue !== null && draftValue < minAmount;
 
   return (

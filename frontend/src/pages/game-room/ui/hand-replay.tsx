@@ -103,6 +103,7 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
           me?.cards && me.cards.length >= 2 ? me.cards : null,
         ],
         [gameModel.$debugHoles, {}],
+        [gameModel.$gameVariant, hand.game ?? 'nlh'],
         [gameModel.$collectingBets, false],
         [sessionModel.$currentUserId, viewerId],
 
@@ -218,7 +219,11 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
           <ArrowLeft size={14} strokeWidth={2.25} />
           {t`Back`}
         </button>
-        <span className={styles.title}>{t`Hand at ${time}`}</span>
+        <span className={styles.title}>
+          {hand.game === 'plo'
+            ? t`PL Omaha · Hand at ${time}`
+            : t`Hand at ${time}`}
+        </span>
       </header>
 
       <div className={styles.stage}>

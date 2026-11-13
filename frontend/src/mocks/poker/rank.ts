@@ -172,3 +172,26 @@ export const rankHand = (cards: readonly string[]) => {
     name: CATEGORY_NAMES[category] ?? 'High card',
   };
 };
+
+/** Omaha: exactly two hole cards and exactly three board cards. */
+export const rankOmaha = (
+  hole: readonly string[],
+  board: readonly string[]
+) => {
+  const pairs = combinations(hole.map(parseCard), 2);
+  const triples = combinations(board.map(parseCard), 3);
+  let best = 0;
+
+  for (const pair of pairs) {
+    for (const triple of triples) {
+      best = Math.max(best, scoreFive([...pair, ...triple]));
+    }
+  }
+
+  const category = Math.floor(best / CATEGORY_BASE);
+
+  return {
+    score: best,
+    name: CATEGORY_NAMES[category] ?? 'High card',
+  };
+};

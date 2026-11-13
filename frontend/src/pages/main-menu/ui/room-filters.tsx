@@ -1,7 +1,7 @@
 import type React from 'react';
 
 import { useLingui } from '@lingui/react/macro';
-import { Coins, Swords } from 'lucide-react';
+import { Coins, Layers, Swords } from 'lucide-react';
 
 import { cn } from 'shared/utils/cn';
 
@@ -17,6 +17,7 @@ interface FiltersProps {
 const FILTER_ICONS = {
   cash: Coins,
   'heads-up': Swords,
+  plo: Layers,
 } as const;
 
 export const Filters = ({ active, onChange }: FiltersProps) => {

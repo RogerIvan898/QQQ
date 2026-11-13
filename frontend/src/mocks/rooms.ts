@@ -1,3 +1,5 @@
+import type { GameVariant } from 'shared/config/game-variant';
+
 export interface MockRoomConfig {
   id: string;
   smallBlind: number;
@@ -5,6 +7,8 @@ export interface MockRoomConfig {
   botCount: number;
 
   scenario?: 'all-in';
+
+  game?: GameVariant;
 }
 
 const ROOMS: Record<string, MockRoomConfig> = {
@@ -17,6 +21,7 @@ const ROOMS: Record<string, MockRoomConfig> = {
   '7': { id: '7', smallBlind: 100, bigBlind: 200, botCount: 2 },
   '8': { id: '8', smallBlind: 10, bigBlind: 20, botCount: 1 },
   '9': { id: '9', smallBlind: 500, bigBlind: 1000, botCount: 1 },
+  '10': { id: '10', smallBlind: 1, bigBlind: 2, botCount: 3, game: 'plo' },
 
   allin: {
     id: 'allin',

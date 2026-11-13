@@ -1,6 +1,7 @@
 import type { CardType as Card } from 'entities/card';
 import type { GameStreet } from 'entities/game';
 import type { PlayerActionType } from 'entities/player';
+import type { GameVariant } from 'shared/config/game-variant';
 
 export interface HandAction {
   street: GameStreet;
@@ -41,6 +42,8 @@ export interface HandRecord {
   dealerSeat?: number | null;
   smallBlindSeat?: number | null;
   bigBlindSeat?: number | null;
+  /** Absent in hands saved before Omaha: those are Hold'em. */
+  game?: GameVariant;
   myCards: Card[] | null;
   board: Card[];
   seats: HandSeat[];

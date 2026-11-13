@@ -245,7 +245,6 @@
   background: color-mix(in srgb, var(--color-text) 12%, var(--color-bg-muted));
 }
 
-
 .control:disabled {
   opacity: 0.35;
   cursor: default;

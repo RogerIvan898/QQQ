@@ -91,4 +91,15 @@ export const MOCK_ROOMS: RoomListItem[] = [
     minBuy: 400,
     maxBuy: 1000,
   },
+  {
+    id: 10,
+    name: 'Omaha',
+    mode: 'cash',
+    game: 'plo',
+    blinds: '0.01/0.02',
+    players: 4,
+    max: 6,
+    minBuy: 0.8,
+    maxBuy: 2,
+  },
 ];

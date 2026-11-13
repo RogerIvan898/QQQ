@@ -27,6 +27,7 @@ export const PlayerActions = () => {
       gameModel.$round,
     ]);
 
+  const variant = useUnit(gameModel.$gameVariant);
   const [isChangingAmount, setIsChangingAmount] = React.useState(false);
   const isMyTurn = Boolean(allowedActions);
 
@@ -87,6 +88,10 @@ export const PlayerActions = () => {
           callAmount={allowedActions?.callAmount ?? 0}
           committed={viewer.committed ?? 0}
           preflop={round === 'PREFLOP'}
+          potLimited={
+            variant === 'plo' &&
+            (allowedActions?.maxRaise ?? 0) < viewer.stack + viewer.committed
+          }
           onCancel={() => setIsChangingAmount(false)}
           variant={canBet ? 'bet' : 'raise'}
         />

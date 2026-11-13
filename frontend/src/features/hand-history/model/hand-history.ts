@@ -138,6 +138,7 @@ const startHand = (
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       roomId: $roomId.getState(),
       startedAt: new Date().toISOString(),
+      game: gameModel.$gameVariant.getState(),
       smallBlind: state.smallBlind,
       bigBlind: state.bigBlind,
       dealerSeat: payload.dealerSeat,

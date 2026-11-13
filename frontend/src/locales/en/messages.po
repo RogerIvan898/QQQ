@@ -7,6 +7,18 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
+#. js-lingui-explicit-id
+msgid "Withdraw {amount, number} TON"
+msgstr "Withdraw {amount, number} TON"
+
+#. js-lingui-explicit-id
+msgid "Pay {amount, number} TON with wallet"
+msgstr "Pay {amount, number} TON with wallet"
+
+#. js-lingui-explicit-id
+msgid "Connect wallet and pay {amount, number} TON"
+msgstr "Connect wallet and pay {amount, number} TON"
+
 #. placeholder {0}: session.hands
 msgid "{0, plural, one {# hand} other {# hands}}"
 msgstr "{0, plural, one {# hand} other {# hands}}"
@@ -142,10 +154,6 @@ msgstr "Connect a wallet to withdraw in one tap"
 
 msgid "Connect wallet"
 msgstr "Connect wallet"
-
-#. js-lingui-explicit-id
-msgid "Connect wallet and pay {amount, number} TON"
-msgstr "Connect wallet and pay {amount, number} TON"
 
 msgid "Connect wallet to withdraw"
 msgstr "Connect wallet to withdraw"
@@ -388,6 +396,9 @@ msgstr "Not enough balance to cover the amount and the network fee."
 msgid "Not enough balance."
 msgstr "Not enough balance."
 
+msgid "Omaha"
+msgstr "Omaha"
+
 msgid "or scan the QR code"
 msgstr "or scan the QR code"
 
@@ -399,10 +410,6 @@ msgstr "Paste"
 
 msgid "Pause"
 msgstr "Pause"
-
-#. js-lingui-explicit-id
-msgid "Pay {amount, number} TON with wallet"
-msgstr "Pay {amount, number} TON with wallet"
 
 msgid "Payment details"
 msgstr "Payment details"
@@ -421,6 +428,12 @@ msgstr "Pending"
 
 msgid "Period"
 msgstr "Period"
+
+msgid "PL Omaha"
+msgstr "PL Omaha"
+
+msgid "PL Omaha · Hand at {time}"
+msgstr "PL Omaha · Hand at {time}"
 
 msgid "Play"
 msgstr "Play"
@@ -659,10 +672,6 @@ msgstr "Winner"
 
 msgid "Withdraw"
 msgstr "Withdraw"
-
-#. js-lingui-explicit-id
-msgid "Withdraw {amount, number} TON"
-msgstr "Withdraw {amount, number} TON"
 
 msgid "Withdraw to"
 msgstr "Withdraw to"

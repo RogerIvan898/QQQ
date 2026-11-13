@@ -4,6 +4,7 @@ import type { ServerGameEvent } from 'entities/game/model/types';
 import { PlayerAction, PlayerStatus } from 'entities/player';
 import type { PlayerActionType, PlayerStatusType } from 'entities/player';
 import { VIEWER_ID } from 'entities/session/model';
+import { HOLE_CARDS, type GameVariant } from 'shared/config/game-variant';
 import { clamp } from 'shared/utils/math';
 
 import { getMockNickname } from '../profile';
@@ -17,7 +18,7 @@ import {
   type ChosenAction,
 } from './commands';
 import { createShuffledDeck } from './deck';
-import { rankHand } from './rank';
+import { rankHand, rankOmaha } from './rank';
 
 const BOT_NAMES = [
   'Nova',
@@ -45,7 +46,7 @@ interface Seat {
   name: string;
   seat: number;
   stack: number;
-  hole: [string, string];
+  hole: string[];
   committed: number;
   totalCommitted: number;
   folded: boolean;
@@ -89,11 +90,14 @@ export class PokerTable {
 
   private readonly allInScenario: boolean;
 
+  private readonly game: GameVariant;
+
   constructor(
     private readonly client: MockSocket,
     room: MockRoomConfig
   ) {
     this.allInScenario = room.scenario === 'all-in';
+    this.game = room.game ?? 'nlh';
     this.smallBlind = room.smallBlind;
     this.bigBlind = room.bigBlind;
 
@@ -210,8 +214,9 @@ export class PokerTable {
     }
 
     playing.forEach(seat => {
-      const [first, second] = [this.draw(), this.draw()];
-      seat.hole = [first, second];
+      seat.hole = Array.from({ length: HOLE_CARDS[this.game] }, () =>
+        this.draw()
+      );
     });
 
     const { small, big } = this.blindSeats();
@@ -255,6 +260,7 @@ export class PokerTable {
         smallBlindSeat: small.seat,
         bigBlindSeat: big.seat,
         initialBets,
+        game: this.game,
       },
     });
 
@@ -393,7 +399,7 @@ export class PokerTable {
         canFold: true,
         callAmount: Math.min(need, seat.stack),
         minRaise: canRaise ? minTotal : 1,
-        maxRaise: canRaise ? bankroll : 0,
+        maxRaise: canRaise ? this.maxTotal(seat) : 0,
       },
     });
 
@@ -504,15 +510,32 @@ export class PokerTable {
 
   private chipsToCommit(seat: Seat, requested: number | undefined) {
     const minExtra = this.minRaiseExtra(seat);
-    const bankroll = seat.committed + seat.stack;
+    const maxTotal = this.maxTotal(seat);
 
-    if (requested == null || requested >= bankroll) {
-      return seat.stack;
+    if (requested == null || requested >= maxTotal) {
+      return maxTotal - seat.committed;
     }
 
-    const target = clamp(requested, seat.committed + minExtra, bankroll);
+    const target = clamp(requested, seat.committed + minExtra, maxTotal);
 
     return clamp(target - seat.committed, 0, seat.stack);
+  }
+
+  /**
+   * Largest total bet this seat may make: the whole stack in Hold'em; in
+   * Pot-Limit Omaha a raise to (call + pot after the call), capped by stack.
+   */
+  private maxTotal(seat: Seat) {
+    const bankroll = seat.committed + seat.stack;
+
+    if (this.game !== 'plo') {
+      return bankroll;
+    }
+
+    const need = Math.max(0, this.currentBet - seat.committed);
+    const pot = this.seats.reduce((sum, item) => sum + item.totalCommitted, 0);
+
+    return Math.min(bankroll, seat.committed + need + pot + need);
   }
 
   private minRaiseExtra(seat: Seat) {
@@ -561,7 +584,7 @@ export class PokerTable {
   }
 
   private emitHoles() {
-    const hands: Record<number, [string, string]> = {};
+    const hands: Record<number, string[]> = {};
 
     if (this.holesVisible) {
       this.seats.forEach(seat => {
@@ -569,7 +592,7 @@ export class PokerTable {
           return;
         }
 
-        hands[seat.seat] = [seat.hole[0], seat.hole[1]];
+        hands[seat.seat] = [...seat.hole];
       });
     }
 
@@ -727,7 +750,10 @@ export class PokerTable {
   private showdown(alive: Seat[]) {
     const ranked = alive.map(seat => ({
       seat,
-      hand: rankHand([...seat.hole, ...this.board]),
+      hand:
+        this.game === 'plo'
+          ? rankOmaha(seat.hole, this.board)
+          : rankHand([...seat.hole, ...this.board]),
     }));
 
     const levels = [...new Set(this.seats.map(seat => seat.totalCommitted))]

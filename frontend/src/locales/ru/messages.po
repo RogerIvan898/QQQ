@@ -8,6 +8,18 @@ msgstr ""
 "Language: ru\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
+#. js-lingui-explicit-id
+msgid "Withdraw {amount, number} TON"
+msgstr "Вывести {amount, number} TON"
+
+#. js-lingui-explicit-id
+msgid "Pay {amount, number} TON with wallet"
+msgstr "Оплатить {amount, number} TON кошельком"
+
+#. js-lingui-explicit-id
+msgid "Connect wallet and pay {amount, number} TON"
+msgstr "Подключить кошелёк и оплатить {amount, number} TON"
+
 #. placeholder {0}: session.hands
 msgid "{0, plural, one {# hand} other {# hands}}"
 msgstr "{0, plural, one {# раздача} few {# раздачи} many {# раздач} other {# раздачи}}"
@@ -143,10 +155,6 @@ msgstr "Подключите кошелёк, чтобы выводить в од
 
 msgid "Connect wallet"
 msgstr "Подключить кошелёк"
-
-#. js-lingui-explicit-id
-msgid "Connect wallet and pay {amount, number} TON"
-msgstr "Подключить кошелёк и оплатить {amount, number} TON"
 
 msgid "Connect wallet to withdraw"
 msgstr "Подключить кошелёк для вывода"
@@ -389,6 +397,9 @@ msgstr "Недостаточно средств на сумму и комисс�
 msgid "Not enough balance."
 msgstr "Недостаточно средств."
 
+msgid "Omaha"
+msgstr "Омаха"
+
 msgid "or scan the QR code"
 msgstr "или отсканируйте QR-код"
 
@@ -400,10 +411,6 @@ msgstr "Вставить"
 
 msgid "Pause"
 msgstr "Пауза"
-
-#. js-lingui-explicit-id
-msgid "Pay {amount, number} TON with wallet"
-msgstr "Оплатить {amount, number} TON кошельком"
 
 msgid "Payment details"
 msgstr "Реквизиты оплаты"
@@ -422,6 +429,12 @@ msgstr "В обработке"
 
 msgid "Period"
 msgstr "Период"
+
+msgid "PL Omaha"
+msgstr "PL Омаха"
+
+msgid "PL Omaha · Hand at {time}"
+msgstr "PL Омаха · раздача в {time}"
 
 msgid "Play"
 msgstr "Играть"
@@ -660,10 +673,6 @@ msgstr "Победа"
 
 msgid "Withdraw"
 msgstr "Вывести"
-
-#. js-lingui-explicit-id
-msgid "Withdraw {amount, number} TON"
-msgstr "Вывести {amount, number} TON"
 
 msgid "Withdraw to"
 msgstr "Вывести на"

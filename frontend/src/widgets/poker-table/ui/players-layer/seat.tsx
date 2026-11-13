@@ -6,6 +6,7 @@ import { highlightHidden, highlightShown } from 'entities/card';
 import { gameModel } from 'entities/game';
 import { Player, PlayerStatus, type SeatDirection } from 'entities/player';
 import { bestFiveCards, madeHandCards } from 'features/equity';
+import { HOLE_CARDS } from 'shared/config/game-variant';
 import { BB_POST_MS, SB_POST_MS } from 'shared/config/table-timing';
 import { useElapsed } from 'shared/hooks/use-elapsed';
 
@@ -199,6 +200,7 @@ const SeatView = ({
         combinationSlot={<SeatCombination hand={hand} />}
         onWinningChange={onWinningChange}
         showdown={showdown}
+        holeCount={HOLE_CARDS[variant]}
       />
     </div>
   );

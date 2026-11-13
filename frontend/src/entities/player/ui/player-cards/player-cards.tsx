@@ -12,6 +12,8 @@ import styles from './player-cards.module.css';
 
 interface Props {
   cards: Player['hand'];
+  /** Card backs to deal while the cards are hidden (2 in Hold'em, 4 in Omaha). */
+  backCount?: number;
   needSound?: boolean;
   large?: boolean;
 
@@ -20,14 +22,29 @@ interface Props {
   mucking?: boolean;
 }
 
-const SECOND_CARD_DELAY_MS = 450;
+const FACE_UP_STEP_MS = 450;
 
-const BACKS_SECOND_DELAY_MS = 160;
+const BACKS_STEP_MS = 160;
 
-const FLIP_SECOND_DELAY_MS = 120;
+const FLIP_STEP_MS = 120;
+
+/** Fan angle per card: two cards lean ±4°, four spread over ±9°. */
+const fanAngles = (count: number) => {
+  if (count < 2) {
+    return [0];
+  }
+
+  const spread = count <= 2 ? 4 : 9;
+
+  return Array.from(
+    { length: count },
+    (_, index) => -spread + (index * 2 * spread) / (count - 1)
+  );
+};
 
 export const PlayerCards = ({
   cards,
+  backCount = 2,
   needSound = false,
   large = false,
   dealDelayMs = 0,
@@ -35,45 +52,44 @@ export const PlayerCards = ({
 }: Props) => {
   const { play: playCardSound, ready } = useSound(Sound.CARD_REVEAL);
 
-  const [showFirst, setShowFirst] = React.useState(false);
-  const [showSecond, setShowSecond] = React.useState(false);
+  // How many slots (from the left) are dealt / turned so far.
+  const [shown, setShown] = React.useState(0);
 
   const cardsKey = getHandKey(cards) ?? '';
 
   const faceUp = Boolean(cards && cards.length >= 2);
+  const count = faceUp && cards ? cards.length : backCount;
 
   const flip = faceUp && !large;
 
   const runDeal = React.useEffectEvent(() => {
-    setShowFirst(false);
-    setShowSecond(false);
+    setShown(0);
 
-    const revealFirst = () => setShowFirst(true);
-    const revealSecond = () => setShowSecond(true);
     const timers: number[] = [];
     const later = (callback: () => void, ms: number) =>
       timers.push(window.setTimeout(callback, ms));
+    const reveal = (slot: number) => () => setShown(slot + 1);
 
-    if (!cardsKey) {
-      later(revealFirst, dealDelayMs + 16);
-      later(revealSecond, dealDelayMs + BACKS_SECOND_DELAY_MS);
-    } else if (flip) {
-      later(revealFirst, 16);
-      later(revealSecond, FLIP_SECOND_DELAY_MS);
-    } else {
-      if (needSound) {
-        playCardSound({ onStart: revealFirst });
+    for (let slot = 0; slot < count; slot += 1) {
+      if (!cardsKey) {
+        later(reveal(slot), dealDelayMs + 16 + slot * BACKS_STEP_MS);
+      } else if (flip) {
+        later(reveal(slot), 16 + slot * FLIP_STEP_MS);
       } else {
-        revealFirst();
-      }
+        const show = () => {
+          if (needSound) {
+            playCardSound({ onStart: reveal(slot) });
+          } else {
+            reveal(slot)();
+          }
+        };
 
-      later(() => {
-        if (needSound) {
-          playCardSound({ onStart: revealSecond });
+        if (slot === 0) {
+          show();
         } else {
-          revealSecond();
+          later(show, slot * FACE_UP_STEP_MS);
         }
-      }, SECOND_CARD_DELAY_MS);
+      }
     }
 
     return () => timers.forEach(timer => window.clearTimeout(timer));
@@ -85,27 +101,34 @@ export const PlayerCards = ({
     }
 
     return runDeal();
-  }, [cardsKey, needSound, ready]);
+  }, [cardsKey, count, needSound, ready]);
 
-  const leftCard = faceUp && cards ? cards[0] : null;
-  const rightCard = faceUp && cards ? cards[1] : null;
+  const angles = fanAngles(count);
 
   return (
     <div
       className={cn(
         styles.cards,
+        count > 2 && styles.wide,
         large && styles.large,
         flip && styles.flip,
         mucking && styles.mucking
       )}
     >
-      <div className={cn(styles.cardSlot, showFirst && styles.visible)}>
-        <Card card={leftCard} flat />
-      </div>
-
-      <div className={cn(styles.cardSlot, showSecond && styles.visible)}>
-        <Card card={rightCard} flat />
-      </div>
+      {angles.map((angle, slot) => (
+        <div
+          key={slot}
+          className={cn(styles.cardSlot, slot < shown && styles.visible)}
+          style={
+            {
+              '--angle': `${angle}deg`,
+              '--slot-delay': `${slot * 90}ms`,
+            } as React.CSSProperties
+          }
+        >
+          <Card card={faceUp && cards ? (cards[slot] ?? null) : null} flat />
+        </div>
+      ))}
     </div>
   );
 };
