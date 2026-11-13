@@ -92,6 +92,7 @@ const SeatView = ({
     fn: (cards, [viewer]) => (viewer ? cards : NO_CARDS),
   });
   const preflop = useStoreMap(gameModel.$round, round => round === 'PREFLOP');
+  const variant = useUnit(gameModel.$gameVariant);
   const [handNumber, handStartedAt, dealerSeat, turnTiming, showdown] = useUnit(
     [
       gameModel.$handNumber,
@@ -117,7 +118,7 @@ const SeatView = ({
     const owner = `live-${seat}`;
     const made =
       liveHand && !folded && community.length >= 3
-        ? madeHandCards(liveHand, community)
+        ? madeHandCards(liveHand, community, variant)
         : null;
 
     if (made) {
@@ -125,7 +126,7 @@ const SeatView = ({
     } else {
       highlightHidden(owner);
     }
-  }, [seat, liveHand, folded, community]);
+  }, [seat, liveHand, folded, community, variant]);
 
   React.useEffect(
     () => () => {
@@ -155,7 +156,7 @@ const SeatView = ({
   const onWinningChange = (winning: boolean) => {
     const best =
       winning && hand
-        ? bestFiveCards(hand, gameModel.$community.getState())
+        ? bestFiveCards(hand, gameModel.$community.getState(), variant)
         : null;
 
     if (best) {

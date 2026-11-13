@@ -2,9 +2,11 @@ import type { MessageDescriptor } from '@lingui/core';
 import { msg } from '@lingui/core/macro';
 
 import type { CardType as Card } from 'entities/card';
+import type { GameVariant } from 'shared/config/game-variant';
 
 import { cardToInt } from './card-int';
 import { evaluateHand, HandCategory } from './evaluator';
+import { bestOmahaHand } from './omaha';
 
 const CATEGORY_LABELS: MessageDescriptor[] = [
   msg`High card`,
@@ -20,17 +22,33 @@ const CATEGORY_LABELS: MessageDescriptor[] = [
 
 const CATEGORY_SHIFT = 20;
 
-export const handCategoryLabel = (
+/** Score of the best hand by the variant's rules, or null if too few cards. */
+const bestScore = (
   hole: readonly Card[],
-  board: readonly Card[]
-): MessageDescriptor | null => {
-  if (hole.length < 2 || hole.length + board.length < 5) {
-    return null;
+  board: readonly Card[],
+  variant: GameVariant
+) => {
+  if (variant === 'plo') {
+    return (
+      bestOmahaHand(hole.map(cardToInt), board.map(cardToInt))?.score ?? null
+    );
   }
 
-  const score = evaluateHand([...hole, ...board].map(cardToInt));
+  return hole.length >= 2 && hole.length + board.length >= 5
+    ? evaluateHand([...hole, ...board].map(cardToInt))
+    : null;
+};
 
-  return CATEGORY_LABELS[score >> CATEGORY_SHIFT] ?? null;
+export const handCategoryLabel = (
+  hole: readonly Card[],
+  board: readonly Card[],
+  variant: GameVariant = 'nlh'
+): MessageDescriptor | null => {
+  const score = bestScore(hole, board, variant);
+
+  return score === null
+    ? null
+    : (CATEGORY_LABELS[score >> CATEGORY_SHIFT] ?? null);
 };
 
 // How many cards of each scored rank slot make up the five, per category.
@@ -65,8 +83,20 @@ const flushSuit = (ints: readonly number[]) => {
  */
 export const bestFiveCards = (
   hole: readonly Card[],
-  board: readonly Card[]
+  board: readonly Card[],
+  variant: GameVariant = 'nlh'
 ): Card[] | null => {
+  if (variant === 'plo') {
+    const best = bestOmahaHand(hole.map(cardToInt), board.map(cardToInt));
+
+    return best
+      ? [
+          ...best.hole.map(index => hole[index]),
+          ...best.board.map(index => board[index]),
+        ]
+      : null;
+  }
+
   const cards = [...hole, ...board];
 
   if (hole.length < 2 || cards.length < 5) {
@@ -128,9 +158,10 @@ const WHOLE_HAND_CATEGORIES = new Set<number>([
 
 export const madeHandCards = (
   hole: readonly Card[],
-  board: readonly Card[]
+  board: readonly Card[],
+  variant: GameVariant = 'nlh'
 ): Card[] | null => {
-  const best = bestFiveCards(hole, board);
+  const best = bestFiveCards(hole, board, variant);
 
   if (!best) {
     return null;
