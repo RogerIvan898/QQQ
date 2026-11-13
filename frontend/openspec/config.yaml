@@ -4,7 +4,7 @@ context: |
   Product: GRAM Poker, a Telegram Mini App (Texas Hold'em, real money in TON).
   This repo folder is the web client only. Backend game server is C++ (../backend,
   WebSocket, Boost), chain/payments service is Go (../chain-service). Write all
-  artifacts in English; UI strings are translated (en, ru).
+  artifacts in Russian; UI strings are translated (en, ru).
 
   Architecture (Feature-Sliced Design, imports only downward):
     app -> pages -> widgets -> features -> entities -> shared
