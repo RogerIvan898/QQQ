@@ -4,6 +4,7 @@ import type {
   PlayerType as Player,
   PlayerStatusType,
 } from 'entities/player';
+import type { GameVariant } from 'shared/config/game-variant';
 
 import { CLIENT_COMMANDS, type SERVER_EVENTS } from './constants';
 
@@ -40,6 +41,8 @@ export interface HandStartedEvent {
     smallBlindSeat: number;
     bigBlindSeat: number;
     initialBets: Record<number, number>;
+    /** Sent by servers that know it; overrides the joined room's variant. */
+    game?: GameVariant;
   };
 }
 
@@ -119,7 +122,7 @@ export interface PlayerSeatedEvent {
 interface YourCardsEvent {
   type: typeof SERVER_EVENTS.YOUR_CARDS;
   payload: {
-    cards: [string, string];
+    cards: string[];
   };
 }
 
@@ -179,4 +182,5 @@ export interface ClientGameEvent {
 
 export interface GameConnectParams {
   wsUrl: string;
+  game?: GameVariant;
 }

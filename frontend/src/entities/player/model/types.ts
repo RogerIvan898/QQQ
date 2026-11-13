@@ -24,7 +24,7 @@ export interface Player {
   stack: number;
   seat: number;
   status: PlayerStatusType;
-  hand: [Card, Card] | null;
+  hand: readonly Card[] | null;
   committed: number;
   lastAction: PlayerActionType | null;
   lastActionAmount: number | null;

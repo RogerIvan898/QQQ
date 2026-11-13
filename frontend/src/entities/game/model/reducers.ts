@@ -212,7 +212,7 @@ const reduceShowdown = (
     if (revealedPlayers[seat]) {
       revealedPlayers[seat] = {
         ...revealedPlayers[seat],
-        hand: cards.map(card => parseCard(card)) as [Card, Card],
+        hand: cards.map(card => parseCard(card)),
       };
     }
   });

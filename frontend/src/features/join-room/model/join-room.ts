@@ -1,7 +1,7 @@
 import { createEffect, createStore, sample } from 'effector';
 
 import { gameModel } from 'entities/game';
-import { roomApi } from 'entities/room';
+import { $rooms, findRoom, roomApi } from 'entities/room';
 
 const isAllowedSocketUrl = (value: string) => {
   try {
@@ -39,6 +39,10 @@ export const $joinFailure = createStore<{
 
 sample({
   clock: joinRoomFx.doneData,
-  fn: ({ wsUrl }) => ({ wsUrl }),
+  source: $rooms,
+  fn: (rooms, { roomId, wsUrl }) => ({
+    wsUrl,
+    game: findRoom(rooms, roomId)?.game,
+  }),
   target: gameModel.connectGame,
 });

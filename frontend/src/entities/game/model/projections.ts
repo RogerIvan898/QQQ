@@ -9,7 +9,7 @@ export const reduceMyCards = (
   event: ServerGameEvent
 ): Player['hand'] => {
   if (event.type === SERVER_EVENTS.YOUR_CARDS) {
-    return event.payload.cards.map(card => parseCard(card)) as [Card, Card];
+    return event.payload.cards.map(card => parseCard(card));
   }
 
   if (
@@ -41,21 +41,14 @@ export const reduceAllowedActions = (
 };
 
 export const reduceDebugHoles = (
-  holes: Record<number, [Card, Card]>,
+  holes: Record<number, readonly Card[]>,
   event: ServerGameEvent
-): Record<number, [Card, Card]> => {
+): Record<number, readonly Card[]> => {
   if (event.type === SERVER_EVENTS.DEBUG_HOLES) {
-    return Object.entries(event.payload.hands).reduce(
-      (hands, [seat, cards]) => {
-        const [first, second] = cards;
-
-        if (first && second) {
-          hands[Number(seat)] = [parseCard(first), parseCard(second)];
-        }
-
-        return hands;
-      },
-      {} as Record<number, [Card, Card]>
+    return Object.fromEntries(
+      Object.entries(event.payload.hands)
+        .filter(([, cards]) => cards.length >= 2)
+        .map(([seat, cards]) => [Number(seat), cards.map(parseCard)])
     );
   }
 

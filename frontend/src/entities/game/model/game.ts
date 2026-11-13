@@ -8,6 +8,10 @@ import {
 
 import type { CardType as Card } from 'entities/card';
 import type { PlayerType as Player } from 'entities/player';
+import {
+  DEFAULT_GAME_VARIANT,
+  type GameVariant,
+} from 'shared/config/game-variant';
 import { DEAL_START_MS, DEALER_START_MS } from 'shared/config/table-timing';
 import { displayBigBlindChanged } from 'shared/lib/display-settings';
 
@@ -106,6 +110,15 @@ export const $isGameLoading = combine(
   (opening, connecting, ready) => opening || (connecting && !ready)
 );
 
+export const $gameVariant = createStore<GameVariant>(DEFAULT_GAME_VARIANT)
+  .on(connectGame, (_, { game }) => game ?? DEFAULT_GAME_VARIANT)
+  .on(incomingEvent, (variant, event) =>
+    event.type === SERVER_EVENTS.HAND_STARTED && event.payload.game
+      ? event.payload.game
+      : variant
+  )
+  .reset(disconnectGame);
+
 export const $connectionLost = createStore(false)
   .on(connectionLost, (_, lost) => lost)
   .reset(disconnectGame);
@@ -163,7 +176,7 @@ export const $collectingBets = createStore(false)
   .on(collectingBets, (_, collecting) => collecting)
   .reset(disconnectGame);
 
-export const $debugHoles = createStore<Record<number, [Card, Card]>>({})
+export const $debugHoles = createStore<Record<number, readonly Card[]>>({})
   .on(incomingEvent, reduceDebugHoles)
   .reset(disconnectGame);
 

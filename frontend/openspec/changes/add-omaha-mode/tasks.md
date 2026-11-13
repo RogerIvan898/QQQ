@@ -2,10 +2,10 @@
 
 ## 1. Модель варианта и типы контракта
 
-- [ ] 1.1 Расширить `RoomGame` до `'nlh' | 'plo'` в `entities/room`, отсутствующий `game` считать `nlh`, добавить метку «PL Omaha» в `GAME_LABELS`
-- [ ] 1.2 Перевести типы карманных карт на `readonly Card[]`: `Player['hand']`, `YOUR_CARDS.cards`, вскрытия на шоудауне, `$debugHoles`, приведения в projections и reducers
-- [ ] 1.3 Добавить `$gameVariant` в `entities/game`: задаётся из комнаты при входе (`game` пробрасывается через вход → параметры `connectGame`), переопределяется необязательным `HAND_STARTED.payload.game`, сбрасывается при отключении
-- [ ] 1.4 Проверка: `tsc -b`, `eslint`, `bun run test` проходят, поведение NLH не изменилось
+- [x] 1.1 Расширить `RoomGame` до `'nlh' | 'plo'` в `entities/room`, отсутствующий `game` считать `nlh`, добавить метку «PL Omaha» в `GAME_LABELS`
+- [x] 1.2 Перевести типы карманных карт на `readonly Card[]`: `Player['hand']`, `YOUR_CARDS.cards`, вскрытия на шоудауне, `$debugHoles`, приведения в projections и reducers
+- [x] 1.3 Добавить `$gameVariant` в `entities/game`: задаётся из комнаты при входе (`game` пробрасывается через вход → параметры `connectGame`), переопределяется необязательным `HAND_STARTED.payload.game`, сбрасывается при отключении
+- [x] 1.4 Проверка: `tsc -b`, `eslint`, `bun run test` проходят, поведение NLH не изменилось
 
 ## 2. Оценка рук
 

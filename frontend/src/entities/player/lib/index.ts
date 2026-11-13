@@ -105,5 +105,5 @@ export const findPlayerById = (
 
 export const getHandKey = (hand: Player['hand']) =>
   hand && hand.length >= 2
-    ? `${hand[0].rank}-${hand[0].suit}|${hand[1].rank}-${hand[1].suit}`
+    ? hand.map(card => `${card.rank}-${card.suit}`).join('|')
     : null;

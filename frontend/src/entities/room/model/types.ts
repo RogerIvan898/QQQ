@@ -1,6 +1,8 @@
+import type { GameVariant } from 'shared/config/game-variant';
+
 export type RoomMode = 'cash' | 'heads-up';
 
-export type RoomGame = 'nlh';
+export type RoomGame = GameVariant;
 
 export interface RoomCardInfo {
   name: string;

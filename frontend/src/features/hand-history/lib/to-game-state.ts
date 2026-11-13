@@ -21,10 +21,7 @@ export const toGameState = (
       stack: seat.stack,
       seat: seat.seat,
       status: seat.folded ? PlayerStatus.FOLDED : PlayerStatus.IN_GAME,
-      hand:
-        seat.cards && seat.cards.length === 2
-          ? [seat.cards[0], seat.cards[1]]
-          : null,
+      hand: seat.cards && seat.cards.length >= 2 ? seat.cards : null,
       committed: seat.bet,
       lastAction:
         seat.lastAction === 'SB' || seat.lastAction === 'BB'

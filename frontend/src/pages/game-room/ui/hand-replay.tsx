@@ -100,9 +100,7 @@ export const HandReplay = ({ hand, onClose, suspended = false }: Props) => {
         [gameModel.$gameState, toGameState(hand, state, viewerId)],
         [
           gameModel.$myCards,
-          me?.cards && me.cards.length === 2
-            ? [me.cards[0], me.cards[1]]
-            : null,
+          me?.cards && me.cards.length >= 2 ? me.cards : null,
         ],
         [gameModel.$debugHoles, {}],
         [gameModel.$collectingBets, false],

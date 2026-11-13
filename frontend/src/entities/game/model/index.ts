@@ -9,6 +9,7 @@ export {
   $dealerSeat,
   $debugHoles,
   $gameState,
+  $gameVariant,
   $isGameLoading,
   $myAllowedActions,
   $myCards,

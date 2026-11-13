@@ -17,6 +17,7 @@ import styles from './room-card.module.css';
 
 const GAME_LABELS = {
   nlh: msg`NL Hold'em`,
+  plo: msg`PL Omaha`,
 } as const satisfies Record<RoomGame, ReturnType<typeof msg>>;
 
 const CURRENCY = 'TON';
