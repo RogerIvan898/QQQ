@@ -16,7 +16,7 @@ export interface EquityResult {
   exact: boolean;
 }
 
-const cardsRemaining = (dead: Set<number>) => {
+export const cardsRemaining = (dead: Set<number>) => {
   const deck: number[] = [];
 
   for (let card = 0; card < 52; card += 1) {
@@ -38,7 +38,7 @@ export const choose = (n: number, k: number) => {
   return Math.round(result);
 };
 
-const seedFor = (hands: number[][], board: number[]) => {
+export const seedFor = (hands: number[][], board: number[]) => {
   let hash = 0x811c9dc5;
 
   for (const card of [...hands.flat(), 0xff, ...board]) {
@@ -49,7 +49,7 @@ const seedFor = (hands: number[][], board: number[]) => {
   return hash >>> 0;
 };
 
-const prng = (seed: number) => () => {
+export const prng = (seed: number) => () => {
   seed |= 0;
   seed = (seed + 0x6d2b79f5) | 0;
   let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);

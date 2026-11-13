@@ -7,6 +7,7 @@ import { HAND_END_MS } from 'shared/config/table-timing';
 import { cardToInt as toInt } from '../lib/card-int';
 import { computeEquity } from '../lib/equity';
 import type { EquityRequest, EquityResponse } from '../lib/equity.worker';
+import { computeOmahaEquity } from '../lib/omaha-equity';
 
 export interface EquityState {
   bySeat: Record<number, number>;
@@ -151,6 +152,7 @@ const recalculate = () => {
     id: requestId,
     hands: contenders.map(player => (player.hand ?? []).map(toInt)),
     board: state.community.map(toInt),
+    variant: gameModel.$gameVariant.getState(),
   };
   dropBusyWorker();
 
@@ -160,7 +162,10 @@ const recalculate = () => {
     busyId = request.id;
     target.postMessage(request);
   } else {
-    const result = computeEquity(request.hands, request.board);
+    const result =
+      request.variant === 'plo'
+        ? computeOmahaEquity(request.hands, request.board)
+        : computeEquity(request.hands, request.board);
 
     publish(
       {

@@ -1,9 +1,13 @@
+import type { GameVariant } from 'shared/config/game-variant';
+
 import { computeEquity } from './equity';
+import { computeOmahaEquity } from './omaha-equity';
 
 export interface EquityRequest {
   id: number;
   hands: number[][];
   board: number[];
+  variant: GameVariant;
 }
 
 export interface EquityResponse {
@@ -18,9 +22,12 @@ const now = () => performance.timeOrigin + performance.now();
 
 self.onmessage = (event: MessageEvent<EquityRequest>) => {
   const received = now();
-  const { id, hands, board } = event.data;
+  const { id, hands, board, variant } = event.data;
   const start = now();
-  const result = computeEquity(hands, board);
+  const result =
+    variant === 'plo'
+      ? computeOmahaEquity(hands, board)
+      : computeEquity(hands, board);
 
   self.postMessage({
     id,

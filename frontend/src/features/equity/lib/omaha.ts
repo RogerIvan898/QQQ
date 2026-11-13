@@ -48,3 +48,41 @@ export const bestOmahaHand = (
 
   return best;
 };
+
+const scratch = [0, 0, 0, 0, 0];
+
+/**
+ * Score of the best Omaha hand on a full five-card board, without allocating
+ * — the equity loop calls this for every player on every runout.
+ */
+export const omahaScore = (
+  hole: ArrayLike<number>,
+  board: ArrayLike<number>
+) => {
+  let best = -1;
+
+  for (let i = 0; i < hole.length; i += 1) {
+    for (let j = i + 1; j < hole.length; j += 1) {
+      scratch[0] = hole[i];
+      scratch[1] = hole[j];
+
+      for (let a = 0; a < board.length; a += 1) {
+        for (let b = a + 1; b < board.length; b += 1) {
+          for (let c = b + 1; c < board.length; c += 1) {
+            scratch[2] = board[a];
+            scratch[3] = board[b];
+            scratch[4] = board[c];
+
+            const score = evaluateHand(scratch);
+
+            if (score > best) {
+              best = score;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return best;
+};
