@@ -1,10 +1,8 @@
-import type React from 'react';
-
 import { useLingui } from '@lingui/react/macro';
 import { Coins, Swords } from 'lucide-react';
 
 import type { GameVariant } from 'shared/config/game-variant';
-import { cn } from 'shared/utils/cn';
+import { ChipGroup } from 'shared/ui/chip-group';
 
 import { ROOM_FILTERS, roomFilterLabel, type RoomFilter } from '../model';
 
@@ -24,39 +22,30 @@ const GAME_VARIANTS: readonly GameVariant[] = ['nlh', 'plo'];
 
 export const Filters = ({ active, onChange }: FiltersProps) => {
   const { i18n, t } = useLingui();
+  const items = ROOM_FILTERS.map(filter => {
+    const Icon = filter === 'all' ? null : FILTER_ICONS[filter];
+
+    return {
+      id: filter,
+      label: (
+        <>
+          {Icon ? <Icon size={15} strokeWidth={2.25} /> : null}
+          {i18n._(roomFilterLabel(filter))}
+        </>
+      ),
+    };
+  });
 
   return (
     <div className={styles.formatControl}>
       <span className={styles.filterLabel}>{t`Format`}</span>
-      <div
-        className={styles.tabsContainer}
-        style={
-          {
-            '--tab-index': Math.max(0, ROOM_FILTERS.indexOf(active)),
-            '--tab-count': ROOM_FILTERS.length,
-          } as React.CSSProperties
-        }
-      >
-        <span className={styles.tabIndicator} aria-hidden="true" />
-        {ROOM_FILTERS.map(filter => {
-          const Icon = filter === 'all' ? null : FILTER_ICONS[filter];
-
-          return (
-            <button
-              key={filter}
-              type="button"
-              onClick={() => onChange(filter)}
-              className={cn(
-                styles.tabItem,
-                active === filter && styles.activeTab
-              )}
-            >
-              {Icon ? <Icon size={15} strokeWidth={2.25} /> : null}
-              {i18n._(roomFilterLabel(filter))}
-            </button>
-          );
-        })}
-      </div>
+      <ChipGroup
+        items={items}
+        value={active}
+        onChange={onChange}
+        label={t`Format`}
+        className={styles.chipGroup}
+      />
     </div>
   );
 };
@@ -71,29 +60,21 @@ export const GameVariantToggle = ({
   onChange,
 }: GameVariantToggleProps) => {
   const { t } = useLingui();
+  const items = GAME_VARIANTS.map(variant => ({
+    id: variant,
+    label: variant === 'nlh' ? t`NL Hold'em` : t`PL Omaha`,
+  }));
 
   return (
     <div className={styles.variantControl}>
-      <div
-        className={styles.variantToggle}
-        role="group"
-        aria-label={t`Game Type`}
-      >
-        {GAME_VARIANTS.map(variant => (
-          <button
-            key={variant}
-            type="button"
-            aria-pressed={active === variant}
-            className={cn(
-              styles.variantButton,
-              active === variant && styles.activeVariant
-            )}
-            onClick={() => onChange(variant)}
-          >
-            {variant === 'nlh' ? t`NL Hold'em` : t`PL Omaha`}
-          </button>
-        ))}
-      </div>
+      <span className={styles.filterLabel}>{t`Game Type`}</span>
+      <ChipGroup
+        items={items}
+        value={active}
+        onChange={onChange}
+        label={t`Game Type`}
+        className={styles.chipGroup}
+      />
     </div>
   );
 };
