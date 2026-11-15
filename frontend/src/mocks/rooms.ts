@@ -22,6 +22,8 @@ const ROOMS: Record<string, MockRoomConfig> = {
   '8': { id: '8', smallBlind: 10, bigBlind: 20, botCount: 1 },
   '9': { id: '9', smallBlind: 500, bigBlind: 1000, botCount: 1 },
   '10': { id: '10', smallBlind: 1, bigBlind: 2, botCount: 3, game: 'plo' },
+  '11': { id: '11', smallBlind: 5, bigBlind: 10, botCount: 4, game: 'plo' },
+  '12': { id: '12', smallBlind: 25, bigBlind: 50, botCount: 5, game: 'plo' },
 
   allin: {
     id: 'allin',
