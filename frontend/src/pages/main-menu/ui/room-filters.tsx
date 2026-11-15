@@ -23,12 +23,13 @@ const FILTER_ICONS = {
 const GAME_VARIANTS: readonly GameVariant[] = ['nlh', 'plo'];
 
 export const Filters = ({ active, onChange }: FiltersProps) => {
-  const { i18n } = useLingui();
+  const { i18n, t } = useLingui();
 
   return (
-    <div className={styles.tabsContainer}>
+    <div className={styles.formatControl}>
+      <span className={styles.filterLabel}>{t`Format`}</span>
       <div
-        className={styles.tabsScroll}
+        className={styles.tabsContainer}
         style={
           {
             '--tab-index': Math.max(0, ROOM_FILTERS.indexOf(active)),

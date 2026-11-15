@@ -49,32 +49,38 @@
 }
 
 .tabsContainer {
-  flex: 0 0 auto;
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 .filterControls {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
-  overflow-x: auto;
-  scrollbar-width: none;
   padding-bottom: 12px;
 }
 
-.filterControls::-webkit-scrollbar {
-  display: none;
+.formatControl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .variantControl {
   display: flex;
   align-items: center;
-  flex: 0 0 auto;
-  padding-right: 10px;
-  border-right: 1px solid var(--color-border);
 }
 
 .variantToggle {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
   padding: 3px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -82,7 +88,7 @@
 }
 
 .variantButton {
-  height: 34px;
+  height: 40px;
   padding: 0 10px;
   border: none;
   border-radius: calc(var(--radius-md) - 3px);
@@ -114,13 +120,13 @@
   color: var(--color-text-on-primary);
 }
 
-.tabsScroll {
-  position: relative;
-  display: flex;
-  padding: 4px;
-  border-radius: var(--radius-md);
-  background: var(--color-bg-elevated);
-  box-shadow: inset 0 0 0 1px var(--color-border);
+.filterLabel {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .tabItem {
@@ -131,7 +137,7 @@
   justify-content: center;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  height: 34px;
   padding: 0 8px;
   background: transparent;
   border: none;
@@ -161,10 +167,10 @@
 
 .tabIndicator {
   position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: calc(4px + (100% - 8px) * var(--tab-index) / var(--tab-count));
-  width: calc((100% - 8px) / var(--tab-count));
+  top: 3px;
+  bottom: 3px;
+  left: calc(3px + (100% - 6px) * var(--tab-index) / var(--tab-count));
+  width: calc((100% - 6px) / var(--tab-count));
   border-radius: var(--radius-sm);
   background: linear-gradient(
     180deg,
@@ -295,21 +301,16 @@
   }
 
   .filterControls {
-    flex: 0 1 500px;
-    width: min(500px, 100%);
-    padding-bottom: 12px;
+    flex: 0 1 400px;
+    width: min(400px, 100%);
   }
 
   .tabsContainer {
-    padding: 0;
+    flex: 1;
   }
 
   .listBar .sectionHeader {
     padding-bottom: 18px;
-  }
-
-  .tabsScroll {
-    min-width: 252px;
   }
 
   .roomGrid {
