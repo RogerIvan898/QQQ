@@ -3,16 +3,19 @@ import { useUnit } from 'effector-react';
 
 import { $rooms, $roomsStatus, RoomCard, roomsRequested } from 'entities/room';
 import { JoinRoomButton } from 'features/join-room';
+import type { GameVariant } from 'shared/config/game-variant';
 import { Preloader } from 'shared/ui/preloader';
 
 import { filterRooms, type RoomFilter } from '../model';
 
 import styles from './main-menu.module.css';
-import { Filters } from './room-filters';
+import { Filters, GameVariantToggle } from './room-filters';
 
 interface Props {
   filter: RoomFilter;
   onFilterChange: (filter: RoomFilter) => void;
+  gameVariant: GameVariant;
+  onGameVariantChange: (variant: GameVariant) => void;
   balance: number | null;
   onShortfall: (missing: number) => void;
 }
@@ -20,6 +23,8 @@ interface Props {
 export const RoomList = ({
   filter,
   onFilterChange,
+  gameVariant,
+  onGameVariantChange,
   balance,
   onShortfall,
 }: Props) => {
@@ -29,7 +34,7 @@ export const RoomList = ({
     $roomsStatus,
     roomsRequested,
   ]);
-  const visibleRooms = filterRooms(rooms, filter);
+  const visibleRooms = filterRooms(rooms, filter, gameVariant);
 
   return (
     <>
@@ -40,7 +45,13 @@ export const RoomList = ({
             <span className={styles.sectionCount}>{visibleRooms.length}</span>
           ) : null}
         </div>
-        <Filters active={filter} onChange={onFilterChange} />
+        <div className={styles.filterControls}>
+          <GameVariantToggle
+            active={gameVariant}
+            onChange={onGameVariantChange}
+          />
+          <Filters active={filter} onChange={onFilterChange} />
+        </div>
       </div>
 
       {status === 'failed' ? (

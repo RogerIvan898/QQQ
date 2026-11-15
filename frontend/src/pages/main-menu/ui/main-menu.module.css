@@ -49,7 +49,70 @@
 }
 
 .tabsContainer {
-  padding: 10px 0 12px;
+  padding-top: 10px;
+}
+
+.filterControls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+
+.variantControl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.variantLabel {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.variantToggle {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+}
+
+.variantButton {
+  height: 30px;
+  padding: 0 10px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 3px);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+
+.variantButton:hover {
+  color: var(--color-text);
+}
+
+.variantButton:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.activeVariant,
+.activeVariant:hover {
+  background: var(--color-primary);
+  box-shadow: 0 3px 8px var(--color-primary-muted);
+  color: var(--color-text-on-primary);
 }
 
 .tabsScroll {
@@ -234,6 +297,11 @@
 
   .tabsContainer {
     flex: 0 1 420px;
+    padding: 0;
+  }
+
+  .filterControls {
+    align-items: flex-end;
     padding-bottom: 12px;
   }
 

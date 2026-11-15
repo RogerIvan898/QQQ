@@ -1,10 +1,14 @@
 import { msg } from '@lingui/core/macro';
 
 import type { RoomListItem, RoomMode } from 'entities/room';
+import {
+  DEFAULT_GAME_VARIANT,
+  type GameVariant,
+} from 'shared/config/game-variant';
 
-export type RoomFilter = 'all' | RoomMode | 'plo';
+export type RoomFilter = 'all' | RoomMode;
 
-export const ROOM_FILTERS: RoomFilter[] = ['all', 'cash', 'heads-up', 'plo'];
+export const ROOM_FILTERS: RoomFilter[] = ['all', 'cash', 'heads-up'];
 
 export const roomFilterLabel = (filter: RoomFilter) => {
   switch (filter) {
@@ -14,17 +18,16 @@ export const roomFilterLabel = (filter: RoomFilter) => {
       return msg`Cash`;
     case 'heads-up':
       return msg`Heads-Up`;
-    case 'plo':
-      return msg`Omaha`;
   }
 };
 
 export const filterRooms = (
   rooms: readonly RoomListItem[],
-  filter: RoomFilter
+  filter: RoomFilter,
+  game: GameVariant
 ) =>
-  filter === 'all'
-    ? rooms
-    : filter === 'plo'
-      ? rooms.filter(room => room.game === 'plo')
-      : rooms.filter(room => room.mode === filter);
+  rooms.filter(
+    room =>
+      (filter === 'all' || room.mode === filter) &&
+      (room.game ?? DEFAULT_GAME_VARIANT) === game
+  );

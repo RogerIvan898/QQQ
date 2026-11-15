@@ -111,6 +111,22 @@
   position: relative;
 }
 
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--color-warning) 50%, transparent) 0%,
+    color-mix(in srgb, var(--color-warning) 20%, transparent) 54%,
+    transparent 74%
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .play::after {
     display: none;
@@ -146,6 +162,10 @@
     0 0 22px color-mix(in srgb, var(--color-warning) 55%, transparent);
 }
 
+.highlighted::before {
+  animation: combinationBreathe 700ms var(--ease-out) infinite alternate;
+}
+
 .dimmed {
   filter: brightness(0.4) saturate(0.45);
 }
@@ -153,6 +173,12 @@
 @media (prefers-reduced-motion: reduce) {
   .highlighted {
     translate: none;
+  }
+
+  .highlighted::before,
+  .live::before {
+    animation: none;
+    opacity: 0.48;
   }
 }
 
@@ -164,4 +190,22 @@
     0 0 0 4px color-mix(in srgb, var(--color-warning) 90%, transparent),
     0 8px 20px color-mix(in srgb, var(--color-warning) 50%, transparent),
     0 0 16px color-mix(in srgb, var(--color-warning) 45%, transparent);
+}
+
+.live::before {
+  animation: combinationBreathe 700ms var(--ease-out) infinite alternate;
+  animation-delay: -350ms;
+}
+
+@keyframes combinationBreathe {
+  from {
+    opacity: 0.2;
+    box-shadow: inset 0 0 4px
+      color-mix(in srgb, var(--color-warning) 35%, transparent);
+  }
+  to {
+    opacity: 0.82;
+    box-shadow: inset 0 0 20px
+      color-mix(in srgb, var(--color-warning) 85%, transparent);
+  }
 }

@@ -7,6 +7,10 @@ import { sessionModel } from 'entities/session';
 import { walletModel } from 'entities/wallet';
 import { JoinRoomButton } from 'features/join-room';
 import { $mockServerEnabled } from 'features/mock-server/model';
+import {
+  DEFAULT_GAME_VARIANT,
+  type GameVariant,
+} from 'shared/config/game-variant';
 import { MOCK_SERVER_AVAILABLE } from 'shared/config/mock';
 import {
   MENU_HEADER_BG,
@@ -40,6 +44,8 @@ const DevServerSwitch = MOCK_SERVER_AVAILABLE
 export const MenuPage = () => {
   const mockEnabled = useUnit($mockServerEnabled);
   const [roomFilter, setRoomFilter] = React.useState<RoomFilter>('all');
+  const [gameVariant, setGameVariant] =
+    React.useState<GameVariant>(DEFAULT_GAME_VARIANT);
   const [isDepositOpen, setIsDepositOpen] = React.useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false);
   const [isWalletOpen, setIsWalletOpen] = React.useState(false);
@@ -111,6 +117,8 @@ export const MenuPage = () => {
               <RoomList
                 filter={roomFilter}
                 onFilterChange={setRoomFilter}
+                gameVariant={gameVariant}
+                onGameVariantChange={setGameVariant}
                 balance={balance}
                 onShortfall={shortfall.show}
               />

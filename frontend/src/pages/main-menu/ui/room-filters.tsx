@@ -1,8 +1,9 @@
 import type React from 'react';
 
 import { useLingui } from '@lingui/react/macro';
-import { Coins, Layers, Swords } from 'lucide-react';
+import { Coins, Swords } from 'lucide-react';
 
+import type { GameVariant } from 'shared/config/game-variant';
 import { cn } from 'shared/utils/cn';
 
 import { ROOM_FILTERS, roomFilterLabel, type RoomFilter } from '../model';
@@ -17,8 +18,9 @@ interface FiltersProps {
 const FILTER_ICONS = {
   cash: Coins,
   'heads-up': Swords,
-  plo: Layers,
 } as const;
+
+const GAME_VARIANTS: readonly GameVariant[] = ['nlh', 'plo'];
 
 export const Filters = ({ active, onChange }: FiltersProps) => {
   const { i18n } = useLingui();
@@ -53,6 +55,44 @@ export const Filters = ({ active, onChange }: FiltersProps) => {
             </button>
           );
         })}
+      </div>
+    </div>
+  );
+};
+
+interface GameVariantToggleProps {
+  active: GameVariant;
+  onChange: (variant: GameVariant) => void;
+}
+
+export const GameVariantToggle = ({
+  active,
+  onChange,
+}: GameVariantToggleProps) => {
+  const { t } = useLingui();
+
+  return (
+    <div className={styles.variantControl}>
+      <span className={styles.variantLabel}>{t`Game Type`}</span>
+      <div
+        className={styles.variantToggle}
+        role="group"
+        aria-label={t`Game Type`}
+      >
+        {GAME_VARIANTS.map(variant => (
+          <button
+            key={variant}
+            type="button"
+            aria-pressed={active === variant}
+            className={cn(
+              styles.variantButton,
+              active === variant && styles.activeVariant
+            )}
+            onClick={() => onChange(variant)}
+          >
+            {variant === 'nlh' ? t`NL Hold'em` : t`PL Omaha`}
+          </button>
+        ))}
       </div>
     </div>
   );
