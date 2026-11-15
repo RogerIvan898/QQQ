@@ -295,14 +295,17 @@
     padding: 0;
   }
 
-  .tabsContainer {
-    flex: 0 1 420px;
-    padding: 0;
-  }
-
   .filterControls {
+    flex: 0 1 420px;
+    width: min(420px, 100%);
     align-items: flex-end;
     padding-bottom: 12px;
+  }
+
+  .tabsContainer {
+    flex: none;
+    width: 100%;
+    padding: 0;
   }
 
   .listBar .sectionHeader {
@@ -310,7 +313,7 @@
   }
 
   .tabsScroll {
-    max-width: 420px;
+    max-width: none;
   }
 
   .roomGrid {
