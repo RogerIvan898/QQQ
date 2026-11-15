@@ -137,14 +137,17 @@
 }
 
 .highlighted {
-  translate: 0 -6%;
+  translate: 0 -10%;
+  z-index: 2;
   box-shadow:
-    0 0 0 2px var(--color-warning),
-    0 6px 18px color-mix(in srgb, var(--color-warning) 45%, transparent);
+    0 0 0 2px #ffffff,
+    0 0 0 5px var(--color-warning),
+    0 12px 28px color-mix(in srgb, var(--color-warning) 65%, transparent),
+    0 0 22px color-mix(in srgb, var(--color-warning) 55%, transparent);
 }
 
 .dimmed {
-  filter: brightness(0.55) saturate(0.7);
+  filter: brightness(0.4) saturate(0.45);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -154,7 +157,11 @@
 }
 
 .live {
+  translate: 0 -4%;
+  z-index: 1;
   box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--color-warning) 80%, transparent),
-    0 0 14px color-mix(in srgb, var(--color-warning) 35%, transparent);
+    0 0 0 2px #ffffff,
+    0 0 0 4px color-mix(in srgb, var(--color-warning) 90%, transparent),
+    0 8px 20px color-mix(in srgb, var(--color-warning) 50%, transparent),
+    0 0 16px color-mix(in srgb, var(--color-warning) 45%, transparent);
 }
