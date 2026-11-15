@@ -49,29 +49,28 @@
 }
 
 .tabsContainer {
-  padding-top: 10px;
+  flex: 0 0 auto;
 }
 
 .filterControls {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
   padding-bottom: 12px;
+}
+
+.filterControls::-webkit-scrollbar {
+  display: none;
 }
 
 .variantControl {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.variantLabel {
-  color: var(--color-text-muted);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  flex: 0 0 auto;
+  padding-right: 10px;
+  border-right: 1px solid var(--color-border);
 }
 
 .variantToggle {
@@ -83,7 +82,7 @@
 }
 
 .variantButton {
-  height: 30px;
+  height: 34px;
   padding: 0 10px;
   border: none;
   border-radius: calc(var(--radius-md) - 3px);
@@ -296,15 +295,12 @@
   }
 
   .filterControls {
-    flex: 0 1 420px;
-    width: min(420px, 100%);
-    align-items: flex-end;
+    flex: 0 1 500px;
+    width: min(500px, 100%);
     padding-bottom: 12px;
   }
 
   .tabsContainer {
-    flex: none;
-    width: 100%;
     padding: 0;
   }
 
@@ -313,7 +309,7 @@
   }
 
   .tabsScroll {
-    max-width: none;
+    min-width: 252px;
   }
 
   .roomGrid {

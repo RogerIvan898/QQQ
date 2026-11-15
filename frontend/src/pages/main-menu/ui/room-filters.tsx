@@ -73,7 +73,6 @@ export const GameVariantToggle = ({
 
   return (
     <div className={styles.variantControl}>
-      <span className={styles.variantLabel}>{t`Game Type`}</span>
       <div
         className={styles.variantToggle}
         role="group"
