@@ -131,7 +131,9 @@ const instrument = () => {
         });
       }
     }).observe({ type: 'long-animation-frame', buffered: true });
-  } catch {}
+  } catch {
+    // Older browsers do not support long-animation-frame observations.
+  }
 
   let last = performance.now();
   const frame = (now: number) => {

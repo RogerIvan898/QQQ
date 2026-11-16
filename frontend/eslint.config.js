@@ -13,8 +13,13 @@ export default defineConfig([
       'public/mockServiceWorker.js',
       'src/locales/**/messages.ts',
       'src/app/routeTree.gen.ts',
-      'scripts/**',
     ],
+  },
+  {
+    files: ['scripts/**/*.ts'],
+    languageOptions: {
+      globals: { ...globals.node, Bun: 'readonly' },
+    },
   },
   {
     files: ['**/*.{ts,tsx}'],

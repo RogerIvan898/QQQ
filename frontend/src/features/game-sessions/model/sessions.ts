@@ -53,6 +53,7 @@ const finish = (draft: Draft) => {
   }
 
   const room = findRoom($rooms.getState(), draft.roomId);
+
   const bigBlindTon = draft.roomBigBlindTon || (room ? roomBigBlind(room) : 0);
   const tonPerChip =
     bigBlindTon && draft.bigBlindChips ? bigBlindTon / draft.bigBlindChips : 0;

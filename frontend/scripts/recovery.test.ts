@@ -1,7 +1,59 @@
+import type { EventCallable } from 'effector';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-async function load(file, stubs) {
+import type { GameConnectParams } from '../src/entities/game/model/types';
+import type { RoomListItem } from '../src/entities/room/model/catalog';
+
+interface TestEvent {
+  type: string;
+  payload: Record<string, unknown>;
+}
+
+interface TestQueue {
+  bindGameQueue(api: {
+    emit: (event: TestEvent) => void;
+    readState: () => { players: Record<string, never> };
+    readHandStartedAt: () => number;
+  }): void;
+  markGameQueueLive(): void;
+  resetEventQueue(): void;
+  enqueueServerEvent(event: TestEvent): void;
+}
+
+type JoinedRoom = { roomId: string; wsUrl: string };
+
+interface TestRuntime {
+  window: {
+    setTimeout: (fn: () => void, ms: number) => number;
+    clearTimeout: (id: number) => void;
+    addEventListener: () => void;
+    removeEventListener: () => void;
+  };
+  document: { hidden: boolean; addEventListener: () => void };
+  WebSocket: { OPEN: number; CONNECTING: number };
+  socketHandlers: { onMessage: (event: TestEvent) => void };
+  saved: Map<string, unknown>;
+  fixture: {
+    roomsChanged: EventCallable<RoomListItem[]>;
+    gameModel: { connectGame: EventCallable<GameConnectParams> };
+  };
+  joinCalls: number;
+  joinHandler: (roomId: string) => Promise<JoinedRoom>;
+  prepared: JoinedRoom | null;
+}
+
+const runtime = globalThis as unknown as TestRuntime;
+
+const readSaved = <T>(key: string): T => {
+  const value = runtime.saved.get(key);
+
+  assert.notEqual(value, undefined);
+
+  return value as T;
+};
+
+async function load<T>(file: string, stubs: string): Promise<T> {
   const source = readFileSync(file, 'utf8');
   const result = await Bun.build({
     entrypoints: ['review:entry'],
@@ -36,38 +88,48 @@ async function load(file, stubs) {
       },
     ],
   });
-  assert.ok(result.success, String(result.logs));
+
+  assert.ok(result.success, result.logs.map(log => log.message).join('\n'));
+
   return import(
     'data:text/javascript;base64,' +
       Buffer.from(await result.outputs[0].text()).toString('base64')
-  );
+  ) as Promise<T>;
 }
+
 const tick = async () => {
   for (let i = 0; i < 10; i++) await Promise.resolve();
 };
+
 let now = 0,
   serial = 0;
-const timers = new Map();
-globalThis.window = {
+const timers = new Map<number, { fn: () => void; at: number }>();
+
+runtime.window = {
   setTimeout: (fn, ms) => {
     timers.set(++serial, { fn, at: now + ms });
+
     return serial;
   },
   clearTimeout: id => timers.delete(id),
   addEventListener() {},
   removeEventListener() {},
 };
-globalThis.document = { hidden: false, addEventListener() {} };
-async function advance(ms) {
+runtime.document = { hidden: false, addEventListener() {} };
+
+async function advance(ms: number) {
   now += ms;
+
   for (const [id, t] of [...timers])
     if (t.at <= now) {
       timers.delete(id);
       t.fn();
     }
+
   await tick();
 }
-const queue = await load(
+
+const queue = await load<TestQueue>(
   'src/entities/game/model/event-queue.ts',
   `
 export const Sound = { CARD_REVEAL: '', CHIPS: '' },
@@ -91,7 +153,8 @@ export const SERVER_EVENTS = Object.fromEntries(
 );
 `
 );
-const emitted = [];
+const emitted: unknown[] = [];
+
 queue.bindGameQueue({
   emit: e => emitted.push(e.payload.marker),
   readState: () => ({ players: {} }),
@@ -120,7 +183,9 @@ assert.deepEqual(emitted, ['showdown', 'new']);
 queue.resetEventQueue();
 timers.clear();
 
-const connection = await load(
+const connection = await load<
+  typeof import('../src/entities/game/model/connection')
+>(
   'src/entities/game/model/connection.ts',
   `
 export const getAudioContext = () => ({}),
@@ -142,15 +207,16 @@ export const createSocket = (url, handlers) => {
 };
 `
 );
-globalThis.WebSocket = { OPEN: 1, CONNECTING: 0 };
+
+runtime.WebSocket = { OPEN: 1, CONNECTING: 0 };
 connection.openGameSocket({ wsUrl: 'wss://test' });
-socketHandlers.onMessage({
+runtime.socketHandlers.onMessage({
   type: 'EV_TURN_CHANGED',
   payload: { turnMs: 15000, timeBankMs: 10000 },
 });
-socketHandlers.onMessage({ type: 'EV_ALLOWED_ACTIONS', payload: {} });
+runtime.socketHandlers.onMessage({ type: 'EV_ALLOWED_ACTIONS', payload: {} });
 assert.ok([...timers.values()].some(t => t.at - now === 35000));
-socketHandlers.onMessage({ type: 'EV_HAND_COMPLETED', payload: {} });
+runtime.socketHandlers.onMessage({ type: 'EV_HAND_COMPLETED', payload: {} });
 assert.ok(![...timers.values()].some(t => t.at - now === 35000));
 connection.closeOpenGameSocket(null);
 timers.clear();
@@ -179,7 +245,8 @@ export const readJson = (key, fallback) =>
 export const writeJson = (key, value) => globalThis.saved.set(key, value);
 globalThis.fixture = { roomsChanged, gameModel };
 `;
-globalThis.saved = new Map([
+
+runtime.saved = new Map([
   [
     'poker:game-session-draft',
     {
@@ -192,24 +259,42 @@ globalThis.saved = new Map([
     },
   ],
 ]);
-const sessions = await load(
-  'src/features/game-sessions/model/sessions.ts',
-  fixtureSource
-);
+
+const sessions = await load<
+  typeof import('../src/features/game-sessions/model/sessions')
+>('src/features/game-sessions/model/sessions.ts', fixtureSource);
+
 assert.equal(sessions.$sessions.getState().length, 0);
-assert.equal(saved.get('poker:game-session-recovery').length, 1);
-globalThis.fixture.roomsChanged([{ id: 1, blinds: '0.05/0.1', max: 6 }]);
+assert.equal(readSaved<unknown[]>('poker:game-session-recovery').length, 1);
+runtime.fixture.roomsChanged([
+  {
+    id: 1,
+    name: 'Test',
+    mode: 'cash',
+    blinds: '0.05/0.1',
+    max: 6,
+    players: 0,
+    minBuy: 1,
+    maxBuy: 10,
+  },
+]);
 assert.equal(sessions.$sessions.getState()[0].net, 2);
-assert.equal(saved.get('poker:game-session-recovery').length, 0);
+assert.equal(readSaved<unknown[]>('poker:game-session-recovery').length, 0);
 console.log(
   'Recovery regressions passed: queue cancellation, watchdog, legacy session recovery'
 );
 
 sessions.sessionStarted('1');
-assert.equal(saved.get('poker:game-session-draft').roomBigBlindTon, 0.1);
+assert.equal(
+  readSaved<{ roomBigBlindTon: number }>('poker:game-session-draft')
+    .roomBigBlindTon,
+  0.1
+);
 sessions.sessionEnded();
 
-const gate = await load(
+const gate = await load<
+  typeof import('../src/pages/game-room/model/game-room')
+>(
   'src/pages/game-room/model/game-room.ts',
   fixtureSource +
     `
@@ -233,23 +318,29 @@ export const joinRoomFx = createEffect(roomId => {
 });
 `
 );
-let connects = [];
-globalThis.fixture.gameModel.connectGame.watch(p => connects.push(p));
-globalThis.joinCalls = 0;
-globalThis.joinHandler = async () => ({ roomId: '1', wsUrl: 'wss://fresh' });
+const connects: GameConnectParams[] = [];
+
+runtime.fixture.gameModel.connectGame.watch(p => connects.push(p));
+runtime.joinCalls = 0;
+runtime.joinHandler = () =>
+  Promise.resolve({ roomId: '1', wsUrl: 'wss://fresh' });
 gate.GamePageGate.open({ roomId: '1' });
 await tick();
-assert.equal(joinCalls, 1);
+assert.equal(runtime.joinCalls, 1);
 assert.equal(connects[0].wsUrl, 'wss://fresh');
 gate.GamePageGate.close({ roomId: '1' });
-globalThis.prepared = { roomId: '1', wsUrl: 'wss://prepared' };
+runtime.prepared = { roomId: '1', wsUrl: 'wss://prepared' };
 gate.GamePageGate.open({ roomId: '1' });
 await tick();
-assert.equal(joinCalls, 1);
+assert.equal(runtime.joinCalls, 1);
 assert.equal(connects[1].wsUrl, 'wss://prepared');
 gate.GamePageGate.close({ roomId: '1' });
-let resolveJoin;
-globalThis.joinHandler = () =>
+
+let resolveJoin: (room: JoinedRoom) => void = () => {
+  throw new Error('Join has not started');
+};
+
+runtime.joinHandler = () =>
   new Promise(resolve => {
     resolveJoin = resolve;
   });
