@@ -179,6 +179,9 @@ msgstr "Copy"
 msgid "Copy address"
 msgstr "Copy address"
 
+msgid "Couldn't connect to table"
+msgstr "Couldn't connect to table"
+
 msgid "Couldn't join the table"
 msgstr "Couldn't join the table"
 

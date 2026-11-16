@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useActionState, useRef, useState } from 'react';
 
 import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
 import { useUnit } from 'effector-react';
 
 import { walletModel } from 'entities/wallet';
+import { useDialogSession } from 'shared/hooks/use-dialog-session';
 import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
 import { Dialog } from 'shared/ui/dialog';
 
@@ -23,26 +24,23 @@ interface Props {
   onSubmit?: (payload: WithdrawPayload) => Promise<unknown> | void;
 }
 
-export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
+export const WithdrawModal = (props: Props) => {
+  const { mounted, key } = useDialogSession(props.open);
+  return mounted ? <WithdrawSession key={key} {...props} /> : null;
+};
+
+const WithdrawSession = ({ open, onClose, balance, onSubmit }: Props) => {
   const { t } = useLingui();
   const wallet = useUnit($tonWallet);
   const connectedAddress = wallet?.friendlyAddress ?? '';
   const savedAddress = useUnit(walletModel.$savedWithdrawAddress);
 
-  const [amount, setAmount] = useState(0);
   const [draft, setDraft] = useState('');
-  const [destination, setDestination] = useState<WithdrawDestination>('wallet');
-  const [customAddress, setCustomAddress] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitFailed, setSubmitFailed] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setDestination(savedAddress ? 'address' : 'wallet');
-      setCustomAddress(savedAddress ?? '');
-    }
-  }, [open, savedAddress]);
-
+  const amount = parseAmountDraft(draft) ?? 0;
+  const [destination, setDestination] = useState<WithdrawDestination>(
+    savedAddress ? 'address' : 'wallet'
+  );
+  const [customAddress, setCustomAddress] = useState(savedAddress ?? '');
   const targetAddress =
     destination === 'wallet' ? connectedAddress : customAddress.trim();
   const isAddressValid =
@@ -50,8 +48,38 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
       ? Boolean(connectedAddress)
       : isValidTonAddress(customAddress);
   const exceedsBalance = amount > balance;
+  const submissionLocked = useRef(false);
+  const [submitFailed, submitAction, submitting] = useActionState(async () => {
+    if (
+      !open ||
+      !isAddressValid ||
+      !Number.isFinite(amount) ||
+      amount <= 0 ||
+      exceedsBalance ||
+      !onSubmit
+    ) {
+      submissionLocked.current = false;
+      return false;
+    }
+    try {
+      await onSubmit({ amount, address: targetAddress, destination });
+      onClose();
+      return false;
+    } catch {
+      return true;
+    } finally {
+      submissionLocked.current = false;
+    }
+  }, false);
+
   const canSubmit =
-    isAddressValid && amount > 0 && !exceedsBalance && !submitting;
+    open &&
+    Boolean(onSubmit) &&
+    isAddressValid &&
+    Number.isFinite(amount) &&
+    amount > 0 &&
+    !exceedsBalance &&
+    !submitting;
 
   const submitLabel =
     destination === 'wallet' && !connectedAddress ? (
@@ -62,30 +90,11 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
       t`Withdraw`
     );
 
-  const handleClose = () => {
-    onClose();
-    setAmount(0);
-    setDraft('');
-    setCustomAddress('');
-    setSubmitFailed(false);
-  };
-
-  const handleAmountChange = (value: string) => {
-    setDraft(value);
-
-    const parsed = parseAmountDraft(value);
-
-    if (parsed !== null) {
-      setAmount(parsed);
-    }
-  };
-
   const handleMax = () => {
     if (balance <= 0) {
       return;
     }
 
-    setAmount(balance);
     setDraft(formatAmountDraft(balance));
   };
 
@@ -95,36 +104,24 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
       .catch(() => undefined);
   };
 
-  const handleSubmit = async () => {
-    if (!canSubmit) {
-      return;
-    }
-
-    setSubmitting(true);
-    setSubmitFailed(false);
-
-    try {
-      await onSubmit?.({
-        amount,
-        address: targetAddress,
-        destination,
-      });
-      handleClose();
-    } catch {
-      setSubmitFailed(true);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={onClose}
       title={t`Withdraw TON`}
       variant="bottom"
     >
-      <div className={styles.content}>
+      <form
+        className={styles.content}
+        action={submitAction}
+        onSubmit={event => {
+          if (!canSubmit || submissionLocked.current) {
+            event.preventDefault();
+            return;
+          }
+          submissionLocked.current = true;
+        }}
+      >
         <WithdrawDestinationBlock
           destination={destination}
           wallet={wallet}
@@ -138,25 +135,24 @@ export const WithdrawModal = ({ open, onClose, balance, onSubmit }: Props) => {
           draft={draft}
           exceedsBalance={exceedsBalance}
           balance={balance}
-          onChange={handleAmountChange}
+          onChange={setDraft}
           onMax={handleMax}
         />
 
         <button
-          type="button"
+          type="submit"
           className={styles.primaryBtn}
           disabled={!canSubmit}
-          onClick={() => void handleSubmit()}
         >
           {submitting ? t`Sending…` : submitLabel}
         </button>
 
-        {submitFailed ? (
+        {submitFailed && !submitting ? (
           <p className={styles.submitError} role="alert">
             {t`The withdrawal didn't go through. Your balance is unchanged; try again.`}
           </p>
         ) : null}
-      </div>
+      </form>
     </Dialog>
   );
 };

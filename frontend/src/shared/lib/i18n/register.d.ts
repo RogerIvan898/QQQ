@@ -185,6 +185,7 @@ declare module '@lingui/core' {
       | 'iSLIjg'
       | 'iq-mFq'
       | 'jFBwXU'
+      | 'kH35ok'
       | 'kI1qVD'
       | 'kLFuS4'
       | 'kWJmRL'

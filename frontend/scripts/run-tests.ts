@@ -1,4 +1,7 @@
-const files = [...new Bun.Glob('src/**/*.test.{ts,tsx}').scanSync('.')].sort();
+const files = [
+  ...new Bun.Glob('src/**/*.test.{ts,tsx}').scanSync('.'),
+  ...new Bun.Glob('scripts/**/*.test.ts').scanSync('.'),
+].sort();
 
 for (const file of files) {
   const { exitCode } = Bun.spawnSync(['bun', file], {

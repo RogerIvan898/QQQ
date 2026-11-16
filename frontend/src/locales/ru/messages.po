@@ -180,6 +180,9 @@ msgstr "Копировать"
 msgid "Copy address"
 msgstr "Скопировать адрес"
 
+msgid "Couldn't connect to table"
+msgstr "Не удалось подключиться к столу"
+
 msgid "Couldn't join the table"
 msgstr "Не удалось сесть за стол"
 

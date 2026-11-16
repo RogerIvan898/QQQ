@@ -2,6 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useUnit } from 'effector-react';
 
 import { $joiningRoomId, joinRoomFx } from '../model';
+import { prepareJoinedRoom } from '../model/join-room';
 
 export const useJoinRoom = () => {
   const navigate = useNavigate();
@@ -13,7 +14,9 @@ export const useJoinRoom = () => {
     }
 
     try {
-      const { roomId: joinedRoomId, wsUrl } = await join(roomId);
+      const result = await join(roomId);
+      const { roomId: joinedRoomId, wsUrl } = result;
+      prepareJoinedRoom(result);
 
       void navigate({
         to: '/game/$roomId',

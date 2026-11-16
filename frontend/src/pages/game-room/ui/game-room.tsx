@@ -30,7 +30,7 @@ import {
 import { PokerBoard } from 'widgets/poker-table';
 import { SettingsDialog } from 'widgets/settings';
 
-import { GamePageGate } from '../model';
+import { $connectionFailed, $connectionPending, GamePageGate } from '../model';
 
 import { GameLoader } from './game-loader';
 import styles from './game-room.module.css';
@@ -59,11 +59,14 @@ export const GameRoomPage = () => {
   useGate(GamePageGate, { roomId });
 
   const navigate = useNavigate();
+  const connectionFailed = useUnit($connectionFailed);
   const [inTelegram] = React.useState(hasTelegramBackButton);
-  const [isLoading, connectionLost] = useUnit([
+  const [gameLoading, connectionLost, connectionPending] = useUnit([
     gameModel.$isGameLoading,
     gameModel.$connectionLost,
+    $connectionPending,
   ]);
+  const isLoading = gameLoading || connectionPending;
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
   const [isLeaveOpen, setIsLeaveOpen] = React.useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
@@ -95,6 +98,17 @@ export const GameRoomPage = () => {
   });
 
   useTelegramClosingConfirmation();
+
+  if (connectionFailed) {
+    return (
+      <div role="alert">
+        <p>{t`Couldn't connect to table`}</p>
+        <button type="button" onClick={() => void navigate({ to: '/' })}>
+          {t`Tables`}
+        </button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <GameLoader />;

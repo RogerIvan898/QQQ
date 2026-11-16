@@ -21,13 +21,10 @@ export const useTurnTimer = ({
   const { play: playTimeBankSound } = useSound(Sound.TIME_BANK);
   const [usingBank, setUsingBank] = React.useState(false);
 
-  const onTurnTimeoutRef = React.useRef(onTurnTimeout);
-  const playSoundRef = React.useRef(playSound);
-
-  React.useEffect(() => {
-    onTurnTimeoutRef.current = onTurnTimeout;
-    playSoundRef.current = playSound;
-  }, [onTurnTimeout, playSound]);
+  const handleTimeout = React.useEffectEvent(() => onTurnTimeout?.());
+  const playBankSound = React.useEffectEvent(() => {
+    if (playSound) playTimeBankSound();
+  });
 
   React.useEffect(() => {
     setUsingBank(false);
@@ -40,18 +37,16 @@ export const useTurnTimer = ({
 
     const turnTimer = window.setTimeout(() => {
       if (timeBankSec <= 0) {
-        onTurnTimeoutRef.current?.();
+        handleTimeout();
         return;
       }
 
       setUsingBank(true);
 
-      if (playSoundRef.current) {
-        playTimeBankSound();
-      }
+      playBankSound();
 
       bankTimer = window.setTimeout(
-        () => onTurnTimeoutRef.current?.(),
+        () => handleTimeout(),
         timeBankSec * MS_IN_SECOND
       );
     }, turnDurationSec * MS_IN_SECOND);
@@ -60,7 +55,7 @@ export const useTurnTimer = ({
       window.clearTimeout(turnTimer);
       window.clearTimeout(bankTimer);
     };
-  }, [isTurn, turnDurationSec, timeBankSec, playTimeBankSound]);
+  }, [isTurn, turnDurationSec, timeBankSec]);
 
   return {
     showTimer: isTurn,

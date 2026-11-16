@@ -1,7 +1,6 @@
-import { createEffect, createStore, sample } from 'effector';
+import { createEffect, createEvent, createStore } from 'effector';
 
-import { gameModel } from 'entities/game';
-import { $rooms, findRoom, roomApi } from 'entities/room';
+import { roomApi } from 'entities/room';
 
 const isAllowedSocketUrl = (value: string) => {
   try {
@@ -37,12 +36,17 @@ export const $joinFailure = createStore<{
   count: (last?.count ?? 0) + 1,
 }));
 
-sample({
-  clock: joinRoomFx.doneData,
-  source: $rooms,
-  fn: (rooms, { roomId, wsUrl }) => ({
-    wsUrl,
-    game: findRoom(rooms, roomId)?.game,
-  }),
-  target: gameModel.connectGame,
-});
+export const prepareJoinedRoom =
+  createEvent<Awaited<ReturnType<typeof joinRoomFx>>>();
+const $joinedRoom = createStore<Awaited<ReturnType<typeof joinRoomFx>> | null>(
+  null
+).on(prepareJoinedRoom, (_, room) => room);
+
+export const consumeJoinedRoom = () => {
+  const room = $joinedRoom.getState();
+  clearJoinedRoom();
+  return room;
+};
+
+const clearJoinedRoom = createEvent();
+$joinedRoom.reset(clearJoinedRoom);

@@ -1,1 +1,5 @@
-export { GamePageGate } from './game-room';
+export {
+  $connectionFailed,
+  $connectionPending,
+  GamePageGate,
+} from './game-room';

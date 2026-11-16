@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { useLingui } from '@lingui/react/macro';
 import { ArrowLeft } from 'lucide-react';
 
+import { useDialogSession } from 'shared/hooks/use-dialog-session';
 import { Dialog, DialogHeaderButton } from 'shared/ui/dialog';
 
 import { DEPOSIT_STEP, DEPOSIT_STEPS } from '../constants';
@@ -23,7 +24,12 @@ interface Props {
   skipEnter?: boolean;
 }
 
-export const DepositDialog = ({
+export const DepositDialog = (props: Props) => {
+  const { mounted, key } = useDialogSession(props.open);
+  return mounted ? <DepositSession key={key} {...props} /> : null;
+};
+
+const DepositSession = ({
   open,
   onClose,
   depositAddress,
@@ -36,13 +42,6 @@ export const DepositDialog = ({
 
   const [step, setStep] = useState<DepositStep>(DEPOSIT_STEP.Amount);
   const [amount, setAmount] = useState(0);
-
-  useEffect(() => {
-    if (open) {
-      setStep(DEPOSIT_STEP.Amount);
-      setAmount(0);
-    }
-  }, [open]);
 
   const isAmountStep = step === DEPOSIT_STEP.Amount;
   const isDetailsStep = step === DEPOSIT_STEP.Details;

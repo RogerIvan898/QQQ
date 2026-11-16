@@ -10,6 +10,7 @@ import type { GameSession } from './types';
 
 const SESSIONS_KEY = 'poker:game-sessions';
 const DRAFT_KEY = 'poker:game-session-draft';
+const RECOVERY_KEY = 'poker:game-session-recovery';
 const MAX_SESSIONS = 500;
 
 interface Draft {
@@ -24,6 +25,9 @@ interface Draft {
   hands: number;
 
   inHand: boolean;
+  roomBigBlindTon?: number;
+  format?: string | null;
+  blinds?: string | null;
 }
 
 const sessionRecorded = createEvent<GameSession>();
@@ -45,13 +49,14 @@ const round = (value: number) => Math.round(value * 100) / 100;
 
 const finish = (draft: Draft) => {
   if (draft.hands === 0 || draft.buyInChips === null) {
-    return;
+    return true;
   }
 
   const room = findRoom($rooms.getState(), draft.roomId);
-  const bigBlindTon = room ? roomBigBlind(room) : 0;
+  const bigBlindTon = draft.roomBigBlindTon || (room ? roomBigBlind(room) : 0);
   const tonPerChip =
     bigBlindTon && draft.bigBlindChips ? bigBlindTon / draft.bigBlindChips : 0;
+  if (!tonPerChip) return false;
   const buyIn = round(draft.buyInChips * tonPerChip);
   const cashOut = round((draft.stackChips ?? 0) * tonPerChip);
 
@@ -59,8 +64,8 @@ const finish = (draft: Draft) => {
     id: draft.id,
     roomId: draft.roomId,
     gameType: 'cash',
-    format: room ? roomFormat(room.max) : null,
-    blinds: room?.blinds ?? null,
+    format: draft.format ?? (room ? roomFormat(room.max) : null),
+    blinds: draft.blinds ?? room?.blinds ?? null,
     startedAt: draft.startedAt,
     endedAt: draft.lastSeenAt,
     hands: draft.hands,
@@ -68,6 +73,7 @@ const finish = (draft: Draft) => {
     cashOut,
     net: round(cashOut - buyIn),
   });
+  return true;
 };
 
 let draft: Draft | null = null;
@@ -75,11 +81,26 @@ let draft: Draft | null = null;
 const save = () => writeJson(DRAFT_KEY, draft);
 
 const stale = readJson<Draft | null>(DRAFT_KEY, null);
+let recovery = readJson<Draft[]>(RECOVERY_KEY, []);
+
+const recover = () => {
+  recovery = recovery.filter(saved => !finish(saved));
+  writeJson(RECOVERY_KEY, recovery);
+};
+
+const finishOrDefer = (saved: Draft) => {
+  if (!finish(saved)) {
+    recovery.push(saved);
+    writeJson(RECOVERY_KEY, recovery);
+  }
+};
 
 if (stale) {
-  finish(stale);
+  finishOrDefer(stale);
   writeJson(DRAFT_KEY, null);
 }
+
+$rooms.watch(recover);
 
 export const sessionStarted = createEvent<string>();
 
@@ -87,10 +108,11 @@ export const sessionEnded = createEvent();
 
 sessionStarted.watch(roomId => {
   if (draft) {
-    finish(draft);
+    finishOrDefer(draft);
   }
 
   const now = new Date().toISOString();
+  const room = findRoom($rooms.getState(), roomId);
 
   draft = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -102,13 +124,16 @@ sessionStarted.watch(roomId => {
     bigBlindChips: null,
     hands: 0,
     inHand: false,
+    roomBigBlindTon: room ? roomBigBlind(room) : undefined,
+    format: room ? roomFormat(room.max) : null,
+    blinds: room?.blinds ?? null,
   };
   save();
 });
 
 sessionEnded.watch(() => {
   if (draft) {
-    finish(draft);
+    finishOrDefer(draft);
     draft = null;
     save();
   }
@@ -126,6 +151,12 @@ gameModel.incomingEvent.watch(event => {
   }
 
   const state = gameModel.$gameState.getState();
+  const room = findRoom($rooms.getState(), draft.roomId);
+  if (room) {
+    draft.roomBigBlindTon = roomBigBlind(room);
+    draft.format = roomFormat(room.max);
+    draft.blinds = room.blinds;
+  }
   const me = findMe(state.players);
 
   if (!me) {

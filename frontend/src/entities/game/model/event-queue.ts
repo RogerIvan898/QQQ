@@ -269,6 +269,10 @@ const run = async (gen: number) => {
         await delay(WINNER_PAUSE_MS);
       }
 
+      if (gen !== generation) {
+        return;
+      }
+
       const completed = queue.shift();
 
       if (completed) {
@@ -287,6 +291,10 @@ const run = async (gen: number) => {
     if (event) {
       emit(event);
     }
+  }
+
+  if (gen !== generation) {
+    return;
   }
 
   running = false;

@@ -29,11 +29,7 @@ export const getTelegramUser = (): TelegramUser | null => {
 };
 
 export const useTelegramBackButton = (onBack: () => void) => {
-  const onBackRef = React.useRef(onBack);
-
-  React.useEffect(() => {
-    onBackRef.current = onBack;
-  }, [onBack]);
+  const handleBack = React.useEffectEvent(onBack);
 
   React.useEffect(() => {
     const tg = webApp();
@@ -42,7 +38,7 @@ export const useTelegramBackButton = (onBack: () => void) => {
       return;
     }
 
-    const handler = () => onBackRef.current();
+    const handler = () => handleBack();
 
     tg.BackButton.onClick(handler);
     tg.BackButton.show();
