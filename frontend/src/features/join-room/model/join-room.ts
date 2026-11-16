@@ -44,9 +44,12 @@ const $joinedRoom = createStore<Awaited<ReturnType<typeof joinRoomFx>> | null>(
 
 export const consumeJoinedRoom = () => {
   const room = $joinedRoom.getState();
+
   clearJoinedRoom();
+
   return room;
 };
 
 const clearJoinedRoom = createEvent();
+
 $joinedRoom.reset(clearJoinedRoom);

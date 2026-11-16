@@ -56,7 +56,10 @@ const finish = (draft: Draft) => {
   const bigBlindTon = draft.roomBigBlindTon || (room ? roomBigBlind(room) : 0);
   const tonPerChip =
     bigBlindTon && draft.bigBlindChips ? bigBlindTon / draft.bigBlindChips : 0;
-  if (!tonPerChip) return false;
+  if (!tonPerChip) {
+    return false;
+  }
+
   const buyIn = round(draft.buyInChips * tonPerChip);
   const cashOut = round((draft.stackChips ?? 0) * tonPerChip);
 
@@ -73,6 +76,7 @@ const finish = (draft: Draft) => {
     cashOut,
     net: round(cashOut - buyIn),
   });
+
   return true;
 };
 
@@ -152,11 +156,13 @@ gameModel.incomingEvent.watch(event => {
 
   const state = gameModel.$gameState.getState();
   const room = findRoom($rooms.getState(), draft.roomId);
+
   if (room) {
     draft.roomBigBlindTon = roomBigBlind(room);
     draft.format = roomFormat(room.max);
     draft.blinds = room.blinds;
   }
+
   const me = findMe(state.players);
 
   if (!me) {

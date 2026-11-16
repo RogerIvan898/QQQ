@@ -80,17 +80,21 @@ export const GameRoomPage = () => {
   }
 
   const replayShown = Boolean(replayHand) && !replayMinimized;
+
   const openReplay = (hand: HandRecord) => {
     setReplayMinimized(false);
     setReplayHand(hand);
   };
+
   const closeReplay = () => {
     setReplayMinimized(false);
     setReplayHand(null);
   };
+
   useTelegramBackButton(() => {
     if (isLoading) {
       void navigate({ to: '/' });
+
       return;
     }
 

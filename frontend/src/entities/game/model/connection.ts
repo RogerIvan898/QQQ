@@ -63,6 +63,7 @@ const trackVisibility = () => {
 
 export const prepareGameAudio = async () => {
   const audioContext = getAudioContext();
+
   pokerSoundEngine.init(audioContext);
   trackVisibility();
 
@@ -98,6 +99,7 @@ const watchForStale = (
     event.type === SERVER_EVENTS.HAND_STARTED
   ) {
     clearStaleWatch();
+
     return;
   }
 
@@ -152,7 +154,9 @@ const scheduleReconnect = (wsUrl: string, id: number) => {
       waitingForNetwork = null;
       scheduleReconnect(wsUrl, id);
     };
+
     window.addEventListener('online', waitingForNetwork, { once: true });
+
     return;
   }
 
@@ -269,11 +273,13 @@ export const sendToGameSocket = (command: unknown) => {
   }
 
   openSocket.send(JSON.stringify(command));
+
   return true;
 };
 
 export const openGameSocket = ({ wsUrl }: GameConnectParams) => {
   connectionId += 1;
+
   const currentId = connectionId;
 
   stopReconnecting();
@@ -284,9 +290,12 @@ export const openGameSocket = ({ wsUrl }: GameConnectParams) => {
   openSocket = null;
   activeWsUrl = wsUrl;
   trackResume();
+
   const socket = createGameSocket(wsUrl, currentId);
+
   openSocket = socket;
   queueMicrotask(markGameQueueLive);
+
   return socket;
 };
 

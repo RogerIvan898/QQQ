@@ -16,6 +16,7 @@ export const useJoinRoom = () => {
     try {
       const result = await join(roomId);
       const { roomId: joinedRoomId, wsUrl } = result;
+
       prepareJoinedRoom(result);
 
       void navigate({

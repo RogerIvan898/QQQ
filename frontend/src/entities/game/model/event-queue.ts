@@ -87,6 +87,7 @@ export const markGameQueueLive = () => {
 export const enqueueServerEvent = (event: ServerGameEvent) => {
   if (!live) {
     emit(event);
+
     return;
   }
 
@@ -141,6 +142,7 @@ const debug = import.meta.env.DEV
       window as unknown as { __queueDebug?: Record<string, number> }
     ).__queueDebug ??= {})
   : null;
+
 const count = (key: string) => {
   if (debug) {
     debug[key] = (debug[key] ?? 0) + 1;
@@ -150,16 +152,19 @@ const count = (key: string) => {
 const shouldFastForward = () => {
   if (typeof document !== 'undefined' && document.hidden) {
     count('ffHidden');
+
     return true;
   }
 
   if (hasTwoHandStartsQueued()) {
     count('ffTwoHandsBehind');
+
     return true;
   }
 
   if (queue.length > BACKLOG_HARD_LIMIT) {
     count('ffHardLimit');
+
     return true;
   }
 
@@ -365,6 +370,7 @@ const playRunout = async (gen: number) => {
   let streetApplied = false;
   let handsRevealed = false;
   let winnerDeclared = false;
+
   const applyStreet = () => {
     if (streetApplied || !street) {
       return;
@@ -461,6 +467,7 @@ const playStreet = async (gen: number) => {
   clearActiveSeat();
 
   let streetApplied = false;
+
   const applyStreet = () => {
     if (streetApplied || street?.type !== SERVER_EVENTS.STREET_CONCLUDED) {
       return;

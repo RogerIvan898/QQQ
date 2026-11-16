@@ -26,6 +26,7 @@ interface Props {
 
 export const WithdrawModal = (props: Props) => {
   const { mounted, key } = useDialogSession(props.open);
+
   return mounted ? <WithdrawSession key={key} {...props} /> : null;
 };
 
@@ -59,11 +60,14 @@ const WithdrawSession = ({ open, onClose, balance, onSubmit }: Props) => {
       !onSubmit
     ) {
       submissionLocked.current = false;
+
       return false;
     }
+
     try {
       await onSubmit({ amount, address: targetAddress, destination });
       onClose();
+
       return false;
     } catch {
       return true;
@@ -117,8 +121,10 @@ const WithdrawSession = ({ open, onClose, balance, onSubmit }: Props) => {
         onSubmit={event => {
           if (!canSubmit || submissionLocked.current) {
             event.preventDefault();
+
             return;
           }
+
           submissionLocked.current = true;
         }}
       >

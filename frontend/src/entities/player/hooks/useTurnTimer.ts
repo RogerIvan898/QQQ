@@ -23,7 +23,9 @@ export const useTurnTimer = ({
 
   const handleTimeout = React.useEffectEvent(() => onTurnTimeout?.());
   const playBankSound = React.useEffectEvent(() => {
-    if (playSound) playTimeBankSound();
+    if (playSound) {
+      playTimeBankSound();
+    }
   });
 
   React.useEffect(() => {
@@ -38,6 +40,7 @@ export const useTurnTimer = ({
     const turnTimer = window.setTimeout(() => {
       if (timeBankSec <= 0) {
         handleTimeout();
+
         return;
       }
 

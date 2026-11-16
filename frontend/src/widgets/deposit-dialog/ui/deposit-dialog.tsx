@@ -26,6 +26,7 @@ interface Props {
 
 export const DepositDialog = (props: Props) => {
   const { mounted, key } = useDialogSession(props.open);
+
   return mounted ? <DepositSession key={key} {...props} /> : null;
 };
 
