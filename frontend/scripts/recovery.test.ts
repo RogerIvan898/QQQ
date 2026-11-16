@@ -70,10 +70,26 @@ async function advance(ms) {
 const queue = await load(
   'src/entities/game/model/event-queue.ts',
   `
-export const Sound={CARD_REVEAL:'',CHIPS:''}, handEndMs=()=>2200, HAND_INTRO_MS=4000, WINNER_PAUSE_MS=250;
-export const playBuffered=()=>{}, delay=ms=>new Promise(r=>window.setTimeout(r,ms));
-export const playAllInRunout=async()=>true, transitionToNextStreet=async()=>true, getTotalPot=()=>0;
-export const SERVER_EVENTS=Object.fromEntries(['STREET_CONCLUDED','BOARD_DEALT','HAND_STARTED','HAND_COMPLETED','YOUR_CARDS','SHOWDOWN'].map(x=>[x,'EV_'+x]));`
+export const Sound = { CARD_REVEAL: '', CHIPS: '' },
+  handEndMs = () => 2200,
+  HAND_INTRO_MS = 4000,
+  WINNER_PAUSE_MS = 250;
+export const playBuffered = () => {},
+  delay = ms => new Promise(r => window.setTimeout(r, ms));
+export const playAllInRunout = async () => true,
+  transitionToNextStreet = async () => true,
+  getTotalPot = () => 0;
+export const SERVER_EVENTS = Object.fromEntries(
+  [
+    'STREET_CONCLUDED',
+    'BOARD_DEALT',
+    'HAND_STARTED',
+    'HAND_COMPLETED',
+    'YOUR_CARDS',
+    'SHOWDOWN',
+  ].map(x => [x, 'EV_' + x])
+);
+`
 );
 const emitted = [];
 queue.bindGameQueue({
@@ -107,10 +123,24 @@ timers.clear();
 const connection = await load(
   'src/entities/game/model/connection.ts',
   `
-export const getAudioContext=()=>({}), preloadSounds=async()=>{}, suspendAudioContext=()=>{}, pokerSoundEngine={};
-export const CLIENT_COMMANDS={PING:'CMD_PING'}, GAME_SOUNDS=[], SERVER_EVENTS={TURN_CHANGED:'EV_TURN_CHANGED',HAND_COMPLETED:'EV_HAND_COMPLETED'};
-export const enqueueServerEvent=()=>{}, markGameQueueLive=()=>{}, resetEventQueue=()=>{};
-export const createSocket=(url,handlers)=>{globalThis.socketHandlers=handlers;return {readyState:1,close(){},send(){}}};`
+export const getAudioContext = () => ({}),
+  preloadSounds = async () => {},
+  suspendAudioContext = () => {},
+  pokerSoundEngine = {};
+export const CLIENT_COMMANDS = { PING: 'CMD_PING' },
+  GAME_SOUNDS = [],
+  SERVER_EVENTS = {
+    TURN_CHANGED: 'EV_TURN_CHANGED',
+    HAND_COMPLETED: 'EV_HAND_COMPLETED',
+  };
+export const enqueueServerEvent = () => {},
+  markGameQueueLive = () => {},
+  resetEventQueue = () => {};
+export const createSocket = (url, handlers) => {
+  globalThis.socketHandlers = handlers;
+  return { readyState: 1, close() {}, send() {} };
+};
+`
 );
 globalThis.WebSocket = { OPEN: 1, CONNECTING: 0 };
 connection.openGameSocket({ wsUrl: 'wss://test' });
@@ -126,17 +156,28 @@ connection.closeOpenGameSocket(null);
 timers.clear();
 
 const fixtureSource = `
-import {createEvent,createStore,createEffect} from 'effector';
-export const SERVER_EVENTS={HAND_STARTED:'start',HAND_COMPLETED:'end'};
-export const gameModel={incomingEvent:createEvent(),$gameState:createStore({players:{}}),connectGame:createEvent(),disconnectGame:createEvent()};
-export const sessionModel={$currentUserId:createStore('100'),waitForAuth:async()=>{}};
-export const roomsChanged=createEvent();
-export const $rooms=createStore([]).on(roomsChanged,(_,rooms)=>rooms);
-export const findRoom=(rooms,id)=>rooms.find(r=>String(r.id)===String(id));
-export const roomBigBlind=r=>Number(r.blinds.split('/')[1]),roomFormat=max=>max+'-Max';
-export const readJson=(key,fallback)=>globalThis.saved.get(key)??fallback;
-export const writeJson=(key,value)=>globalThis.saved.set(key,value);
-globalThis.fixture={roomsChanged,gameModel};
+import { createEvent, createStore, createEffect } from 'effector';
+export const SERVER_EVENTS = { HAND_STARTED: 'start', HAND_COMPLETED: 'end' };
+export const gameModel = {
+  incomingEvent: createEvent(),
+  $gameState: createStore({ players: {} }),
+  connectGame: createEvent(),
+  disconnectGame: createEvent(),
+};
+export const sessionModel = {
+  $currentUserId: createStore('100'),
+  waitForAuth: async () => {},
+};
+export const roomsChanged = createEvent();
+export const $rooms = createStore([]).on(roomsChanged, (_, rooms) => rooms);
+export const findRoom = (rooms, id) =>
+  rooms.find(r => String(r.id) === String(id));
+export const roomBigBlind = r => Number(r.blinds.split('/')[1]),
+  roomFormat = max => max + '-Max';
+export const readJson = (key, fallback) =>
+  globalThis.saved.get(key) ?? fallback;
+export const writeJson = (key, value) => globalThis.saved.set(key, value);
+globalThis.fixture = { roomsChanged, gameModel };
 `;
 globalThis.saved = new Map([
   [
@@ -172,11 +213,24 @@ const gate = await load(
   'src/pages/game-room/model/game-room.ts',
   fixtureSource +
     `
-export const gameSessionsModel={sessionStarted:createEvent(),sessionEnded:createEvent()};
-export const handHistoryModel={tableEntered:createEvent(),tableLeft:createEvent()};
-export const setTonConnectPaused=()=>{};
-export const consumeJoinedRoom=()=>{const room=globalThis.prepared;globalThis.prepared=null;return room;};
-export const joinRoomFx=createEffect(roomId=>{globalThis.joinCalls++;return globalThis.joinHandler(roomId);});
+export const gameSessionsModel = {
+  sessionStarted: createEvent(),
+  sessionEnded: createEvent(),
+};
+export const handHistoryModel = {
+  tableEntered: createEvent(),
+  tableLeft: createEvent(),
+};
+export const setTonConnectPaused = () => {};
+export const consumeJoinedRoom = () => {
+  const room = globalThis.prepared;
+  globalThis.prepared = null;
+  return room;
+};
+export const joinRoomFx = createEffect(roomId => {
+  globalThis.joinCalls++;
+  return globalThis.joinHandler(roomId);
+});
 `
 );
 let connects = [];
