@@ -2,21 +2,13 @@ import { createEffect, createEvent, sample } from 'effector';
 
 import { $tonWallet } from 'shared/lib/ton-connect';
 
-import {
-  payViaWallet,
-  type WalletPaymentRequest,
-} from '../utils/pay-via-wallet';
+import { payViaWallet } from '../utils/pay-via-wallet';
 
-interface PaymentOptions extends WalletPaymentRequest {
-  onInvalidAmount: () => void;
-  onSuccess?: () => void;
-  onError?: (error: unknown) => void;
-}
+import type { PaymentOptions } from './types';
 
 const payViaWalletFx = createEffect(
   async ({
     walletChain,
-    onInvalidAmount,
     onSuccess,
     onError,
     ...request
@@ -26,8 +18,6 @@ const payViaWalletFx = createEffect(
 
       if (result === 'sent') {
         onSuccess?.();
-      } else if (result === 'invalid-amount') {
-        onInvalidAmount();
       }
     } catch (error) {
       console.error('TON Connect transaction error:', error);

@@ -8,6 +8,12 @@ export class WrongNetworkError extends Error {
   }
 }
 
+export class InvalidAmountError extends Error {
+  constructor() {
+    super('Invalid amount');
+  }
+}
+
 export interface WalletPaymentRequest {
   amount: number;
   depositAddress: string;
@@ -17,7 +23,7 @@ export interface WalletPaymentRequest {
 export const payViaWallet = async (
   { amount, depositAddress, memo }: WalletPaymentRequest,
   walletChain: string | null
-): Promise<'wallet-opened' | 'invalid-amount' | 'sent'> => {
+): Promise<'wallet-opened' | 'sent'> => {
   const tonConnectUI = await getTonConnectUI();
 
   if (walletChain === null) {
@@ -31,7 +37,7 @@ export const payViaWallet = async (
   }
 
   if (!Number.isFinite(amount) || amount <= 0) {
-    return 'invalid-amount';
+    throw new InvalidAmountError();
   }
 
   // Load the TON codec only when preparing a transaction.

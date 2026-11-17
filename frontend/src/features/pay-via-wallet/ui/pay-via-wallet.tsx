@@ -7,7 +7,7 @@ import {
   $hasPaymentWallet,
   $walletPaymentPending,
   walletPaymentRequested,
-} from '../model/wallet-payment';
+} from '../model';
 
 interface Props {
   amount: number;
@@ -41,7 +41,6 @@ export const PayViaWalletButton = ({
       memo,
       onSuccess,
       onError,
-      onInvalidAmount: () => alert(t`Invalid amount`),
     });
 
   return (

@@ -1,6 +1,10 @@
 import { useLingui } from '@lingui/react/macro';
 
-import { PayViaWalletButton, WrongNetworkError } from 'features/pay-via-wallet';
+import {
+  InvalidAmountError,
+  PayViaWalletButton,
+  WrongNetworkError,
+} from 'features/pay-via-wallet';
 import { IS_TESTNET } from 'shared/config/ton-network';
 import { buildTonTransferLink } from 'widgets/deposit-dialog/utils';
 
@@ -48,7 +52,9 @@ export const WalletPanel = ({
               ? IS_TESTNET
                 ? t`Your wallet is on mainnet. Switch it to testnet and try again.`
                 : t`Your wallet is on testnet. Switch it to mainnet and try again.`
-              : t`Payment failed or rejected in wallet`
+              : error instanceof InvalidAmountError
+                ? t`Invalid amount`
+                : t`Payment failed or rejected in wallet`
           )
         }
       />
