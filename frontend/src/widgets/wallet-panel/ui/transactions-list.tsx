@@ -147,28 +147,28 @@ export const TransactionsList = () => {
       walletModel.retryRequested,
     ]);
   const [selected, setSelected] = React.useState<Transaction | null>(null);
-  const sentinelRef = React.useRef<HTMLDivElement | null>(null);
 
-  React.useEffect(() => {
-    const sentinel = sentinelRef.current;
+  const observeSentinel = React.useCallback(
+    (sentinel: HTMLDivElement | null) => {
+      if (!sentinel || !hasMore || error || loading) {
+        return;
+      }
 
-    if (!sentinel || !hasMore || error) {
-      return;
-    }
+      const observer = new IntersectionObserver(
+        entries => {
+          if (entries.some(entry => entry.isIntersecting)) {
+            requestNext();
+          }
+        },
+        { rootMargin: '0px 0px 160px 0px' }
+      );
 
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries.some(entry => entry.isIntersecting)) {
-          requestNext();
-        }
-      },
-      { rootMargin: '0px 0px 160px 0px' }
-    );
+      observer.observe(sentinel);
 
-    observer.observe(sentinel);
-
-    return () => observer.disconnect();
-  }, [hasMore, error, requestNext, items.length]);
+      return () => observer.disconnect();
+    },
+    [hasMore, error, loading, requestNext]
+  );
 
   const today = new Date();
   const todayStart = new Date(
@@ -254,7 +254,7 @@ export const TransactionsList = () => {
           </section>
         ))}
 
-        <div ref={sentinelRef} className={styles.footer}>
+        <div ref={observeSentinel} className={styles.footer}>
           {loading ? (
             <Loader2
               size={20}

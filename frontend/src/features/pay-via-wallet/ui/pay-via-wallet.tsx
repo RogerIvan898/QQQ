@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useTransition } from 'react';
 
 import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
@@ -34,40 +34,40 @@ export const PayViaWalletButton = ({
 }: Props) => {
   const { t } = useLingui();
   const wallet = useUnit($tonWallet);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, startPayment] = useTransition();
 
-  const handleClick = async () => {
-    const tonConnectUI = await getTonConnectUI();
+  const paymentLocked = useRef(false);
 
-    if (!wallet) {
-      await tonConnectUI.openModal();
-      return;
-    }
-
-    if (wallet.chain !== TON_CHAIN_ID) {
-      onError?.(new WrongNetworkError());
-      return;
-    }
-
-    if (!Number.isFinite(amount) || amount <= 0) {
-      alert(t`Invalid amount`);
-      return;
-    }
-
-    // Loaded on click: @ton/core is ~200 kB and only needed to send.
-    const { Address, beginCell } = await import('@ton/core');
-
-    if (
-      !Address.isFriendly(depositAddress.trim()) &&
-      !Address.isRaw(depositAddress.trim())
-    ) {
-      onError?.(new Error('Invalid deposit address'));
-      return;
-    }
-
-    setIsLoading(true);
-
+  const pay = async () => {
     try {
+      const tonConnectUI = await getTonConnectUI();
+
+      if (!wallet) {
+        await tonConnectUI.openModal();
+        return;
+      }
+
+      if (wallet.chain !== TON_CHAIN_ID) {
+        onError?.(new WrongNetworkError());
+        return;
+      }
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        alert(t`Invalid amount`);
+        return;
+      }
+
+      // Loaded on click: @ton/core is ~200 kB and only needed to send.
+      const { Address, beginCell } = await import('@ton/core');
+
+      if (
+        !Address.isFriendly(depositAddress.trim()) &&
+        !Address.isRaw(depositAddress.trim())
+      ) {
+        onError?.(new Error('Invalid deposit address'));
+        return;
+      }
+
       let payload: string | undefined;
 
       if (memo) {
@@ -95,16 +95,30 @@ export const PayViaWalletButton = ({
     } catch (error) {
       console.error('TON Connect transaction error:', error);
       onError?.(error);
-    } finally {
-      setIsLoading(false);
     }
+  };
+
+  const handleClick = () => {
+    if (isLoading || paymentLocked.current) {
+      return;
+    }
+
+    paymentLocked.current = true;
+
+    startPayment(async () => {
+      try {
+        await pay();
+      } finally {
+        paymentLocked.current = false;
+      }
+    });
   };
 
   return (
     <button
       type="button"
       className={className}
-      onClick={() => void handleClick()}
+      onClick={handleClick}
       disabled={isLoading}
     >
       {isLoading ? <Loader2 size={20} /> : <Wallet size={20} />}

@@ -20,17 +20,14 @@ interface Props {
   onSave: (nickname: string) => void;
 }
 
+const selectNickname = (input: HTMLInputElement | null) => {
+  input?.select();
+};
+
 export const Nickname = ({ name, onSave }: Props) => {
   const { t } = useLingui();
   const [editing, setEditing] = React.useState(false);
   const [draft, setDraft] = React.useState(name);
-  const inputRef = React.useRef<HTMLInputElement | null>(null);
-
-  React.useEffect(() => {
-    if (editing) {
-      inputRef.current?.select();
-    }
-  }, [editing]);
 
   const error = validateNickname(draft);
   const errorText: Record<NicknameError, string> = {
@@ -78,7 +75,7 @@ export const Nickname = ({ name, onSave }: Props) => {
     <span className={styles.nameEdit}>
       <span className={styles.nameRow}>
         <input
-          ref={inputRef}
+          ref={selectNickname}
           className={cn(styles.nameInput, error && styles.nameInputError)}
           value={draft}
           onChange={event => setDraft(event.target.value)}
