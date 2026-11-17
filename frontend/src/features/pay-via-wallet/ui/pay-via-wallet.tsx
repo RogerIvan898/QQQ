@@ -1,8 +1,13 @@
 import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
+import { useUnit } from 'effector-react';
 import { Loader2, Wallet } from 'lucide-react';
 
-import { useWalletPayment } from '../model/use-wallet-payment';
+import {
+  $hasPaymentWallet,
+  $walletPaymentPending,
+  walletPaymentRequested,
+} from '../model/wallet-payment';
 
 interface Props {
   amount: number;
@@ -23,14 +28,21 @@ export const PayViaWalletButton = ({
 }: Props) => {
   const { t } = useLingui();
 
-  const { hasWallet, isLoading, pay } = useWalletPayment({
-    amount,
-    depositAddress,
-    memo,
-    onSuccess,
-    onError,
-    onInvalidAmount: () => alert(t`Invalid amount`),
-  });
+  const [hasWallet, isLoading, requestPayment] = useUnit([
+    $hasPaymentWallet,
+    $walletPaymentPending,
+    walletPaymentRequested,
+  ]);
+
+  const pay = () =>
+    requestPayment({
+      amount,
+      depositAddress,
+      memo,
+      onSuccess,
+      onError,
+      onInvalidAmount: () => alert(t`Invalid amount`),
+    });
 
   return (
     <button

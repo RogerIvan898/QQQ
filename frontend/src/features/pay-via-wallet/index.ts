@@ -1,2 +1,2 @@
-export { WrongNetworkError } from './lib/pay-via-wallet';
+export { WrongNetworkError } from './utils/pay-via-wallet';
 export { PayViaWalletButton } from './ui';
