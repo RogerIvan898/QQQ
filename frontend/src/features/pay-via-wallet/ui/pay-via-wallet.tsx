@@ -1,19 +1,8 @@
-import { useRef, useTransition } from 'react';
-
 import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
-import { useUnit } from 'effector-react';
 import { Loader2, Wallet } from 'lucide-react';
 
-import { TON_CHAIN_ID } from 'shared/config/ton-network';
-import { toNanoSafe } from 'shared/lib/ton';
-import { $tonWallet, getTonConnectUI } from 'shared/lib/ton-connect';
-
-export class WrongNetworkError extends Error {
-  constructor() {
-    super('Wallet is on another network');
-  }
-}
+import { useWalletPayment } from '../model/use-wallet-payment';
 
 interface Props {
   amount: number;
@@ -33,96 +22,25 @@ export const PayViaWalletButton = ({
   className,
 }: Props) => {
   const { t } = useLingui();
-  const wallet = useUnit($tonWallet);
-  const [isLoading, startPayment] = useTransition();
 
-  const paymentLocked = useRef(false);
-
-  const pay = async () => {
-    try {
-      const tonConnectUI = await getTonConnectUI();
-
-      if (!wallet) {
-        await tonConnectUI.openModal();
-        return;
-      }
-
-      if (wallet.chain !== TON_CHAIN_ID) {
-        onError?.(new WrongNetworkError());
-        return;
-      }
-
-      if (!Number.isFinite(amount) || amount <= 0) {
-        alert(t`Invalid amount`);
-        return;
-      }
-
-      // Loaded on click: @ton/core is ~200 kB and only needed to send.
-      const { Address, beginCell } = await import('@ton/core');
-
-      if (
-        !Address.isFriendly(depositAddress.trim()) &&
-        !Address.isRaw(depositAddress.trim())
-      ) {
-        onError?.(new Error('Invalid deposit address'));
-        return;
-      }
-
-      let payload: string | undefined;
-
-      if (memo) {
-        payload = beginCell()
-          .storeUint(0, 32)
-          .storeStringTail(memo)
-          .endCell()
-          .toBoc()
-          .toString('base64');
-      }
-
-      await tonConnectUI.sendTransaction({
-        network: TON_CHAIN_ID,
-        validUntil: Math.floor(Date.now() / 1000) + 60 * 10,
-        messages: [
-          {
-            address: depositAddress,
-            amount: toNanoSafe(amount).toString(),
-            payload,
-          },
-        ],
-      });
-
-      onSuccess?.();
-    } catch (error) {
-      console.error('TON Connect transaction error:', error);
-      onError?.(error);
-    }
-  };
-
-  const handleClick = () => {
-    if (isLoading || paymentLocked.current) {
-      return;
-    }
-
-    paymentLocked.current = true;
-
-    startPayment(async () => {
-      try {
-        await pay();
-      } finally {
-        paymentLocked.current = false;
-      }
-    });
-  };
+  const { hasWallet, isLoading, pay } = useWalletPayment({
+    amount,
+    depositAddress,
+    memo,
+    onSuccess,
+    onError,
+    onInvalidAmount: () => alert(t`Invalid amount`),
+  });
 
   return (
     <button
       type="button"
       className={className}
-      onClick={handleClick}
+      onClick={pay}
       disabled={isLoading}
     >
       {isLoading ? <Loader2 size={20} /> : <Wallet size={20} />}
-      {wallet ? (
+      {hasWallet ? (
         isLoading ? (
           t`Confirm in wallet…`
         ) : (
