@@ -5,6 +5,7 @@ import {
   createStore,
   sample,
 } from 'effector';
+import { delay } from 'patronum/delay';
 
 import type { CardType as Card } from 'entities/card';
 import type { PlayerType as Player } from 'entities/player';
@@ -51,13 +52,6 @@ const TABLE_WAIT_MS = 8000;
 const initializeGameFx = createEffect(openGameSocket);
 const prepareAudioFx = createEffect(prepareGameAudio);
 
-const waitForTableFx = createEffect(
-  (attempt: number) =>
-    new Promise<number>(resolve =>
-      window.setTimeout(() => resolve(attempt), TABLE_WAIT_MS)
-    )
-);
-
 const sendClientCommandFx = createEffect((command: unknown) => {
   if (!sendToGameSocket(command)) {
     console.warn('[WS] Cannot send action: socket is not open');
@@ -99,10 +93,10 @@ const $tableReady = createStore(false)
   )
   .reset(connectGame, disconnectGame);
 
-sample({ clock: $connectAttempt, target: waitForTableFx });
+const tableWaitElapsed = delay($connectAttempt, TABLE_WAIT_MS);
 
 sample({
-  clock: waitForTableFx.doneData,
+  clock: tableWaitElapsed,
   source: $connectAttempt,
   filter: (current, attempt) => current === attempt,
   fn: () => true,
@@ -204,17 +198,9 @@ export const $myAllowedActions = createStore<
 
 const $actualDealerSeat = $gameState.map(state => state.dealerSeat);
 
-const moveDealerFx = createEffect(
-  (seat: number | null) =>
-    new Promise<number | null>(resolve =>
-      window.setTimeout(() => resolve(seat), DEALER_START_MS)
-    )
-);
-
 const placeDealer = createEvent<number | null>();
 
 export const $dealerSeat = createStore<number | null>(null)
-  .on(moveDealerFx.doneData, (_, seat) => seat)
   .on(placeDealer, (_, seat) => seat)
   .reset(disconnectGame);
 
@@ -226,12 +212,17 @@ sample({
   target: placeDealer,
 });
 
-sample({
+const dealerMoveRequested = sample({
   clock: $actualDealerSeat,
   source: $dealerSeat,
   filter: (shown, actual) => shown !== null && shown !== actual,
   fn: (_, actual) => actual,
-  target: moveDealerFx,
+});
+
+delay({
+  source: dealerMoveRequested,
+  timeout: DEALER_START_MS,
+  target: placeDealer,
 });
 
 export const $players = $gameState.map(state => state.players);

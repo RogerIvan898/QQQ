@@ -2,6 +2,9 @@ import { TON_CHAIN_ID } from 'shared/config/ton-network';
 import { toNanoSafe } from 'shared/lib/ton';
 import { getTonConnectUI } from 'shared/lib/ton-connect';
 
+import { buildMemoPayload } from '../lib/build-memo-payload';
+import { isValidAddress, isValidAmount } from '../lib/validation';
+
 export class WrongNetworkError extends Error {
   constructor() {
     super('Wallet is on another network');
@@ -36,7 +39,7 @@ export const payViaWallet = async (
     throw new WrongNetworkError();
   }
 
-  if (!Number.isFinite(amount) || amount <= 0) {
+  if (!isValidAmount(amount)) {
     throw new InvalidAmountError();
   }
 
@@ -44,18 +47,11 @@ export const payViaWallet = async (
   const { Address, beginCell } = await import('@ton/core');
   const address = depositAddress.trim();
 
-  if (!Address.isFriendly(address) && !Address.isRaw(address)) {
+  if (!isValidAddress(Address, address)) {
     throw new Error('Invalid deposit address');
   }
 
-  const payload = memo
-    ? beginCell()
-        .storeUint(0, 32)
-        .storeStringTail(memo)
-        .endCell()
-        .toBoc()
-        .toString('base64')
-    : undefined;
+  const payload = memo ? buildMemoPayload(memo, beginCell) : undefined;
 
   await tonConnectUI.sendTransaction({
     network: TON_CHAIN_ID,

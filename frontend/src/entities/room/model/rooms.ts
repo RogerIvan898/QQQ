@@ -1,4 +1,5 @@
 import { createEffect, createEvent, createStore, sample } from 'effector';
+import { not } from 'patronum/not';
 
 import { roomApi } from '../api';
 
@@ -22,6 +23,6 @@ export const $roomsStatus = createStore<
 
 sample({
   clock: roomsRequested,
-  filter: fetchRoomsFx.pending.map(pending => !pending),
+  filter: not(fetchRoomsFx.pending),
   target: fetchRoomsFx,
 });

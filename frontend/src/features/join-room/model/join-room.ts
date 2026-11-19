@@ -5,6 +5,7 @@ import {
   createStore,
   sample,
 } from 'effector';
+import { not } from 'patronum/not';
 
 import { roomApi } from 'entities/room';
 
@@ -65,9 +66,7 @@ const joinFromMenuFx = attach({
 
 sample({
   clock: joinRequested,
-  source: joinRoomFx.pending,
-  filter: pending => !pending,
-  fn: (_, request) => request,
+  filter: not(joinRoomFx.pending),
   target: joinFromMenuFx,
 });
 
