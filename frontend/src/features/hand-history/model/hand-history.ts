@@ -1,4 +1,4 @@
-import { createEvent, createStore, sample } from 'effector';
+import { createEffect, createEvent, createStore, sample } from 'effector';
 
 import { parseCard, type CardType as Card } from 'entities/card';
 import {
@@ -56,12 +56,27 @@ const enteredTable = sample({
   fn: (userId, roomId) => ({ userId, roomId }),
 });
 
+const loadHandsFx = createEffect(
+  ({ roomId, userId }: { roomId: string | null; userId: string | null }) =>
+    loadHands(roomId, userId)
+);
+
 const $roomId = createStore<string | null>(null)
   .on(tableEntered, (_, roomId) => roomId)
   .reset(tableLeft, sessionModel.$currentUserId.updates);
 
+sample({ clock: enteredTable, target: loadHandsFx });
+
+const handsLoaded = sample({
+  clock: loadHandsFx.done,
+  source: { roomId: $roomId, userId: sessionModel.$currentUserId },
+  filter: (current, { params }) =>
+    current.roomId === params.roomId && current.userId === params.userId,
+  fn: (_, { result }) => result,
+});
+
 export const $hands = createStore<HandRecord[]>([])
-  .on(enteredTable, (_, { userId, roomId }) => loadHands(roomId, userId))
+  .on(handsLoaded, (_, hands) => hands)
   .on(handRecorded, (hands, hand) =>
     [hand, ...hands.filter(saved => saved.id !== hand.id)].slice(
       0,

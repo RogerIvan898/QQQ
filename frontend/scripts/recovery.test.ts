@@ -202,6 +202,7 @@ export const CLIENT_COMMANDS = { PING: 'CMD_PING' },
 export const enqueueServerEvent = () => {},
   markGameQueueLive = () => {},
   resetEventQueue = () => {};
+export const isServerGameEvent = value => typeof value?.type === 'string';
 export const createSocket = (url, handlers) => {
   globalThis.socketHandlers = handlers;
   return { readyState: 1, close() {}, send() {} };
@@ -233,6 +234,7 @@ export const gameModel = {
 export const userChanged = createEvent();
 export const sessionModel = {
   $currentUserId: createStore(null, { skipVoid: false }).on(userChanged, (_, user) => user),
+  $authStatus: createStore('ready'),
   waitForAuth: async () => {},
 };
 export const roomsChanged = createEvent();

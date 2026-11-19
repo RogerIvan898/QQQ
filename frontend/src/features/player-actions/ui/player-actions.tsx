@@ -28,6 +28,7 @@ export const PlayerActions = () => {
     ]);
 
   const variant = useUnit(gameModel.$gameVariant);
+  const connectionLost = useUnit(gameModel.$connectionLost);
   const [isChangingAmount, setIsChangingAmount] = React.useState(false);
   const isMyTurn = Boolean(allowedActions);
 
@@ -67,7 +68,7 @@ export const PlayerActions = () => {
     };
   }, [isRaisePanelOpen]);
 
-  if (!viewer) {
+  if (!viewer || connectionLost) {
     return null;
   }
 

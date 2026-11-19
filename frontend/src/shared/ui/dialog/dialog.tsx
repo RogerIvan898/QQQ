@@ -11,6 +11,10 @@ import { cn } from 'shared/utils/cn';
 
 import styles from './dialog.module.css';
 
+const openPanels: HTMLDivElement[] = [];
+const TABBABLE =
+  'a[href], button, input, select, textarea, [tabindex], [contenteditable="true"]';
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -52,22 +56,78 @@ export const Dialog = ({
   const close = React.useEffectEvent(onClose);
 
   React.useEffect(() => {
-    if (!open) {
-      return;
-    }
+    const panel = panelRef.current;
+    if (!open || !panel) return;
 
-    panelRef.current?.focus({ preventScroll: true });
+    const previousFocus = document.activeElement;
+    const previousPanel = openPanels.at(-1);
+    if (previousPanel) previousPanel.inert = true;
+    openPanels.push(panel);
+    panel.focus({ preventScroll: true });
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || openPanels.at(-1) !== panel) return;
+
       if (event.key === 'Escape') {
+        event.preventDefault();
         close();
+
+        return;
       }
+
+      if (event.key !== 'Tab') return;
+
+      const tabbable = Array.from(
+        panel.querySelectorAll<HTMLElement>(TABBABLE)
+      ).filter(
+        element =>
+          element.tabIndex >= 0 &&
+          !element.matches(':disabled') &&
+          !element.closest('[inert]') &&
+          element.getClientRects().length > 0 &&
+          getComputedStyle(element).visibility === 'visible'
+      );
+      const active = document.activeElement;
+      const first = tabbable[0];
+      const last = tabbable.at(-1);
+      const focusInside =
+        active instanceof HTMLElement && tabbable.includes(active);
+      if (
+        first &&
+        last &&
+        focusInside &&
+        (event.shiftKey ? active !== first : active !== last)
+      )
+        return;
+
+      event.preventDefault();
+      (event.shiftKey ? (last ?? panel) : (first ?? panel)).focus({
+        preventScroll: true,
+      });
     };
 
     document.addEventListener('keydown', onKeyDown);
 
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open]);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+
+      const wasTop = openPanels.at(-1) === panel;
+      openPanels.splice(openPanels.indexOf(panel), 1);
+      if (!wasTop) return;
+
+      const nextPanel = openPanels.at(-1);
+      if (nextPanel) nextPanel.inert = false;
+      if (
+        previousFocus instanceof HTMLElement &&
+        previousFocus.isConnected &&
+        (!nextPanel || nextPanel.contains(previousFocus))
+      ) {
+        previousFocus.focus({ preventScroll: true });
+      } else {
+        nextPanel?.focus({ preventScroll: true });
+      }
+    };
+  }, [open, rendered]);
 
   if (!rendered) {
     return null;
@@ -94,7 +154,8 @@ export const Dialog = ({
         )}
         style={dragY > 0 ? { transform: `translateY(${dragY}px)` } : undefined}
         role="dialog"
-        aria-modal="true"
+        aria-modal={open ? true : undefined}
+        inert={!open}
         aria-label={typeof title === 'string' ? title : undefined}
         tabIndex={-1}
         onClick={e => e.stopPropagation()}

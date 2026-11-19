@@ -117,6 +117,6 @@ sample({
 });
 
 sample({
-  clock: gameModel.disconnectGame,
+  clock: [gameModel.disconnectGame, gameModel.gameConnectionInterrupted],
   target: clearPreAction,
 });

@@ -200,6 +200,9 @@ msgstr "Couldn't load transactions"
 msgid "Couldn't load your deposit address"
 msgstr "Couldn't load your deposit address"
 
+msgid "Couldn't sign in"
+msgstr "Couldn't sign in"
+
 msgid "Custom"
 msgstr "Custom"
 

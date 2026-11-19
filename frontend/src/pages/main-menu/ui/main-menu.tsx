@@ -6,7 +6,7 @@ import { roomsRequested } from 'entities/room';
 import { sessionModel } from 'entities/session';
 import { walletModel } from 'entities/wallet';
 import { JoinRoomButton } from 'features/join-room';
-import { $mockServerEnabled } from 'features/mock-server/model';
+import { $mockServerEnabled } from 'features/mock-server';
 import {
   DEFAULT_GAME_VARIANT,
   type GameVariant,

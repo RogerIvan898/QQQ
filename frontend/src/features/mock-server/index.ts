@@ -1,2 +1,2 @@
-export { bootstrapMockServer } from './model';
+export { $mockServerEnabled, bootstrapMockServer } from './model';
 export { RevealCardsButton, ServerModeSwitch } from './ui';

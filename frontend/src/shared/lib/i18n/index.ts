@@ -6,13 +6,6 @@ export {
   supportedLocales,
 } from './constants';
 export type { Locale } from './constants';
-export {
-  $currentLocale,
-  $isI18nReady,
-  changeLocale,
-  I18nGate,
-  prepareI18n,
-  waitForLocale,
-} from './model';
-export { getBootLoadingLabel } from './locale';
+export { $currentLocale, changeLocale, prepareI18n } from './model';
+export { getBootLocaleError } from './locale';
 export { preloadOtherLocales } from './catalogs';

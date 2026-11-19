@@ -50,6 +50,11 @@ const SeatView = ({
   winId,
   ref,
 }: Props) => {
+  const [showHighlight, hideHighlight] = useUnit([
+    highlightShown,
+    highlightHidden,
+  ]);
+
   const player = useStoreMap({
     store: gameModel.$players,
     keys: [seat],
@@ -123,18 +128,26 @@ const SeatView = ({
         : null;
 
     if (made) {
-      highlightShown({ owner, cards: made, mode: 'live' });
+      showHighlight({ owner, cards: made, mode: 'live' });
     } else {
-      highlightHidden(owner);
+      hideHighlight(owner);
     }
-  }, [seat, liveHand, folded, community, variant]);
+  }, [
+    seat,
+    liveHand,
+    folded,
+    community,
+    variant,
+    showHighlight,
+    hideHighlight,
+  ]);
 
   React.useEffect(
     () => () => {
-      highlightHidden(`win-${seat}`);
-      highlightHidden(`live-${seat}`);
+      hideHighlight(`win-${seat}`);
+      hideHighlight(`live-${seat}`);
     },
-    [seat]
+    [seat, hideHighlight]
   );
 
   const hand =
@@ -165,9 +178,9 @@ const SeatView = ({
       winning && hand ? bestFiveCards(hand, winningBoard, variant) : null;
 
     if (best) {
-      highlightShown({ owner: `win-${seat}`, cards: best, mode: 'win' });
+      showHighlight({ owner: `win-${seat}`, cards: best, mode: 'win' });
     } else {
-      highlightHidden(`win-${seat}`);
+      hideHighlight(`win-${seat}`);
     }
   };
 

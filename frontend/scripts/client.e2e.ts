@@ -35,7 +35,9 @@ try {
   const joined: string[] = [];
   const connected = Promise.withResolvers<WebSocketRoute>();
   const disconnected = Promise.withResolvers<void>();
-  const second = Promise.withResolvers<void>();
+  const second = Promise.withResolvers<WebSocketRoute>();
+  const reconnected = Promise.withResolvers<WebSocketRoute>();
+  let openedRoomTwo = false;
 
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
@@ -85,7 +87,12 @@ try {
 
   await page.routeWebSocket('**/test-table/*', socket => {
     if (socket.url().endsWith('/2')) {
-      second.resolve();
+      if (openedRoomTwo) {
+        reconnected.resolve(socket);
+      } else {
+        openedRoomTwo = true;
+        second.resolve(socket);
+      }
     } else {
       socket.onClose(() => disconnected.resolve());
       connected.resolve(socket);
@@ -155,8 +162,73 @@ try {
   console.log(
     'Passed room change, audio-independent entry and completed-hand accounting.'
   );
+
+  const secondSocket = await second.promise;
+  const allowedActions = JSON.stringify({
+    type: 'EV_ALLOWED_ACTIONS',
+    payload: {
+      canCheck: true,
+      canCall: false,
+      canFold: true,
+      callAmount: 0,
+      minRaise: 0,
+      maxRaise: 95,
+    },
+  });
+  secondSocket.send(
+    JSON.stringify({
+      type: 'EV_PLAYER_SEATED',
+      payload: {
+        seatIndex: 0,
+        player: {
+          id: '100',
+          name: 'Hero',
+          avatar: '',
+          stack: 95,
+          status: 'IN_GAME',
+        },
+      },
+    })
+  );
+  secondSocket.send(allowedActions);
+  const check = page.getByRole('button', { name: 'Check', exact: true });
+  await check.waitFor();
+
+  await secondSocket.close({ code: 1012, reason: 'fixture reconnect' });
+  const newSocket = await Promise.race([reconnected.promise, deadline]);
+  await check.waitFor({ state: 'hidden' });
+  newSocket.send(
+    JSON.stringify({ type: 'EV_BOARD_DEALT', payload: { street: 'FLOP' } })
+  );
+  newSocket.send(allowedActions);
+  const playerAction = Promise.withResolvers<unknown>();
+  newSocket.onMessage(message => {
+    if (String(message).includes('CMD_PLAYER_ACTION')) {
+      playerAction.resolve(JSON.parse(String(message)));
+    }
+  });
+  await check.click();
+  assert.deepEqual(await Promise.race([playerAction.promise, deadline]), {
+    type: 'CMD_PLAYER_ACTION',
+    payload: { action: 'CHECK' },
+  });
+  console.log(
+    'Passed reconnect permission reset and malformed game message handling.'
+  );
+
   audio.resolve();
   await checkWithdrawalRetry(page);
+
+  await page.route(/\/locales\/en\/messages\.po(?:\?|$)/, route =>
+    route.abort()
+  );
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page
+    .getByRole('alert')
+    .getByText('Could not load translations.')
+    .waitFor();
+  assert.ok(await page.getByRole('button', { name: 'Retry' }).isEnabled());
+  console.log('Passed application startup with an unavailable locale catalog.');
 } finally {
   audio.resolve();
   await browser?.close();

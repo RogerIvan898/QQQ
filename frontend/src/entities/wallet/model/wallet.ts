@@ -8,10 +8,9 @@ import {
   sample,
 } from 'effector';
 
-import { sessionModel } from 'entities/session';
-
 import { walletApi } from '../api';
 
+import { $walletAccountId } from './account';
 import type {
   DepositAddress,
   Transaction,
@@ -33,11 +32,11 @@ const fetchBalanceFx = createEffect<string, WalletBalance>(() =>
   walletApi.getBalance()
 );
 
-const accountChanged = sessionModel.$currentUserId.updates;
+const accountChanged = $walletAccountId.updates;
 
 const balanceLoaded = sample({
   clock: fetchBalanceFx.done,
-  source: sessionModel.$currentUserId,
+  source: $walletAccountId,
   filter: (userId, { params }) => userId === params,
   fn: (_, { result }) => result.available,
 });
@@ -48,7 +47,7 @@ export const $balance = createStore<number | null>(null)
 
 sample({
   clock: balanceRequested,
-  source: sessionModel.$currentUserId,
+  source: $walletAccountId,
   filter: (userId): userId is string => userId !== null,
   target: fetchBalanceFx,
 });
@@ -60,14 +59,14 @@ const fetchDepositAddressFx = createEffect<string, DepositAddress>(() =>
 );
 const addressLoaded = sample({
   clock: fetchDepositAddressFx.done,
-  source: sessionModel.$currentUserId,
+  source: $walletAccountId,
   filter: (userId, { params }) => userId === params,
   fn: (_, { result }) => result,
 });
 
 const addressFailed = sample({
   clock: fetchDepositAddressFx.fail,
-  source: sessionModel.$currentUserId,
+  source: $walletAccountId,
   filter: (userId, { params }) => userId === params,
 });
 
@@ -85,10 +84,8 @@ export const $depositAddressStatus = createStore<
 
 sample({
   clock: depositAddressRequested,
-  source: combine(
-    sessionModel.$currentUserId,
-    $depositAddressStatus,
-    (userId, status) => (status === 'loading' ? null : userId)
+  source: combine($walletAccountId, $depositAddressStatus, (userId, status) =>
+    status === 'loading' ? null : userId
   ),
   filter: (userId): userId is string => userId !== null,
   target: fetchDepositAddressFx,

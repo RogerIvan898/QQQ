@@ -4,6 +4,7 @@ import { useLingui } from '@lingui/react/macro';
 import { useUnit } from 'effector-react';
 import { Loader2 } from 'lucide-react';
 
+import { sessionModel } from 'entities/session';
 import { walletModel } from 'entities/wallet';
 import { Dialog } from 'shared/ui/dialog';
 
@@ -22,11 +23,11 @@ interface Props {
 
 interface LoadingProps {
   onClose: () => void;
-  failed?: boolean;
+  error?: string;
   onRetry?: () => void;
 }
 
-const DepositLoading = ({ onClose, failed, onRetry }: LoadingProps) => {
+const DepositLoading = ({ onClose, error, onRetry }: LoadingProps) => {
   const { t } = useLingui();
 
   return (
@@ -37,9 +38,9 @@ const DepositLoading = ({ onClose, failed, onRetry }: LoadingProps) => {
       titleAddon={<span>1/2</span>}
       onClose={onClose}
     >
-      {failed ? (
+      {error ? (
         <div className={styles.state} role="alert">
-          <span>{t`Couldn't load your deposit address`}</span>
+          <span>{error}</span>
           <button type="button" className={styles.retry} onClick={onRetry}>
             {t`Retry`}
           </button>
@@ -55,22 +56,39 @@ const DepositLoading = ({ onClose, failed, onRetry }: LoadingProps) => {
 };
 
 export const DepositEntry = ({ onClose, onSuccess }: Props) => {
-  const [address, status, request] = useUnit([
+  const { t } = useLingui();
+  const [address, status, request, auth, retryAuth] = useUnit([
     walletModel.$depositAddress,
     walletModel.$depositAddressStatus,
     walletModel.depositAddressRequested,
+    sessionModel.$authStatus,
+    sessionModel.authRetryRequested,
   ]);
 
   React.useEffect(() => {
-    request();
-  }, [request]);
+    if (auth === 'ready') request();
+  }, [auth, request]);
+
+  if (auth !== 'ready') {
+    return (
+      <DepositLoading
+        onClose={onClose}
+        error={auth === 'failed' ? t`Couldn't sign in` : undefined}
+        onRetry={retryAuth}
+      />
+    );
+  }
 
   if (!address) {
     return (
       <DepositLoading
         onClose={onClose}
-        failed={status === 'failed'}
-        onRetry={() => request()}
+        error={
+          status === 'failed'
+            ? t`Couldn't load your deposit address`
+            : undefined
+        }
+        onRetry={request}
       />
     );
   }

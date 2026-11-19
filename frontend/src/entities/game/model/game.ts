@@ -25,7 +25,11 @@ import {
   sendToGameSocket,
   serverEventReceived,
 } from './connection';
-import { INITIAL_GAME_STATE, SERVER_EVENTS } from './constants';
+import {
+  CLIENT_COMMANDS,
+  INITIAL_GAME_STATE,
+  SERVER_EVENTS,
+} from './constants';
 import {
   bindGameQueue,
   clearActiveSeat,
@@ -77,7 +81,15 @@ const $socketClient = createStore<WebSocket | null>(null)
   .on(initializeGameFx.doneData, (_, socket) => socket)
   .reset(disconnectGame);
 
-const $connectAttempt = createStore(0).on(connectGame, n => n + 1);
+export const gameConnectionInterrupted = sample({
+  clock: connectionLost,
+  filter: lost => lost,
+});
+
+const $connectAttempt = createStore(0).on(
+  [connectGame, disconnectGame, gameConnectionInterrupted],
+  n => n + 1
+);
 
 const $connecting = createStore(false)
   .on(connectGame, () => true)
@@ -93,7 +105,13 @@ const $tableReady = createStore(false)
   )
   .reset(connectGame, disconnectGame);
 
-const tableWaitElapsed = delay($connectAttempt, TABLE_WAIT_MS);
+const tableWaitElapsed = delay(
+  sample({
+    clock: [connectGame, gameConnectionInterrupted],
+    source: $connectAttempt,
+  }),
+  TABLE_WAIT_MS
+);
 
 sample({
   clock: tableWaitElapsed,
@@ -190,11 +208,27 @@ export const $myCards = createStore<Player['hand']>(null)
   .on(incomingEvent, reduceMyCards)
   .reset(disconnectGame);
 
-export const $myAllowedActions = createStore<
-  AllowedPlayerActionsEvent['payload'] | null
->(null)
-  .on(incomingEvent, reduceAllowedActions)
-  .reset(disconnectGame);
+const turnPermissions = () =>
+  createStore<AllowedPlayerActionsEvent['payload'] | null>(null).reset(
+    connectGame,
+    disconnectGame,
+    gameConnectionInterrupted
+  );
+
+const $receivedActions = turnPermissions().on(
+  serverEventReceived,
+  reduceAllowedActions
+);
+const $displayedActions = turnPermissions().on(
+  incomingEvent,
+  reduceAllowedActions
+);
+
+export const $myAllowedActions = combine(
+  $receivedActions,
+  $displayedActions,
+  (received, displayed) => (received === displayed ? received : null)
+);
 
 const $actualDealerSeat = $gameState.map(state => state.dealerSeat);
 
@@ -214,14 +248,17 @@ sample({
 
 const dealerMoveRequested = sample({
   clock: $actualDealerSeat,
-  source: $dealerSeat,
-  filter: (shown, actual) => shown !== null && shown !== actual,
-  fn: (_, actual) => actual,
+  source: { shown: $dealerSeat, generation: $connectAttempt },
+  filter: ({ shown }, actual) => shown !== null && shown !== actual,
+  fn: ({ generation }, seat) => ({ generation, seat }),
 });
 
-delay({
-  source: dealerMoveRequested,
-  timeout: DEALER_START_MS,
+sample({
+  clock: delay(dealerMoveRequested, DEALER_START_MS),
+  source: { generation: $connectAttempt, actual: $actualDealerSeat },
+  filter: ({ generation, actual }, move) =>
+    generation === move.generation && actual === move.seat,
+  fn: (_, { seat }) => seat,
   target: placeDealer,
 });
 
@@ -244,6 +281,11 @@ sample({
 
 sample({
   clock: sendClientCommand,
+  source: { allowed: $myAllowedActions, lost: $connectionLost },
+  filter: ({ allowed, lost }, command) =>
+    !lost &&
+    (command.type !== CLIENT_COMMANDS.PLAYER_ACTION || allowed !== null),
+  fn: (_, command) => command,
   target: sendClientCommandFx,
 });
 

@@ -201,6 +201,9 @@ msgstr "Не удалось загрузить транзакции"
 msgid "Couldn't load your deposit address"
 msgstr "Не удалось загрузить адрес для пополнения"
 
+msgid "Couldn't sign in"
+msgstr "Не удалось войти"
+
 msgid "Custom"
 msgstr "Период"
 

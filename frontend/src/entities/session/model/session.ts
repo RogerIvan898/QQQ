@@ -24,6 +24,7 @@ export const $currentUserId = createStore<string | null>(null)
 export const $authStatus = createStore<'pending' | 'ready' | 'failed'>(
   'pending'
 )
+  .on(loginFx, () => 'pending')
   .on(loginFx.done, () => 'ready')
   .on(loginFx.fail, () => 'failed');
 
@@ -38,13 +39,15 @@ const authReady = new Promise<void>(resolve => {
 
 export const waitForAuth = () => authReady;
 
+export const authRetryRequested = createEvent();
+
 sample({
-  clock: appStarted,
+  clock: [appStarted, authRetryRequested],
   target: loginFx,
 });
 
 tokenManager.onSessionExpired(() => {
-  void loginFx();
+  authRetryRequested();
 });
 
 export const NICKNAME_KEY = 'poker:nickname';

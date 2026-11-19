@@ -23,6 +23,7 @@ export {
   $smallBlindSeat,
   connectGame,
   disconnectGame,
+  gameConnectionInterrupted,
   gameEventApplied,
   incomingEvent,
   tableAnimationEvent,

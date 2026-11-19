@@ -36,12 +36,12 @@ export const detectLocale = (): Locale => {
   return DEFAULT_LOCALE;
 };
 
-const BOOT_LOADING_LABELS: Record<Locale, string> = {
-  en: 'Loading…',
-  ru: 'Загрузка…',
+const BOOT_LOCALE_ERRORS: Record<Locale, { message: string; retry: string }> = {
+  en: { message: 'Could not load translations.', retry: 'Retry' },
+  ru: { message: 'Не удалось загрузить переводы.', retry: 'Повторить' },
 };
 
-export const getBootLoadingLabel = () => BOOT_LOADING_LABELS[detectLocale()];
+export const getBootLocaleError = () => BOOT_LOCALE_ERRORS[detectLocale()];
 
 const CATALOG_ATTEMPTS = 3;
 

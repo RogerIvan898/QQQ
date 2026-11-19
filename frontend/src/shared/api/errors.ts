@@ -13,6 +13,15 @@ export class ApiError extends Error {
 export const isApiError = (error: unknown): error is ApiError =>
   error instanceof ApiError;
 
+export const expectResponse = <T>(
+  value: unknown,
+  isExpected: (value: unknown) => value is T
+): T => {
+  if (!isExpected(value)) throw new ApiError('bad_response', null);
+
+  return value;
+};
+
 const bodyCode = (data: unknown) => {
   if (typeof data !== 'object' || data === null) {
     return null;

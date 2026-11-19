@@ -1,4 +1,4 @@
-import { createEvent, createStore, sample } from 'effector';
+import { createEffect, createStore, sample } from 'effector';
 import { createGate } from 'effector-react';
 
 import { gameModel } from 'entities/game';
@@ -11,60 +11,74 @@ import { setTonConnectPaused } from 'shared/lib/ton-connect';
 
 export const GamePageGate = createGate<{ roomId: string }>();
 
-const connectionFailed = createEvent();
-const connectionStarted = createEvent();
-
-export const $connectionFailed = createStore(false)
-  .on(connectionFailed, () => true)
-  .reset(connectionStarted, GamePageGate.close);
-
-const connectionReady = createEvent();
-
-export const $connectionPending = createStore(false)
-  .on(connectionStarted, () => true)
-  .reset(connectionReady, connectionFailed, GamePageGate.close);
-
-let connectionGeneration = 0;
-
-GamePageGate.close.watch(() => {
-  connectionGeneration += 1;
-});
+const $connectionGeneration = createStore(0).on(
+  [GamePageGate.open, GamePageGate.close],
+  generation => generation + 1
+);
 
 const roomOpened = sample({
   clock: GamePageGate.open,
-  source: $joinedRoom,
-  fn: (prepared, { roomId }) => ({ prepared, roomId }),
+  source: { prepared: $joinedRoom, generation: $connectionGeneration },
+  fn: (connection, { roomId }) => ({ ...connection, roomId }),
 });
 
-roomOpened.watch(async ({ roomId, prepared }) => {
-  const generation = ++connectionGeneration;
+type RoomEntry = {
+  generation: number;
+  roomId: string;
+  prepared: Awaited<ReturnType<typeof joinRoomFx>> | null;
+};
 
-  connectionStarted();
+const waitForRoomAuthFx = createEffect(async (entry: RoomEntry) => {
+  await sessionModel.waitForAuth();
 
-  clearJoinedRoom();
-
-  try {
-    await sessionModel.waitForAuth();
-    if (generation !== connectionGeneration) {
-      return;
-    }
-
-    const room =
-      prepared?.roomId === roomId ? prepared : await joinRoomFx(roomId);
-    if (generation !== connectionGeneration) {
-      return;
-    }
-
-    roomJoined(room);
-    connectionReady();
-  } catch {
-    if (generation === connectionGeneration) {
-      connectionFailed();
-    }
-  }
+  return entry;
 });
 
-const roomJoined = createEvent<{ roomId: string; wsUrl: string }>();
+const resolveRoomFx = createEffect(({ roomId, prepared }: RoomEntry) =>
+  prepared?.roomId === roomId ? prepared : joinRoomFx(roomId)
+);
+
+sample({ clock: roomOpened, target: [waitForRoomAuthFx, clearJoinedRoom] });
+
+const authenticationSettled = sample({
+  clock: waitForRoomAuthFx.doneData,
+  source: { generation: $connectionGeneration, auth: sessionModel.$authStatus },
+  filter: ({ generation }, entry) => generation === entry.generation,
+  fn: ({ auth }, entry) => ({ auth, entry }),
+});
+
+sample({
+  clock: authenticationSettled,
+  filter: ({ auth }) => auth === 'ready',
+  fn: ({ entry }) => entry,
+  target: resolveRoomFx,
+});
+
+const authFailed = sample({
+  clock: authenticationSettled,
+  filter: ({ auth }) => auth !== 'ready',
+});
+
+const roomJoined = sample({
+  clock: resolveRoomFx.done,
+  source: $connectionGeneration,
+  filter: (generation, { params }) => generation === params.generation,
+  fn: (_, { result }) => result,
+});
+
+const joinFailed = sample({
+  clock: [resolveRoomFx.fail, waitForRoomAuthFx.fail],
+  source: $connectionGeneration,
+  filter: (generation, { params }) => generation === params.generation,
+});
+
+export const $connectionFailed = createStore(false)
+  .on([authFailed, joinFailed], () => true)
+  .reset(roomOpened, GamePageGate.close);
+
+export const $connectionPending = createStore(false)
+  .on(roomOpened, () => true)
+  .reset(roomJoined, authFailed, joinFailed, GamePageGate.close);
 
 sample({
   clock: roomJoined,
@@ -77,15 +91,9 @@ sample({
 });
 
 sample({
-  clock: GamePageGate.open,
+  clock: roomJoined,
   fn: ({ roomId }) => roomId,
-  target: handHistoryModel.tableEntered,
-});
-
-sample({
-  clock: GamePageGate.open,
-  fn: ({ roomId }) => roomId,
-  target: gameSessionsModel.sessionStarted,
+  target: [handHistoryModel.tableEntered, gameSessionsModel.sessionStarted],
 });
 
 sample({
@@ -97,5 +105,15 @@ sample({
   ],
 });
 
-GamePageGate.open.watch(() => setTonConnectPaused(true));
-GamePageGate.close.watch(() => setTonConnectPaused(false));
+const setTonConnectPausedFx = createEffect(setTonConnectPaused);
+
+sample({
+  clock: GamePageGate.open,
+  fn: () => true,
+  target: setTonConnectPausedFx,
+});
+sample({
+  clock: GamePageGate.close,
+  fn: () => false,
+  target: setTonConnectPausedFx,
+});

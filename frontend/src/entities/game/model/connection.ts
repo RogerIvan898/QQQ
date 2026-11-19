@@ -15,13 +15,11 @@ import {
   markGameQueueLive,
   resetEventQueue,
 } from './event-queue';
+import { isServerGameEvent } from './server-event';
 import type { GameConnectParams, ServerGameEvent } from './types';
 
 let openSocket: WebSocket | null = null;
 let connectionId = 0;
-
-const isServerGameEvent = (data: unknown): data is ServerGameEvent =>
-  typeof data === 'object' && data !== null && 'type' in data;
 
 let unlockArmed = false;
 let visibilityTracked = false;
@@ -148,6 +146,7 @@ const scheduleReconnect = (wsUrl: string, id: number) => {
 
   if (id !== connectionId) return;
 
+  resetEventQueue();
   connectionLost(true);
 
   if (!navigator.onLine) {
@@ -198,12 +197,20 @@ const createGameSocket = (wsUrl: string, id: number): WebSocket => {
         }
       }, KEEPALIVE_MS);
       reconnectAttempt = 0;
-      connectionLost(false);
     },
     onMessage: data => {
       if (socket !== openSocket) return;
 
       if (isServerGameEvent(data)) {
+        if (
+          data.type === SERVER_EVENTS.PLAYER_SEATED ||
+          data.type === SERVER_EVENTS.HAND_STARTED ||
+          data.type === SERVER_EVENTS.TURN_CHANGED ||
+          data.type === SERVER_EVENTS.ALLOWED_ACTIONS
+        ) {
+          connectionLost(false);
+        }
+
         watchForStale(data, socket, () => {
           openSocket = null;
           socket.close();

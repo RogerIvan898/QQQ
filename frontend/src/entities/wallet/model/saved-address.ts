@@ -1,7 +1,8 @@
 import { createEvent, createStore, sample } from 'effector';
 
-import { sessionModel } from 'entities/session';
 import { readStorage, writeStorage } from 'shared/lib/storage';
+
+import { $walletAccountId } from './account';
 
 const STORAGE_KEY = 'poker:withdraw-address';
 
@@ -13,13 +14,13 @@ export const $savedWithdrawAddress = createStore<string | null>(null).on(
   (_, address) => address
 );
 
-sessionModel.$currentUserId.watch(userId => {
+$walletAccountId.watch(userId => {
   addressLoaded(userId ? readStorage(`${STORAGE_KEY}:${userId}`) : null);
 });
 
 sample({
   clock: withdrawAddressSaved,
-  source: sessionModel.$currentUserId,
+  source: $walletAccountId,
   fn: (userId, value) => ({ userId, value }),
 }).watch(({ userId, value }) => {
   if (!userId) return;

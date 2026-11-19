@@ -32,7 +32,10 @@ export const reduceAllowedActions = (
 
   if (
     event.type === SERVER_EVENTS.PLAYER_ACTED ||
-    event.type === SERVER_EVENTS.STREET_CONCLUDED
+    event.type === SERVER_EVENTS.STREET_CONCLUDED ||
+    event.type === SERVER_EVENTS.HAND_STARTED ||
+    event.type === SERVER_EVENTS.HAND_COMPLETED ||
+    event.type === SERVER_EVENTS.TURN_CHANGED
   ) {
     return null;
   }

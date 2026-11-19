@@ -93,4 +93,41 @@ export const checkWithdrawalRetry = async (page: Page) => {
   console.log(
     'Passed withdrawal remount, idempotent retry and saved address isolation.'
   );
+
+  await page.setViewportSize({ width: 450, height: 810 });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'My Wallet' }).click();
+  const wallet = page.getByRole('dialog', { name: 'My Wallet' });
+  const withdrawButton = wallet.getByRole('button', {
+    name: 'Withdraw',
+    exact: true,
+  });
+  await withdrawButton.click();
+  const withdrawal = page.getByRole('dialog', { name: 'Withdraw TON' });
+  await withdrawal.waitFor();
+  for (let tab = 0; tab < 8; tab += 1) {
+    await page.keyboard.press('Tab');
+    assert.ok(
+      await withdrawal.evaluate(panel => panel.contains(document.activeElement))
+    );
+  }
+  await page.keyboard.press('Escape');
+  await withdrawal.waitFor({ state: 'hidden' });
+  await wallet.waitFor();
+  assert.ok(
+    await withdrawButton.evaluate(button => button === document.activeElement)
+  );
+
+  await page.route('**/api/auth/login', route =>
+    route.fulfill({ status: 401, json: { error: 'test_auth_rejected' } })
+  );
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'My Wallet' }).click();
+  await wallet.getByRole('button', { name: 'Deposit', exact: true }).click();
+  const deposit = page.getByRole('dialog', { name: 'Deposit TON' });
+  await deposit.getByText("Couldn't sign in").waitFor();
+  assert.ok(await deposit.getByRole('button', { name: 'Retry' }).isEnabled());
+  console.log(
+    'Passed mobile dialog keyboard handling and deposit auth failure.'
+  );
 };

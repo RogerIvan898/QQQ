@@ -50,144 +50,166 @@ const readBody = async (response: Response): Promise<unknown> => {
 
   try {
     return await response.json();
-  } catch {
-    return undefined;
+  } catch (error) {
+    if (error instanceof SyntaxError) return undefined;
+
+    throw error;
   }
 };
 
-const send = async (
+const withRequestSignal = async <T>(
+  signal: AbortSignal | undefined,
+  run: (signal: AbortSignal) => Promise<T>
+): Promise<T> => {
+  const controller = new AbortController();
+  const onAbort = () => controller.abort();
+  const timer = setTimeout(onAbort, API_TIMEOUT_MS);
+
+  signal?.addEventListener('abort', onAbort, { once: true });
+  if (signal?.aborted) onAbort();
+
+  try {
+    controller.signal.throwIfAborted();
+
+    return await run(controller.signal);
+  } catch (error) {
+    if (controller.signal.aborted) {
+      if (signal?.aborted)
+        throw new ApiError('aborted', null, 'Request canceled');
+
+      throw new ApiError('timeout', null, 'Request timed out');
+    }
+
+    throw toApiError(error);
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', onAbort);
+  }
+};
+
+const send = (
   method: 'GET' | 'POST',
   url: string,
   data: unknown,
   config: RequestConfig | undefined,
-  token: string | null
-): Promise<Response> => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
-  const onAbort = () => controller.abort();
-
-  config?.signal?.addEventListener('abort', onAbort, { once: true });
-
+  token: string | null,
+  signal: AbortSignal
+) => {
   const headers: Record<string, string> = {
     Accept: 'application/json',
     [APP_HEADER]: APP_HEADER_VALUE,
     ...config?.headers,
   };
 
-  if (data !== undefined) {
-    headers['Content-Type'] = 'application/json';
-  }
+  if (data !== undefined) headers['Content-Type'] = 'application/json';
+  if (token) headers.Authorization = `Bearer ${token}`;
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  try {
-    return await fetch(buildUrl(url, config?.params), {
-      method,
-      headers,
-      body: data === undefined ? undefined : JSON.stringify(data),
-      credentials: 'include',
-      signal: controller.signal,
-    });
-  } catch (error) {
-    if (controller.signal.aborted && !config?.signal?.aborted) {
-      throw new ApiError('timeout', null, 'Request timed out');
-    }
-
+  return fetch(buildUrl(url, config?.params), {
+    method,
+    headers,
+    body: data === undefined ? undefined : JSON.stringify(data),
+    credentials: 'include',
+    signal,
+  }).catch((error: unknown) => {
     throw new ApiError(
       'network',
       null,
       error instanceof Error ? error.message : String(error)
     );
-  } finally {
-    clearTimeout(timer);
-    config?.signal?.removeEventListener('abort', onAbort);
-  }
+  });
 };
 
-const refreshToken = async (): Promise<string> => {
-  if (tokenManager.getIsRefreshing()) {
-    return tokenManager.addRequestToQueue();
-  }
+let refreshing: Promise<string> | undefined;
 
-  tokenManager.setIsRefreshing(true);
-
-  try {
-    const response = await send('POST', '/refresh', {}, undefined, null);
-    const body = (await readBody(response)) as
-      | { accessToken?: unknown }
-      | undefined;
-
-    if (!response.ok || typeof body?.accessToken !== 'string') {
-      throw new ApiError(`http_${response.status}`, response.status);
+const refreshToken = () => {
+  refreshing ??= withRequestSignal(undefined, async signal => {
+    const response = await send(
+      'POST',
+      '/refresh',
+      {},
+      undefined,
+      null,
+      signal
+    );
+    const body = await readBody(response);
+    if (
+      !response.ok ||
+      typeof body !== 'object' ||
+      body === null ||
+      !('accessToken' in body) ||
+      typeof body.accessToken !== 'string' ||
+      !body.accessToken.trim()
+    ) {
+      throw new ApiError('bad_refresh_response', response.status);
     }
 
     tokenManager.setToken(body.accessToken);
-    tokenManager.processQueue(null, body.accessToken);
 
     return body.accessToken;
-  } catch (error) {
-    const apiError = toApiError(error);
+  })
+    .catch((error: unknown) => {
+      tokenManager.setToken(null);
+      tokenManager.triggerSessionExpired();
 
-    tokenManager.setToken(null);
-    tokenManager.processQueue(apiError, null);
-    tokenManager.triggerSessionExpired();
+      throw error;
+    })
+    .finally(() => {
+      refreshing = undefined;
+    });
 
-    throw apiError;
-  } finally {
-    tokenManager.setIsRefreshing(false);
-  }
+  return refreshing;
 };
 
-const request = async <T>(
+const waitForRefresh = (refresh: Promise<string>, signal: AbortSignal) =>
+  new Promise<string>((resolve, reject) => {
+    const onAbort = () =>
+      reject(new DOMException('Request canceled', 'AbortError'));
+
+    signal.addEventListener('abort', onAbort, { once: true });
+    if (signal.aborted) onAbort();
+
+    void refresh.then(resolve, reject).finally(() => {
+      signal.removeEventListener('abort', onAbort);
+    });
+  });
+
+const request = (
   method: 'GET' | 'POST',
   url: string,
   data?: unknown,
   config?: RequestConfig
-): Promise<T> => {
-  try {
-    let response = await send(
-      method,
-      url,
-      data,
-      config,
-      tokenManager.getToken()
-    );
+): Promise<unknown> =>
+  withRequestSignal(config?.signal, async signal => {
+    const token = tokenManager.getToken();
+    let response = await send(method, url, data, config, token, signal);
 
     if (response.status === 401 && !AUTH_CALL.test(url)) {
-      const token = await refreshToken();
+      void response.body?.cancel().catch(() => undefined);
 
-      response = await send(method, url, data, config, token);
+      // A late 401 may arrive after another request already refreshed the token.
+      const current = tokenManager.getToken();
+      const renewed =
+        current && current !== token
+          ? current
+          : await waitForRefresh(refreshToken(), signal);
+
+      signal.throwIfAborted();
+      response = await send(method, url, data, config, renewed, signal);
     }
 
-    if (response.status === 204) {
-      return undefined as T;
-    }
+    if (response.status === 204) return undefined;
 
     const body = await readBody(response);
+    if (!response.ok) throw toApiError({ status: response.status, body });
+    if (body === undefined) throw new ApiError('bad_response', response.status);
 
-    if (!response.ok) {
-      throw toApiError({ status: response.status, body });
-    }
-
-    if (body === undefined) {
-      throw new ApiError('bad_response', response.status);
-    }
-
-    return body as T;
-  } catch (error) {
-    throw toApiError(error);
-  }
-};
+    return body;
+  });
 
 export const api = {
-  get: <TResponse>(url: string, config?: RequestConfig) =>
-    request<TResponse>('GET', url, undefined, config),
+  get: (url: string, config?: RequestConfig) =>
+    request('GET', url, undefined, config),
 
-  post: <TResponse, TRequest = unknown>(
-    url: string,
-    data?: TRequest,
-    config?: RequestConfig
-  ) => request<TResponse>('POST', url, data, config),
+  post: (url: string, data?: unknown, config?: RequestConfig) =>
+    request('POST', url, data, config),
 };

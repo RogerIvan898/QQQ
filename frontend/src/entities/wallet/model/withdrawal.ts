@@ -1,11 +1,11 @@
 import { createEffect, createEvent, sample } from 'effector';
 
-import { sessionModel } from 'entities/session';
 import { isApiError } from 'shared/api';
 import { readStorage, writeStorage } from 'shared/lib/storage';
 
 import { walletApi } from '../api';
 
+import { $walletAccountId } from './account';
 import type { WithdrawRequest } from './types';
 
 // Storage may be unavailable in a private WebView.
@@ -65,7 +65,7 @@ export const withdrawalSucceeded = withdrawFx.doneData;
 
 const submissionReceived = sample({
   clock: withdrawRequested,
-  source: { userId: sessionModel.$currentUserId, pending: $withdrawPending },
+  source: { userId: $walletAccountId, pending: $withdrawPending },
   fn: ({ userId, pending }, submission) => ({ userId, pending, submission }),
 });
 

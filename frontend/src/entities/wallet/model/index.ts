@@ -19,4 +19,5 @@ export {
 } from './wallet';
 export { $withdrawPending, withdrawRequested } from './withdrawal';
 export { $savedWithdrawAddress, withdrawAddressSaved } from './saved-address';
+export { walletAccountChanged } from './account';
 export type * from './types';

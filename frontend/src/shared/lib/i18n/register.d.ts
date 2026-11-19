@@ -149,6 +149,7 @@ declare module '@lingui/core' {
       | '_HtTna'
       | '_Y-845'
       | '_jQctM'
+      | '_laMzA'
       | '_rHUhS'
       | 'a2htTQ'
       | 'aREOqv'
