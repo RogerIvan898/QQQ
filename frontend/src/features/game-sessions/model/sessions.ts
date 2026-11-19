@@ -1,8 +1,13 @@
-import { createEvent, createStore } from 'effector';
+import { combine, createEvent, createStore, sample } from 'effector';
 
 import { gameModel, SERVER_EVENTS } from 'entities/game';
-import type { PlayerType as Player } from 'entities/player';
-import { $rooms, findRoom, roomBigBlind, roomFormat } from 'entities/room';
+import {
+  $rooms,
+  findRoom,
+  roomBigBlind,
+  roomFormat,
+  type RoomListItem,
+} from 'entities/room';
 import { sessionModel } from 'entities/session';
 import { readJson, writeJson } from 'shared/lib/storage';
 
@@ -54,12 +59,12 @@ const record = (session: GameSession) => {
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
-const finish = (draft: Draft) => {
+const finish = (draft: Draft, rooms: readonly RoomListItem[]) => {
   if (draft.hands === 0 || draft.buyInChips === null) {
     return true;
   }
 
-  const room = findRoom($rooms.getState(), draft.roomId);
+  const room = findRoom(rooms, draft.roomId);
 
   const bigBlindTon = draft.roomBigBlindTon || (room ? roomBigBlind(room) : 0);
   const tonPerChip =
@@ -96,61 +101,71 @@ const save = () => {
 
 let recovery: Draft[] = [];
 
-const recover = () => {
+const recover = (rooms: readonly RoomListItem[]) => {
   if (!owner || !recovery.length) return;
 
-  recovery = recovery.filter(saved => !finish(saved));
+  recovery = recovery.filter(saved => !finish(saved, rooms));
   writeJson(`${RECOVERY_KEY}:${owner}`, recovery);
 };
 
-const finishOrDefer = (saved: Draft) => {
-  if (!finish(saved)) {
+const finishOrDefer = (saved: Draft, rooms: readonly RoomListItem[]) => {
+  if (!finish(saved, rooms)) {
     recovery.push(saved);
     writeJson(`${RECOVERY_KEY}:${owner}`, recovery);
   }
 };
 
-sessionModel.$currentUserId.watch(userId => {
-  if (draft) {
-    finishOrDefer(draft);
-    draft = null;
-    save();
+combine({ rooms: $rooms, userId: sessionModel.$currentUserId }).watch(
+  ({ rooms, userId }) => {
+    if (userId === owner) {
+      recover(rooms);
+
+      return;
+    }
+
+    if (draft) {
+      finishOrDefer(draft, rooms);
+      draft = null;
+      save();
+    }
+
+    owner = userId;
+    recovery = [];
+    sessionsLoaded(
+      owner ? readJson<GameSession[]>(`${SESSIONS_KEY}:${owner}`, []) : []
+    );
+
+    if (!owner) return;
+
+    recovery = readJson<Draft[]>(`${RECOVERY_KEY}:${owner}`, []);
+    const stale = readJson<Draft | null>(`${DRAFT_KEY}:${owner}`, null);
+
+    if (stale) {
+      finishOrDefer(stale, rooms);
+      save();
+    }
+
+    recover(rooms);
   }
-
-  owner = userId;
-  recovery = [];
-  sessionsLoaded(
-    owner ? readJson<GameSession[]>(`${SESSIONS_KEY}:${owner}`, []) : []
-  );
-
-  if (!owner) return;
-
-  recovery = readJson<Draft[]>(`${RECOVERY_KEY}:${owner}`, []);
-  const stale = readJson<Draft | null>(`${DRAFT_KEY}:${owner}`, null);
-
-  if (stale) {
-    finishOrDefer(stale);
-    save();
-  }
-
-  recover();
-});
-
-$rooms.watch(recover);
+);
 
 export const sessionStarted = createEvent<string>();
 
 export const sessionEnded = createEvent();
 
-sessionStarted.watch(roomId => {
+sample({
+  clock: sessionStarted,
+  source: $rooms,
+  fn: (rooms, roomId) => ({ rooms, roomId }),
+}).watch(({ rooms, roomId }) => {
   if (!owner) return;
 
   if (draft) {
-    finishOrDefer(draft);
+    finishOrDefer(draft, rooms);
   }
 
   const now = new Date().toISOString();
-  const room = findRoom($rooms.getState(), roomId);
+  const room = findRoom(rooms, roomId);
 
   draft = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -169,26 +184,24 @@ sessionStarted.watch(roomId => {
   save();
 });
 
-sessionEnded.watch(() => {
+sample({ clock: sessionEnded, source: $rooms }).watch(rooms => {
   if (draft) {
-    finishOrDefer(draft);
+    finishOrDefer(draft, rooms);
     draft = null;
     save();
   }
 });
 
-const findMe = (players: Record<string, Player>) => {
-  const userId = sessionModel.$currentUserId.getState();
-
-  return Object.values(players).find(player => player.id === userId) ?? null;
-};
-
-gameModel.gameEventApplied.watch(({ state, event }) => {
+sample({
+  clock: gameModel.gameEventApplied,
+  source: $rooms,
+  fn: (rooms, applied) => ({ rooms, ...applied }),
+}).watch(({ rooms, state, event }) => {
   if (!draft) {
     return;
   }
 
-  const room = findRoom($rooms.getState(), draft.roomId);
+  const room = findRoom(rooms, draft.roomId);
 
   if (room) {
     draft.roomBigBlindTon = roomBigBlind(room);
@@ -196,7 +209,7 @@ gameModel.gameEventApplied.watch(({ state, event }) => {
     draft.blinds = room.blinds;
   }
 
-  const me = findMe(state.players);
+  const me = Object.values(state.players).find(player => player.id === owner);
 
   if (!me) {
     return;

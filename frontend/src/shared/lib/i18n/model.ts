@@ -20,44 +20,29 @@ export const $isI18nReady = createStore(false).on(
   () => true
 );
 
-let pendingLoad: Promise<void> | null = null;
-
-export const waitForLocale = () => {
-  if ($isI18nReady.getState()) {
-    return Promise.resolve();
-  }
-
-  pendingLoad ??= new Promise(resolve => {
-    const unsubscribe = $isI18nReady.watch(ready => {
-      if (!ready) {
-        return;
-      }
-
+const localeReady = new Promise<void>(resolve => {
+  const unsubscribe = $isI18nReady.updates.watch(ready => {
+    if (ready) {
       unsubscribe();
-      pendingLoad = null;
       resolve();
-    });
+    }
   });
+});
 
-  return pendingLoad;
-};
+const localePreparationRequested = createEvent();
 
-export const prepareI18n = async () => {
-  if ($isI18nReady.getState()) {
-    return;
-  }
+export const waitForLocale = () => localeReady;
 
-  if (!activateLocaleFx.pending.getState()) {
-    void activateLocaleFx(detectLocale()).catch(() => undefined);
-  }
+export const prepareI18n = () => {
+  localePreparationRequested();
 
-  await waitForLocale();
+  return waitForLocale();
 };
 
 sample({
-  clock: I18nGate.open,
-  filter: () =>
-    !$isI18nReady.getState() && !activateLocaleFx.pending.getState(),
+  clock: [I18nGate.open, localePreparationRequested],
+  source: { ready: $isI18nReady, pending: activateLocaleFx.pending },
+  filter: ({ ready, pending }) => !ready && !pending,
   fn: () => detectLocale(),
   target: activateLocaleFx,
 });

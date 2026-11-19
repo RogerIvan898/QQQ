@@ -27,20 +27,16 @@ export const $authStatus = createStore<'pending' | 'ready' | 'failed'>(
   .on(loginFx.done, () => 'ready')
   .on(loginFx.fail, () => 'failed');
 
-export const waitForAuth = () =>
-  new Promise<void>(resolve => {
-    if ($authStatus.getState() !== 'pending') {
+const authReady = new Promise<void>(resolve => {
+  const unsubscribe = $authStatus.updates.watch(status => {
+    if (status !== 'pending') {
+      unsubscribe();
       resolve();
-      return;
     }
-
-    const unsubscribe = $authStatus.watch(status => {
-      if (status !== 'pending') {
-        unsubscribe();
-        resolve();
-      }
-    });
   });
+});
+
+export const waitForAuth = () => authReady;
 
 sample({
   clock: appStarted,

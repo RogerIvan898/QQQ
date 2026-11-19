@@ -1,5 +1,8 @@
 import React from 'react';
 
+import { createWatch } from 'effector';
+import { useProvidedScope } from 'effector-react';
+
 import { SERVER_EVENTS, gameModel, type ServerGameEvent } from 'entities/game';
 import { POT_FLIGHT_MS, winRevealMs } from 'shared/config/table-timing';
 
@@ -17,6 +20,7 @@ export const usePotFlights = (
   >({});
   const [flights, setFlights] = React.useState<PotFlight[] | null>(null);
   const [flightId, setFlightId] = React.useState(0);
+  const scope = useProvidedScope();
   const revealTimer = React.useRef<number | null>(null);
 
   const clearReveal = () => {
@@ -26,69 +30,79 @@ export const usePotFlights = (
     }
   };
 
-  const onTableEvent = React.useEffectEvent((event: ServerGameEvent) => {
-    if (event.type === SERVER_EVENTS.HAND_STARTED) {
-      clearReveal();
-      setFlights(null);
-      onHidePot(false);
-      return;
-    }
-
-    if (event.type !== SERVER_EVENTS.HAND_COMPLETED || !tableElement) {
-      return;
-    }
-
-    const tableRect = tableElement.getBoundingClientRect();
-    const { x: fromX, y: fromY } = getPotCenter(tableElement, tableRect);
-
-    const next = event.payload.winners.flatMap(winner => {
-      const seat = seats.find(item => item.seat === winner.seatIndex);
-
-      if (!seat) {
-        return [];
+  const onTableEvent = React.useEffectEvent(
+    ({ event, showdown }: { event: ServerGameEvent; showdown: boolean }) => {
+      if (event.type === SERVER_EVENTS.HAND_STARTED) {
+        clearReveal();
+        setFlights(null);
+        onHidePot(false);
+        return;
       }
 
-      return [
-        {
-          seat: winner.seatIndex,
-          amount: winner.amountWon,
-          fromX,
-          fromY,
-          toX: seat.fx * tableRect.width,
-          toY: seat.fy * tableRect.height,
-        },
-      ];
-    });
+      if (event.type !== SERVER_EVENTS.HAND_COMPLETED || !tableElement) {
+        return;
+      }
 
-    if (!next.length) {
-      return;
-    }
+      const tableRect = tableElement.getBoundingClientRect();
+      const { x: fromX, y: fromY } = getPotCenter(tableElement, tableRect);
 
-    setWins(current => {
-      const updated = { ...current };
+      const next = event.payload.winners.flatMap(winner => {
+        const seat = seats.find(item => item.seat === winner.seatIndex);
 
-      event.payload.winners.forEach(winner => {
-        updated[winner.seatIndex] = {
-          amount: winner.amountWon,
-          id: (current[winner.seatIndex]?.id ?? 0) + 1,
-        };
+        if (!seat) {
+          return [];
+        }
+
+        return [
+          {
+            seat: winner.seatIndex,
+            amount: winner.amountWon,
+            fromX,
+            fromY,
+            toX: seat.fx * tableRect.width,
+            toY: seat.fy * tableRect.height,
+          },
+        ];
       });
 
-      return updated;
-    });
+      if (!next.length) {
+        return;
+      }
 
-    clearReveal();
-    revealTimer.current = window.setTimeout(() => {
-      revealTimer.current = null;
-      setFlights(next);
-      setFlightId(id => id + 1);
-      onHidePot(true);
-    }, winRevealMs(gameModel.$showdownThisHand.getState()));
-  });
+      setWins(current => {
+        const updated = { ...current };
+
+        event.payload.winners.forEach(winner => {
+          updated[winner.seatIndex] = {
+            amount: winner.amountWon,
+            id: (current[winner.seatIndex]?.id ?? 0) + 1,
+          };
+        });
+
+        return updated;
+      });
+
+      clearReveal();
+      revealTimer.current = window.setTimeout(() => {
+        revealTimer.current = null;
+        setFlights(next);
+        setFlightId(id => id + 1);
+        onHidePot(true);
+      }, winRevealMs(showdown));
+    }
+  );
 
   React.useEffect(() => clearReveal, []);
 
-  React.useEffect(() => gameModel.incomingEvent.watch(onTableEvent), []);
+  React.useEffect(
+    () =>
+      createWatch({
+        unit: gameModel.tableAnimationEvent,
+        scope: scope ?? undefined,
+        fn: onTableEvent,
+      }),
+    [scope]
+  );
 
   React.useEffect(() => {
     if (!flights) {

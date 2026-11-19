@@ -1,4 +1,4 @@
-import { createEvent, createStore } from 'effector';
+import { createEvent, createStore, sample } from 'effector';
 
 import { parseCard, type CardType as Card } from 'entities/card';
 import {
@@ -9,6 +9,7 @@ import {
 } from 'entities/game';
 import type { PlayerType as Player } from 'entities/player';
 import { sessionModel } from 'entities/session';
+import type { GameVariant } from 'shared/config/game-variant';
 import { readJson, removeStorageByPrefix, writeJson } from 'shared/lib/storage';
 import { runInBackground } from 'shared/utils/schedule';
 
@@ -28,8 +29,10 @@ interface Saved {
 // Старый формат: по ключу на стол в localStorage, без очистки.
 removeStorageByPrefix('poker:hand-history');
 
-const loadHands = (roomId: string | null): HandRecord[] => {
-  const userId = sessionModel.$currentUserId.getState();
+const loadHands = (
+  roomId: string | null,
+  userId: string | null
+): HandRecord[] => {
   if (!userId || !roomId) {
     return [];
   }
@@ -47,13 +50,18 @@ const loadHands = (roomId: string | null): HandRecord[] => {
 export const tableEntered = createEvent<string | null>();
 export const tableLeft = createEvent();
 const handRecorded = createEvent<HandRecord>();
+const enteredTable = sample({
+  clock: tableEntered,
+  source: sessionModel.$currentUserId,
+  fn: (userId, roomId) => ({ userId, roomId }),
+});
 
 const $roomId = createStore<string | null>(null)
   .on(tableEntered, (_, roomId) => roomId)
   .reset(tableLeft, sessionModel.$currentUserId.updates);
 
 export const $hands = createStore<HandRecord[]>([])
-  .on(tableEntered, (_, roomId) => loadHands(roomId))
+  .on(enteredTable, (_, { userId, roomId }) => loadHands(roomId, userId))
   .on(handRecorded, (hands, hand) =>
     [hand, ...hands.filter(saved => saved.id !== hand.id)].slice(
       0,
@@ -81,13 +89,13 @@ const flushSave = () => {
   writeJson(pending.key, pending.value);
 };
 
-const scheduleSave = (roomId: string) => {
+const scheduleSave = (roomId: string, hands: HandRecord[]) => {
   if (!tableKey) return;
 
   pendingSave?.cancel();
   pendingSave = {
     key: tableKey,
-    value: { roomId, hands: $hands.getState() },
+    value: { roomId, hands },
     cancel: runInBackground(flushSave),
   };
 };
@@ -95,8 +103,7 @@ const scheduleSave = (roomId: string) => {
 // Reload or close before the background task runs: write right away.
 window.addEventListener('pagehide', flushSave);
 
-tableEntered.watch(() => {
-  const userId = sessionModel.$currentUserId.getState();
+enteredTable.watch(({ userId }) => {
   tableKey = userId ? `${STORAGE_KEY}:${userId}` : null;
 });
 
@@ -107,9 +114,13 @@ tableLeft.watch(() => {
   tableKey = null;
 });
 
-handRecorded.watch(hand => {
+sample({
+  clock: handRecorded,
+  source: $hands,
+  fn: (hands, hand) => ({ hands, hand }),
+}).watch(({ hands, hand }) => {
   if (hand.roomId) {
-    scheduleSave(hand.roomId);
+    scheduleSave(hand.roomId, hands);
   }
 });
 
@@ -128,23 +139,20 @@ sessionModel.$currentUserId.updates.watch(() => {
   draft = null;
 });
 
-const findMe = (players: Record<string, Player>) => {
-  const userId = sessionModel.$currentUserId.getState();
-
-  return Object.values(players).find(player => player.id === userId) ?? null;
-};
-
 const nameOf = (players: Record<string, Player>, seat: number) =>
   players[seat]?.name ?? `#${seat + 1}`;
 
 const startHand = (
   state: GameState,
+  context: { userId: string | null; roomId: string | null; game: GameVariant },
   payload: Extract<
     ServerGameEvent,
     { type: typeof SERVER_EVENTS.HAND_STARTED }
   >['payload']
 ) => {
-  const me = findMe(state.players);
+  const me = Object.values(state.players).find(
+    player => player.id === context.userId
+  );
   const mySeat = me?.seat ?? null;
   const blind = (seat: number, action: 'SB' | 'BB'): HandAction => ({
     street: 'PREFLOP',
@@ -161,9 +169,9 @@ const startHand = (
     revealed: {},
     record: {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      roomId: $roomId.getState(),
+      roomId: context.roomId,
       startedAt: new Date().toISOString(),
-      game: gameModel.$gameVariant.getState(),
+      game: context.game,
       smallBlind: state.smallBlind,
       bigBlind: state.bigBlind,
       dealerSeat: payload.dealerSeat,
@@ -235,12 +243,20 @@ const finishHand = (
   });
 };
 
-gameModel.gameEventApplied.watch(({ state, event }) => {
+sample({
+  clock: gameModel.gameEventApplied,
+  source: {
+    userId: sessionModel.$currentUserId,
+    roomId: $roomId,
+    game: gameModel.$gameVariant,
+  },
+  fn: (context, applied) => ({ context, ...applied }),
+}).watch(({ context, state, event }) => {
   if (!tableKey) return;
 
   switch (event.type) {
     case SERVER_EVENTS.HAND_STARTED:
-      startHand(state, event.payload);
+      startHand(state, context, event.payload);
       break;
     case SERVER_EVENTS.YOUR_CARDS:
       if (draft) {

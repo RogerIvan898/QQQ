@@ -45,6 +45,10 @@ try {
       return route.fulfill({ json: { user: { id: '100' } } });
     }
 
+    if (url.pathname === '/api/wallet/balance') {
+      return route.fulfill({ json: { available: 20 } });
+    }
+
     if (url.pathname === '/api/rooms') {
       return route.fulfill({
         json: [1, 2].map(id => ({
@@ -88,9 +92,8 @@ try {
     }
   });
 
-  await page.goto(new URL('game/1', base).href, {
-    waitUntil: 'domcontentloaded',
-  });
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Play', exact: true }).first().click();
   const socket = await Promise.race([connected.promise, deadline]);
   socket.send(
     JSON.stringify({

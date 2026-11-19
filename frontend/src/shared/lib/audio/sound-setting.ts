@@ -13,4 +13,10 @@ export const $soundEnabled = createStore(readFlag(STORAGE_KEY, true)).on(
 
 $soundEnabled.updates.watch(enabled => writeFlag(STORAGE_KEY, enabled));
 
-export const isSoundEnabled = () => $soundEnabled.getState();
+// Audio playback is an imperative browser integration.
+let soundEnabled = true;
+$soundEnabled.watch(enabled => {
+  soundEnabled = enabled;
+});
+
+export const isSoundEnabled = () => soundEnabled;

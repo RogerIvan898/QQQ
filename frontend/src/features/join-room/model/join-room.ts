@@ -1,4 +1,10 @@
-import { createEffect, createEvent, createStore } from 'effector';
+import {
+  attach,
+  createEffect,
+  createEvent,
+  createStore,
+  sample,
+} from 'effector';
 
 import { roomApi } from 'entities/room';
 
@@ -36,20 +42,37 @@ export const $joinFailure = createStore<{
   count: (last?.count ?? 0) + 1,
 }));
 
-export const prepareJoinedRoom =
-  createEvent<Awaited<ReturnType<typeof joinRoomFx>>>();
-const $joinedRoom = createStore<Awaited<ReturnType<typeof joinRoomFx>> | null>(
-  null
-).on(prepareJoinedRoom, (_, room) => room);
+type JoinedRoom = Awaited<ReturnType<typeof joinRoomFx>>;
 
-export const consumeJoinedRoom = () => {
-  const room = $joinedRoom.getState();
+const prepareJoinedRoom = createEvent<JoinedRoom>();
+export const clearJoinedRoom = createEvent();
 
-  clearJoinedRoom();
+export const $joinedRoom = createStore<JoinedRoom | null>(null)
+  .on(prepareJoinedRoom, (_, room) => room)
+  .reset(clearJoinedRoom);
 
-  return room;
-};
+interface JoinRequest {
+  roomId: string;
+  onJoined: (room: JoinedRoom) => void;
+}
 
-const clearJoinedRoom = createEvent();
+export const joinRequested = createEvent<JoinRequest>();
 
-$joinedRoom.reset(clearJoinedRoom);
+const joinFromMenuFx = attach({
+  effect: joinRoomFx,
+  mapParams: ({ roomId }: JoinRequest) => roomId,
+});
+
+sample({
+  clock: joinRequested,
+  source: joinRoomFx.pending,
+  filter: pending => !pending,
+  fn: (_, request) => request,
+  target: joinFromMenuFx,
+});
+
+sample({ clock: joinFromMenuFx.doneData, target: prepareJoinedRoom });
+
+joinFromMenuFx.done.watch(({ params, result }) => {
+  params.onJoined(result);
+});

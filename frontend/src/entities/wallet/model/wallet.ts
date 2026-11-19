@@ -19,7 +19,7 @@ import type {
   TransactionType,
   WalletBalance,
 } from './types';
-import { withdrawFx } from './withdrawal';
+import { withdrawalSucceeded } from './withdrawal';
 
 export const STATUS_LABELS = {
   completed: msg`Completed`,
@@ -225,6 +225,6 @@ sample({
 });
 
 sample({
-  clock: withdrawFx.done,
+  clock: withdrawalSucceeded,
   target: walletRefreshRequested,
 });

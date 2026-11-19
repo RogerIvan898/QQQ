@@ -28,10 +28,9 @@ const applyFourColor = (enabled: boolean) => {
   document.documentElement.toggleAttribute('data-four-color', enabled);
 };
 
-applyFourColor($fourColorDeck.getState());
+$fourColorDeck.watch(applyFourColor);
 
 $fourColorDeck.updates.watch(enabled => {
-  applyFourColor(enabled);
   writeFlag(FOUR_COLOR_KEY, enabled);
 });
 

@@ -41,7 +41,7 @@ interface TestRuntime {
   };
   joinCalls: number;
   joinHandler: (roomId: string) => Promise<JoinedRoom>;
-  prepared: JoinedRoom | null;
+  prepareRoom: EventCallable<JoinedRoom>;
 }
 
 const runtime = globalThis as unknown as TestRuntime;
@@ -232,7 +232,7 @@ export const gameModel = {
 };
 export const userChanged = createEvent();
 export const sessionModel = {
-  $currentUserId: createStore('100').on(userChanged, (_, user) => user),
+  $currentUserId: createStore(null, { skipVoid: false }).on(userChanged, (_, user) => user),
   waitForAuth: async () => {},
 };
 export const roomsChanged = createEvent();
@@ -265,7 +265,13 @@ const sessions = await load<
   typeof import('../src/features/game-sessions/model/sessions')
 >('src/features/game-sessions/model/sessions.ts', fixtureSource);
 
-assert.equal(sessions.$sessions.getState().length, 0);
+let observedSessions: typeof sessions.$sessions.defaultState = [];
+const stopObserving = sessions.$sessions.watch(value => {
+  observedSessions = value;
+});
+
+runtime.fixture.userChanged('100');
+assert.equal(observedSessions.length, 0);
 assert.equal(readSaved<unknown[]>('poker:game-session-recovery:100').length, 1);
 runtime.fixture.roomsChanged([
   {
@@ -279,12 +285,12 @@ runtime.fixture.roomsChanged([
     maxBuy: 10,
   },
 ]);
-assert.equal(sessions.$sessions.getState()[0].net, 2);
+assert.equal(observedSessions[0].net, 2);
 assert.equal(readSaved<unknown[]>('poker:game-session-recovery:100').length, 0);
 runtime.fixture.userChanged('101');
-assert.deepEqual(sessions.$sessions.getState(), []);
+assert.equal(observedSessions.length, 0);
 runtime.fixture.userChanged('100');
-assert.equal(sessions.$sessions.getState()[0].net, 2);
+assert.equal(observedSessions[0].net, 2);
 console.log(
   'Recovery regressions passed: queue cancellation, watchdog, legacy session recovery'
 );
@@ -296,6 +302,7 @@ assert.equal(
   0.1
 );
 sessions.sessionEnded();
+stopObserving();
 
 const gate = await load<
   typeof import('../src/pages/game-room/model/game-room')
@@ -312,11 +319,10 @@ export const handHistoryModel = {
   tableLeft: createEvent(),
 };
 export const setTonConnectPaused = () => {};
-export const consumeJoinedRoom = () => {
-  const room = globalThis.prepared;
-  globalThis.prepared = null;
-  return room;
-};
+const prepared = createEvent();
+globalThis.prepareRoom = prepared;
+export const clearJoinedRoom = createEvent();
+export const $joinedRoom = createStore(null, { skipVoid: false }).on(prepared, (_, room) => room).reset(clearJoinedRoom);
 export const joinRoomFx = createEffect(roomId => {
   globalThis.joinCalls++;
   return globalThis.joinHandler(roomId);
@@ -334,7 +340,7 @@ await tick();
 assert.equal(runtime.joinCalls, 1);
 assert.equal(connects[0].wsUrl, 'wss://fresh');
 gate.GamePageGate.close({ roomId: '1' });
-runtime.prepared = { roomId: '1', wsUrl: 'wss://prepared' };
+runtime.prepareRoom({ roomId: '1', wsUrl: 'wss://prepared' });
 gate.GamePageGate.open({ roomId: '1' });
 await tick();
 assert.equal(runtime.joinCalls, 1);

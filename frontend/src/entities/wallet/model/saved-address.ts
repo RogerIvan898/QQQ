@@ -1,4 +1,4 @@
-import { createEvent, createStore } from 'effector';
+import { createEvent, createStore, sample } from 'effector';
 
 import { sessionModel } from 'entities/session';
 import { readStorage, writeStorage } from 'shared/lib/storage';
@@ -17,8 +17,11 @@ sessionModel.$currentUserId.watch(userId => {
   addressLoaded(userId ? readStorage(`${STORAGE_KEY}:${userId}`) : null);
 });
 
-withdrawAddressSaved.watch(value => {
-  const userId = sessionModel.$currentUserId.getState();
+sample({
+  clock: withdrawAddressSaved,
+  source: sessionModel.$currentUserId,
+  fn: (userId, value) => ({ userId, value }),
+}).watch(({ userId, value }) => {
   if (!userId) return;
 
   const address = value.trim() || null;

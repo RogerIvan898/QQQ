@@ -42,7 +42,7 @@ const WithdrawSession = ({
   const wallet = useUnit($tonWallet);
   const connectedAddress = wallet?.friendlyAddress ?? '';
   const savedAddress = useUnit(walletModel.$savedWithdrawAddress);
-  const pending = useUnit(walletModel.withdrawFx.pending);
+  const pending = useUnit(walletModel.$withdrawPending);
   const mounted = useRef(false);
 
   useEffect(() => {

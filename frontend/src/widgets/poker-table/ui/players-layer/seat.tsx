@@ -137,9 +137,15 @@ const SeatView = ({
     [seat]
   );
 
+  const hand =
+    isViewer && myCards ? myCards : (revealed ?? player?.hand ?? null);
+  const winningBoard = useStoreMap({
+    store: gameModel.$community,
+    keys: [Boolean(winAmount && hand)],
+    fn: (cards, [winning]) => (winning ? cards : NO_CARDS),
+  });
   if (!player) return null;
 
-  const hand = isViewer && myCards ? myCards : (revealed ?? player.hand);
   const blindHidden =
     postAt !== null && !blindShown && preflop && player.committed > 0;
   const shownPlayer = blindHidden
@@ -156,9 +162,7 @@ const SeatView = ({
 
   const onWinningChange = (winning: boolean) => {
     const best =
-      winning && hand
-        ? bestFiveCards(hand, gameModel.$community.getState(), variant)
-        : null;
+      winning && hand ? bestFiveCards(hand, winningBoard, variant) : null;
 
     if (best) {
       highlightShown({ owner: `win-${seat}`, cards: best, mode: 'win' });

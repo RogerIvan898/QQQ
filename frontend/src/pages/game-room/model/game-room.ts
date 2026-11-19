@@ -6,10 +6,7 @@ import { $rooms, findRoom } from 'entities/room';
 import { sessionModel } from 'entities/session';
 import { gameSessionsModel } from 'features/game-sessions';
 import { handHistoryModel } from 'features/hand-history';
-import {
-  consumeJoinedRoom,
-  joinRoomFx,
-} from 'features/join-room/model/join-room';
+import { $joinedRoom, clearJoinedRoom, joinRoomFx } from 'features/join-room';
 import { setTonConnectPaused } from 'shared/lib/ton-connect';
 
 export const GamePageGate = createGate<{ roomId: string }>();
@@ -33,12 +30,18 @@ GamePageGate.close.watch(() => {
   connectionGeneration += 1;
 });
 
-GamePageGate.open.watch(async ({ roomId }) => {
+const roomOpened = sample({
+  clock: GamePageGate.open,
+  source: $joinedRoom,
+  fn: (prepared, { roomId }) => ({ prepared, roomId }),
+});
+
+roomOpened.watch(async ({ roomId, prepared }) => {
   const generation = ++connectionGeneration;
 
   connectionStarted();
 
-  const prepared = consumeJoinedRoom();
+  clearJoinedRoom();
 
   try {
     await sessionModel.waitForAuth();
@@ -52,16 +55,25 @@ GamePageGate.open.watch(async ({ roomId }) => {
       return;
     }
 
-    gameModel.connectGame({
-      wsUrl: room.wsUrl,
-      game: findRoom($rooms.getState(), roomId)?.game,
-    });
+    roomJoined(room);
     connectionReady();
   } catch {
     if (generation === connectionGeneration) {
       connectionFailed();
     }
   }
+});
+
+const roomJoined = createEvent<{ roomId: string; wsUrl: string }>();
+
+sample({
+  clock: roomJoined,
+  source: $rooms,
+  fn: (rooms, { roomId, wsUrl }) => ({
+    wsUrl,
+    game: findRoom(rooms, roomId)?.game,
+  }),
+  target: gameModel.connectGame,
 });
 
 sample({

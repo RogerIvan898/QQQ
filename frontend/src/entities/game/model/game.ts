@@ -158,6 +158,12 @@ export const $showdownThisHand = createStore(false)
   })
   .reset(disconnectGame);
 
+export const tableAnimationEvent = sample({
+  clock: incomingEvent,
+  source: $showdownThisHand,
+  fn: (showdown, event) => ({ showdown, event }),
+});
+
 export const $handNumber = createStore(0)
   .on(incomingEvent, (count, event) =>
     event.type === SERVER_EVENTS.HAND_STARTED ? count + 1 : count
@@ -261,10 +267,21 @@ sample({
   target: disconnectGameFx,
 });
 
+// The animation queue runs outside Effector and consumes the live table snapshots.
+let queueState = INITIAL_GAME_STATE;
+let queueHandStartedAt = 0;
+
+$gameState.watch(state => {
+  queueState = state;
+});
+$handStartedAt.watch(startedAt => {
+  queueHandStartedAt = startedAt;
+});
+
 bindGameQueue({
   emit: incomingEvent,
-  readState: () => $gameState.getState(),
-  readHandStartedAt: () => $handStartedAt.getState(),
+  readState: () => queueState,
+  readHandStartedAt: () => queueHandStartedAt,
 });
 
 watchPlayerActionSounds(incomingEvent);

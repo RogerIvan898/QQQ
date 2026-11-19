@@ -1,6 +1,6 @@
-import { createEvent, createStore } from 'effector';
+import { createEvent, createStore, sample } from 'effector';
 
-import { gameModel, SERVER_EVENTS } from 'entities/game';
+import { gameModel, SERVER_EVENTS, type GameState } from 'entities/game';
 import { PlayerStatus } from 'entities/player';
 import { HAND_END_MS } from 'shared/config/table-timing';
 
@@ -131,9 +131,7 @@ const stop = () => {
   equityChanged(null);
 };
 
-const recalculate = () => {
-  const state = gameModel.$gameState.getState();
-
+const recalculate = (state: GameState, variant: EquityRequest['variant']) => {
   const contenders = Object.values(state.players).filter(
     player => player.hand && player.status !== PlayerStatus.FOLDED
   );
@@ -152,7 +150,7 @@ const recalculate = () => {
     id: requestId,
     hands: contenders.map(player => (player.hand ?? []).map(toInt)),
     board: state.community.map(toInt),
-    variant: gameModel.$gameVariant.getState(),
+    variant,
   };
   dropBusyWorker();
 
@@ -179,20 +177,28 @@ const recalculate = () => {
   }
 };
 
-gameModel.incomingEvent.watch(event => {
+sample({
+  clock: gameModel.incomingEvent,
+  source: {
+    state: gameModel.$gameState,
+    variant: gameModel.$gameVariant,
+    equity: $equity,
+  },
+  fn: (snapshot, event) => ({ ...snapshot, event }),
+}).watch(({ state, variant, equity, event }) => {
   switch (event.type) {
     case SERVER_EVENTS.SHOWDOWN:
-      if (gameModel.$gameState.getState().community.length < 5) {
+      if (state.community.length < 5) {
         revealAt = 0;
-        recalculate();
+        recalculate(state, variant);
       }
       break;
     case SERVER_EVENTS.BOARD_DEALT: {
-      const boardSize = gameModel.$gameState.getState().community.length;
+      const boardSize = state.community.length;
 
       if (active && boardSize !== 1 && boardSize !== 2) {
         revealAt = performance.now() + CARD_DEAL_MS;
-        recalculate();
+        recalculate(state, variant);
       }
       break;
     }
@@ -203,7 +209,7 @@ gameModel.incomingEvent.watch(event => {
       }
       break;
     case SERVER_EVENTS.HAND_STARTED:
-      if (active || $equity.getState()) {
+      if (active || equity) {
         stop();
       }
 

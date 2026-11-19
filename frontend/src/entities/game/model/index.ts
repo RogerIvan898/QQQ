@@ -25,6 +25,7 @@ export {
   disconnectGame,
   gameEventApplied,
   incomingEvent,
+  tableAnimationEvent,
   sendClientCommand,
 } from './game';
 export { CLIENT_COMMANDS, SERVER_EVENTS } from './constants';
