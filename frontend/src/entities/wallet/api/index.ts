@@ -16,8 +16,10 @@ export const walletApi = {
 
   getDepositAddress: () => api.get<DepositAddress>('/wallet/deposit-address'),
 
-  withdraw: (request: WithdrawRequest) =>
-    api.post<Transaction, WithdrawRequest>('/wallet/withdraw', request),
+  withdraw: (request: WithdrawRequest, id: string) =>
+    api.post<Transaction, WithdrawRequest>('/wallet/withdraw', request, {
+      headers: { 'Idempotency-Key': id },
+    }),
   getTransactions: (
     cursor: string | null,
     type: TransactionType | null,

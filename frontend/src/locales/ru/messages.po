@@ -593,8 +593,8 @@ msgstr "Сеть отклонила перевод."
 msgid "The transfer was sent without the required memo. Contact support to get it credited."
 msgstr "Перевод отправлен без обязательного комментария (memo). Напишите в поддержку, чтобы его зачислили."
 
-msgid "The withdrawal didn't go through. Your balance is unchanged; try again."
-msgstr "Вывод не прошёл. Баланс не изменился, попробуйте ещё раз."
+msgid "Check your transaction history before retrying this withdrawal."
+msgstr "Перед повторным выводом проверьте историю операций."
 
 msgid "Three of a kind"
 msgstr "Сет"

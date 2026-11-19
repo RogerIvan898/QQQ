@@ -1,7 +1,12 @@
 import { createEvent, createStore } from 'effector';
 
 import { parseCard, type CardType as Card } from 'entities/card';
-import { gameModel, SERVER_EVENTS, type ServerGameEvent } from 'entities/game';
+import {
+  gameModel,
+  SERVER_EVENTS,
+  type GameState,
+  type ServerGameEvent,
+} from 'entities/game';
 import type { PlayerType as Player } from 'entities/player';
 import { sessionModel } from 'entities/session';
 import { readJson, removeStorageByPrefix, writeJson } from 'shared/lib/storage';
@@ -24,19 +29,19 @@ interface Saved {
 removeStorageByPrefix('poker:hand-history');
 
 const loadHands = (roomId: string | null): HandRecord[] => {
-  if (!roomId) {
+  const userId = sessionModel.$currentUserId.getState();
+  if (!userId || !roomId) {
     return [];
   }
 
-  const saved = readJson<Partial<Saved> | null>(STORAGE_KEY, null);
+  const saved = readJson<Partial<Saved> | null>(
+    `${STORAGE_KEY}:${userId}`,
+    null
+  );
 
   return saved?.roomId === roomId && Array.isArray(saved.hands)
     ? saved.hands
     : [];
-};
-
-const saveHands = (roomId: string, hands: HandRecord[]) => {
-  writeJson(STORAGE_KEY, { roomId, hands } satisfies Saved);
 };
 
 export const tableEntered = createEvent<string | null>();
@@ -45,7 +50,7 @@ const handRecorded = createEvent<HandRecord>();
 
 const $roomId = createStore<string | null>(null)
   .on(tableEntered, (_, roomId) => roomId)
-  .reset(tableLeft);
+  .reset(tableLeft, sessionModel.$currentUserId.updates);
 
 export const $hands = createStore<HandRecord[]>([])
   .on(tableEntered, (_, roomId) => loadHands(roomId))
@@ -55,12 +60,14 @@ export const $hands = createStore<HandRecord[]>([])
       MAX_HANDS_PER_ROOM
     )
   )
-  .reset(tableLeft);
+  .reset(tableLeft, sessionModel.$currentUserId.updates);
 
 // Serializing up to 50 hands runs at background priority: HAND_COMPLETED
 // lands right as the pot flies to the winner, and a sync write there can drop
 // frames.
-let pendingSave: { roomId: string; cancel: () => void } | null = null;
+let pendingSave: { key: string; value: Saved; cancel: () => void } | null =
+  null;
+let tableKey: string | null = null;
 
 const flushSave = () => {
   const pending = pendingSave;
@@ -71,21 +78,33 @@ const flushSave = () => {
 
   pending.cancel();
   pendingSave = null;
-  saveHands(pending.roomId, $hands.getState());
+  writeJson(pending.key, pending.value);
 };
 
 const scheduleSave = (roomId: string) => {
+  if (!tableKey) return;
+
   pendingSave?.cancel();
-  pendingSave = { roomId, cancel: runInBackground(flushSave) };
+  pendingSave = {
+    key: tableKey,
+    value: { roomId, hands: $hands.getState() },
+    cancel: runInBackground(flushSave),
+  };
 };
 
 // Reload or close before the background task runs: write right away.
 window.addEventListener('pagehide', flushSave);
 
+tableEntered.watch(() => {
+  const userId = sessionModel.$currentUserId.getState();
+  tableKey = userId ? `${STORAGE_KEY}:${userId}` : null;
+});
+
 tableLeft.watch(() => {
   pendingSave?.cancel();
   pendingSave = null;
-  writeJson(STORAGE_KEY, null);
+  if (tableKey) writeJson(tableKey, null);
+  tableKey = null;
 });
 
 handRecorded.watch(hand => {
@@ -103,6 +122,12 @@ interface Draft {
 
 let draft: Draft | null = null;
 
+sessionModel.$currentUserId.updates.watch(() => {
+  flushSave();
+  tableKey = null;
+  draft = null;
+});
+
 const findMe = (players: Record<string, Player>) => {
   const userId = sessionModel.$currentUserId.getState();
 
@@ -113,12 +138,12 @@ const nameOf = (players: Record<string, Player>, seat: number) =>
   players[seat]?.name ?? `#${seat + 1}`;
 
 const startHand = (
+  state: GameState,
   payload: Extract<
     ServerGameEvent,
     { type: typeof SERVER_EVENTS.HAND_STARTED }
   >['payload']
 ) => {
-  const state = gameModel.$gameState.getState();
   const me = findMe(state.players);
   const mySeat = me?.seat ?? null;
   const blind = (seat: number, action: 'SB' | 'BB'): HandAction => ({
@@ -164,6 +189,7 @@ const startHand = (
 };
 
 const finishHand = (
+  state: GameState,
   payload: Extract<
     ServerGameEvent,
     { type: typeof SERVER_EVENTS.HAND_COMPLETED }
@@ -180,7 +206,6 @@ const finishHand = (
     return;
   }
 
-  const state = gameModel.$gameState.getState();
   const endStack = state.players[current.mySeat]?.stack ?? null;
   const seats: HandSeat[] = current.record.seats.map(seat => ({
     ...seat,
@@ -210,10 +235,12 @@ const finishHand = (
   });
 };
 
-gameModel.incomingEvent.watch(event => {
+gameModel.gameEventApplied.watch(({ state, event }) => {
+  if (!tableKey) return;
+
   switch (event.type) {
     case SERVER_EVENTS.HAND_STARTED:
-      startHand(event.payload);
+      startHand(state, event.payload);
       break;
     case SERVER_EVENTS.YOUR_CARDS:
       if (draft) {
@@ -222,8 +249,6 @@ gameModel.incomingEvent.watch(event => {
       break;
     case SERVER_EVENTS.PLAYER_ACTED:
       if (draft) {
-        const state = gameModel.$gameState.getState();
-
         draft.record.actions.push({
           street: state.round,
           seat: event.payload.seat,
@@ -244,7 +269,7 @@ gameModel.incomingEvent.watch(event => {
       }
       break;
     case SERVER_EVENTS.HAND_COMPLETED:
-      finishHand(event.payload);
+      finishHand(state, event.payload);
       break;
   }
 });

@@ -36,6 +36,7 @@ interface TestRuntime {
   saved: Map<string, unknown>;
   fixture: {
     roomsChanged: EventCallable<RoomListItem[]>;
+    userChanged: EventCallable<string | null>;
     gameModel: { connectGame: EventCallable<GameConnectParams> };
   };
   joinCalls: number;
@@ -225,13 +226,13 @@ const fixtureSource = `
 import { createEvent, createStore, createEffect } from 'effector';
 export const SERVER_EVENTS = { HAND_STARTED: 'start', HAND_COMPLETED: 'end' };
 export const gameModel = {
-  incomingEvent: createEvent(),
-  $gameState: createStore({ players: {} }),
+  gameEventApplied: createEvent(),
   connectGame: createEvent(),
   disconnectGame: createEvent(),
 };
+export const userChanged = createEvent();
 export const sessionModel = {
-  $currentUserId: createStore('100'),
+  $currentUserId: createStore('100').on(userChanged, (_, user) => user),
   waitForAuth: async () => {},
 };
 export const roomsChanged = createEvent();
@@ -243,12 +244,12 @@ export const roomBigBlind = r => Number(r.blinds.split('/')[1]),
 export const readJson = (key, fallback) =>
   globalThis.saved.get(key) ?? fallback;
 export const writeJson = (key, value) => globalThis.saved.set(key, value);
-globalThis.fixture = { roomsChanged, gameModel };
+globalThis.fixture = { roomsChanged, gameModel, userChanged };
 `;
 
 runtime.saved = new Map([
   [
-    'poker:game-session-draft',
+    'poker:game-session-draft:100',
     {
       id: 'legacy',
       roomId: '1',
@@ -265,7 +266,7 @@ const sessions = await load<
 >('src/features/game-sessions/model/sessions.ts', fixtureSource);
 
 assert.equal(sessions.$sessions.getState().length, 0);
-assert.equal(readSaved<unknown[]>('poker:game-session-recovery').length, 1);
+assert.equal(readSaved<unknown[]>('poker:game-session-recovery:100').length, 1);
 runtime.fixture.roomsChanged([
   {
     id: 1,
@@ -279,14 +280,18 @@ runtime.fixture.roomsChanged([
   },
 ]);
 assert.equal(sessions.$sessions.getState()[0].net, 2);
-assert.equal(readSaved<unknown[]>('poker:game-session-recovery').length, 0);
+assert.equal(readSaved<unknown[]>('poker:game-session-recovery:100').length, 0);
+runtime.fixture.userChanged('101');
+assert.deepEqual(sessions.$sessions.getState(), []);
+runtime.fixture.userChanged('100');
+assert.equal(sessions.$sessions.getState()[0].net, 2);
 console.log(
   'Recovery regressions passed: queue cancellation, watchdog, legacy session recovery'
 );
 
 sessions.sessionStarted('1');
 assert.equal(
-  readSaved<{ roomBigBlindTon: number }>('poker:game-session-draft')
+  readSaved<{ roomBigBlindTon: number }>('poker:game-session-draft:100')
     .roomBigBlindTon,
   0.1
 );

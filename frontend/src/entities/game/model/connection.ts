@@ -130,6 +130,7 @@ let reconnectTimer: number | undefined;
 let waitingForNetwork: (() => void) | null = null;
 
 export const connectionLost = createEvent<boolean>();
+export const serverEventReceived = createEvent<ServerGameEvent>();
 
 const stopReconnecting = () => {
   clearStaleWatch();
@@ -200,12 +201,15 @@ const createGameSocket = (wsUrl: string, id: number): WebSocket => {
       connectionLost(false);
     },
     onMessage: data => {
+      if (socket !== openSocket) return;
+
       if (isServerGameEvent(data)) {
         watchForStale(data, socket, () => {
           openSocket = null;
           socket.close();
           scheduleReconnect(wsUrl, id);
         });
+        serverEventReceived(data);
         enqueueServerEvent(data);
       } else {
         console.warn('[WS] Received non-game event:', data);

@@ -30,20 +30,27 @@ interface Draft {
   blinds?: string | null;
 }
 
-const sessionRecorded = createEvent<GameSession>();
-
-export const $sessions = createStore<GameSession[]>(
-  readJson<GameSession[]>(SESSIONS_KEY, [])
-).on(sessionRecorded, (_, session) =>
-  [
-    session,
-    ...readJson<GameSession[]>(SESSIONS_KEY, []).filter(
-      saved => saved.id !== session.id
-    ),
-  ].slice(0, MAX_SESSIONS)
+const sessionsLoaded = createEvent<GameSession[]>();
+export const $sessions = createStore<GameSession[]>([]).on(
+  sessionsLoaded,
+  (_, sessions) => sessions
 );
 
-$sessions.updates.watch(sessions => writeJson(SESSIONS_KEY, sessions));
+let owner: string | null = null;
+
+const record = (session: GameSession) => {
+  if (!owner) return;
+
+  const key = `${SESSIONS_KEY}:${owner}`;
+  const saved = readJson<GameSession[]>(key, []);
+  const sessions = [
+    session,
+    ...saved.filter(item => item.id !== session.id),
+  ].slice(0, MAX_SESSIONS);
+
+  writeJson(key, sessions);
+  sessionsLoaded(sessions);
+};
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
@@ -64,7 +71,7 @@ const finish = (draft: Draft) => {
   const buyIn = round(draft.buyInChips * tonPerChip);
   const cashOut = round((draft.stackChips ?? 0) * tonPerChip);
 
-  sessionRecorded({
+  record({
     id: draft.id,
     roomId: draft.roomId,
     gameType: 'cash',
@@ -83,27 +90,51 @@ const finish = (draft: Draft) => {
 
 let draft: Draft | null = null;
 
-const save = () => writeJson(DRAFT_KEY, draft);
+const save = () => {
+  if (owner) writeJson(`${DRAFT_KEY}:${owner}`, draft);
+};
 
-const stale = readJson<Draft | null>(DRAFT_KEY, null);
-let recovery = readJson<Draft[]>(RECOVERY_KEY, []);
+let recovery: Draft[] = [];
 
 const recover = () => {
+  if (!owner || !recovery.length) return;
+
   recovery = recovery.filter(saved => !finish(saved));
-  writeJson(RECOVERY_KEY, recovery);
+  writeJson(`${RECOVERY_KEY}:${owner}`, recovery);
 };
 
 const finishOrDefer = (saved: Draft) => {
   if (!finish(saved)) {
     recovery.push(saved);
-    writeJson(RECOVERY_KEY, recovery);
+    writeJson(`${RECOVERY_KEY}:${owner}`, recovery);
   }
 };
 
-if (stale) {
-  finishOrDefer(stale);
-  writeJson(DRAFT_KEY, null);
-}
+sessionModel.$currentUserId.watch(userId => {
+  if (draft) {
+    finishOrDefer(draft);
+    draft = null;
+    save();
+  }
+
+  owner = userId;
+  recovery = [];
+  sessionsLoaded(
+    owner ? readJson<GameSession[]>(`${SESSIONS_KEY}:${owner}`, []) : []
+  );
+
+  if (!owner) return;
+
+  recovery = readJson<Draft[]>(`${RECOVERY_KEY}:${owner}`, []);
+  const stale = readJson<Draft | null>(`${DRAFT_KEY}:${owner}`, null);
+
+  if (stale) {
+    finishOrDefer(stale);
+    save();
+  }
+
+  recover();
+});
 
 $rooms.watch(recover);
 
@@ -112,6 +143,8 @@ export const sessionStarted = createEvent<string>();
 export const sessionEnded = createEvent();
 
 sessionStarted.watch(roomId => {
+  if (!owner) return;
+
   if (draft) {
     finishOrDefer(draft);
   }
@@ -150,12 +183,11 @@ const findMe = (players: Record<string, Player>) => {
   return Object.values(players).find(player => player.id === userId) ?? null;
 };
 
-gameModel.incomingEvent.watch(event => {
+gameModel.gameEventApplied.watch(({ state, event }) => {
   if (!draft) {
     return;
   }
 
-  const state = gameModel.$gameState.getState();
   const room = findRoom($rooms.getState(), draft.roomId);
 
   if (room) {
@@ -171,12 +203,15 @@ gameModel.incomingEvent.watch(event => {
   }
 
   if (draft.buyInChips === null) {
-    const blind =
-      event.type === SERVER_EVENTS.HAND_STARTED
-        ? (event.payload.initialBets[me.seat] ?? 0)
-        : 0;
-
-    draft.buyInChips = me.stack + blind;
+    if (event.type === SERVER_EVENTS.HAND_STARTED) {
+      draft.buyInChips = me.stack + (event.payload.initialBets[me.seat] ?? 0);
+    } else if (
+      event.type === SERVER_EVENTS.PLAYER_ACTED ||
+      event.type === SERVER_EVENTS.HAND_COMPLETED
+    ) {
+      // Joining mid-hand: keep the stack observed before the first action.
+      draft.buyInChips = draft.stackChips ?? me.stack;
+    }
   }
 
   draft.stackChips = me.stack;

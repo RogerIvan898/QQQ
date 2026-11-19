@@ -23,6 +23,7 @@ export {
   $smallBlindSeat,
   connectGame,
   disconnectGame,
+  gameEventApplied,
   incomingEvent,
   sendClientCommand,
 } from './game';

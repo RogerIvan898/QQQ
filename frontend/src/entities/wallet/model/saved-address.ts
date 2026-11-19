@@ -1,15 +1,27 @@
 import { createEvent, createStore } from 'effector';
 
+import { sessionModel } from 'entities/session';
 import { readStorage, writeStorage } from 'shared/lib/storage';
 
 const STORAGE_KEY = 'poker:withdraw-address';
 
 export const withdrawAddressSaved = createEvent<string>();
 
-export const $savedWithdrawAddress = createStore<string | null>(
-  readStorage(STORAGE_KEY) || null
-).on(withdrawAddressSaved, (_, address) => address.trim() || null);
+const addressLoaded = createEvent<string | null>();
+export const $savedWithdrawAddress = createStore<string | null>(null).on(
+  addressLoaded,
+  (_, address) => address
+);
 
-$savedWithdrawAddress.updates.watch(address => {
-  writeStorage(STORAGE_KEY, address);
+sessionModel.$currentUserId.watch(userId => {
+  addressLoaded(userId ? readStorage(`${STORAGE_KEY}:${userId}`) : null);
+});
+
+withdrawAddressSaved.watch(value => {
+  const userId = sessionModel.$currentUserId.getState();
+  if (!userId) return;
+
+  const address = value.trim() || null;
+  writeStorage(`${STORAGE_KEY}:${userId}`, address);
+  addressLoaded(address);
 });

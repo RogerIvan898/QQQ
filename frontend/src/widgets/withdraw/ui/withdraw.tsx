@@ -1,4 +1,4 @@
-import { useActionState, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 
 import { Trans } from '@lingui/react';
 import { useLingui } from '@lingui/react/macro';
@@ -22,6 +22,7 @@ interface Props {
   balance: number;
 
   onSubmit?: (payload: WithdrawPayload) => Promise<unknown> | void;
+  onSuccess?: (payload: WithdrawPayload) => void;
 }
 
 export const WithdrawModal = (props: Props) => {
@@ -30,11 +31,26 @@ export const WithdrawModal = (props: Props) => {
   return mounted ? <WithdrawSession key={key} {...props} /> : null;
 };
 
-const WithdrawSession = ({ open, onClose, balance, onSubmit }: Props) => {
+const WithdrawSession = ({
+  open,
+  onClose,
+  balance,
+  onSubmit,
+  onSuccess,
+}: Props) => {
   const { t } = useLingui();
   const wallet = useUnit($tonWallet);
   const connectedAddress = wallet?.friendlyAddress ?? '';
   const savedAddress = useUnit(walletModel.$savedWithdrawAddress);
+  const pending = useUnit(walletModel.withdrawFx.pending);
+  const mounted = useRef(false);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const [draft, setDraft] = useState('');
   const amount = parseAmountDraft(draft) ?? 0;
@@ -65,8 +81,13 @@ const WithdrawSession = ({ open, onClose, balance, onSubmit }: Props) => {
     }
 
     try {
-      await onSubmit({ amount, address: targetAddress, destination });
-      onClose();
+      const payload = { amount, address: targetAddress, destination };
+      await onSubmit(payload);
+
+      if (mounted.current) {
+        onSuccess?.(payload);
+        onClose();
+      }
 
       return false;
     } catch {
@@ -83,7 +104,8 @@ const WithdrawSession = ({ open, onClose, balance, onSubmit }: Props) => {
     Number.isFinite(amount) &&
     amount > 0 &&
     !exceedsBalance &&
-    !submitting;
+    !submitting &&
+    !pending;
 
   const submitLabel =
     destination === 'wallet' && !connectedAddress ? (
@@ -150,12 +172,12 @@ const WithdrawSession = ({ open, onClose, balance, onSubmit }: Props) => {
           className={styles.primaryBtn}
           disabled={!canSubmit}
         >
-          {submitting ? t`Sending…` : submitLabel}
+          {submitting || pending ? t`Sending…` : submitLabel}
         </button>
 
         {submitFailed && !submitting ? (
           <p className={styles.submitError} role="alert">
-            {t`The withdrawal didn't go through. Your balance is unchanged; try again.`}
+            {t`Check your transaction history before retrying this withdrawal.`}
           </p>
         ) : null}
       </form>

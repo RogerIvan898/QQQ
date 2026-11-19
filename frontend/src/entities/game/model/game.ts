@@ -22,6 +22,7 @@ import {
   openGameSocket,
   prepareGameAudio,
   sendToGameSocket,
+  serverEventReceived,
 } from './connection';
 import { INITIAL_GAME_STATE, SERVER_EVENTS } from './constants';
 import {
@@ -47,14 +48,8 @@ export const incomingEvent = createEvent<ServerGameEvent>();
 
 const TABLE_WAIT_MS = 8000;
 
-const initializeGameFx = createEffect(async (params: GameConnectParams) => {
-  const audioReady = prepareGameAudio();
-  const socket = openGameSocket(params);
-
-  await audioReady;
-
-  return socket;
-});
+const initializeGameFx = createEffect(openGameSocket);
+const prepareAudioFx = createEffect(prepareGameAudio);
 
 const waitForTableFx = createEffect(
   (attempt: number) =>
@@ -73,6 +68,17 @@ export const connectGame = createEvent<GameConnectParams>();
 export const sendClientCommand = createEvent<ClientGameEvent>();
 export const disconnectGame = createEvent();
 
+// Accounting follows the wire order, even while the table is still animating.
+const $serverState = createStore(INITIAL_GAME_STATE)
+  .on(serverEventReceived, reduceGameEvent)
+  .reset(connectGame, disconnectGame);
+
+export const gameEventApplied = sample({
+  clock: serverEventReceived,
+  source: $serverState,
+  fn: (state, event) => ({ state, event }),
+});
+
 const $socketClient = createStore<WebSocket | null>(null)
   .on(initializeGameFx.doneData, (_, socket) => socket)
   .reset(disconnectGame);
@@ -85,7 +91,7 @@ const $connecting = createStore(false)
 
 const $tableReady = createStore(false)
   .on(
-    incomingEvent,
+    serverEventReceived,
     (ready, event) =>
       ready ||
       event.type === SERVER_EVENTS.PLAYER_SEATED ||
@@ -112,7 +118,7 @@ export const $isGameLoading = combine(
 
 export const $gameVariant = createStore<GameVariant>(DEFAULT_GAME_VARIANT)
   .on(connectGame, (_, { game }) => game ?? DEFAULT_GAME_VARIANT)
-  .on(incomingEvent, (variant, event) =>
+  .on(serverEventReceived, (variant, event) =>
     event.type === SERVER_EVENTS.HAND_STARTED && event.payload.game
       ? event.payload.game
       : variant
@@ -236,7 +242,7 @@ sample({ clock: $bigBlind, target: displayBigBlindChanged });
 
 sample({
   clock: connectGame,
-  target: initializeGameFx,
+  target: [initializeGameFx, prepareAudioFx],
 });
 
 sample({

@@ -592,8 +592,8 @@ msgstr "The transfer was rejected by the network."
 msgid "The transfer was sent without the required memo. Contact support to get it credited."
 msgstr "The transfer was sent without the required memo. Contact support to get it credited."
 
-msgid "The withdrawal didn't go through. Your balance is unchanged; try again."
-msgstr "The withdrawal didn't go through. Your balance is unchanged; try again."
+msgid "Check your transaction history before retrying this withdrawal."
+msgstr "Check your transaction history before retrying this withdrawal."
 
 msgid "Three of a kind"
 msgstr "Three of a kind"

@@ -49,6 +49,7 @@ const TRANSACTIONS: Transaction[] = Array.from(
 
 let available = 42.5;
 let nextWithdrawalId = TOTAL + 1;
+const withdrawals = new Map<string, Transaction>();
 
 export const walletHandlers = [
   http.get('*/wallet/balance', async () => {
@@ -72,6 +73,26 @@ export const walletHandlers = [
     const body = (await request.json()) as Partial<WithdrawRequest>;
     const amount = Number(body.amount);
     const address = typeof body.address === 'string' ? body.address : '';
+    const id = request.headers.get('Idempotency-Key');
+
+    if (!id) {
+      return HttpResponse.json(
+        { error: 'missing_idempotency_key' },
+        { status: 400 }
+      );
+    }
+
+    const previous = withdrawals.get(id);
+    if (previous) {
+      if (previous.amount !== amount || previous.address !== address) {
+        return HttpResponse.json(
+          { error: 'idempotency_conflict' },
+          { status: 409 }
+        );
+      }
+
+      return HttpResponse.json(previous);
+    }
 
     if (!isValidTonAddress(address)) {
       return HttpResponse.json({ error: 'invalid_address' }, { status: 400 });
@@ -101,6 +122,7 @@ export const walletHandlers = [
     };
 
     TRANSACTIONS.unshift(transaction);
+    withdrawals.set(id, transaction);
 
     return HttpResponse.json(transaction);
   }),

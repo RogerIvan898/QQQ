@@ -8,6 +8,8 @@ import {
   sample,
 } from 'effector';
 
+import { sessionModel } from 'entities/session';
+
 import { walletApi } from '../api';
 
 import type {
@@ -15,8 +17,9 @@ import type {
   Transaction,
   TransactionStatus,
   TransactionType,
-  WithdrawRequest,
+  WalletBalance,
 } from './types';
+import { withdrawFx } from './withdrawal';
 
 export const STATUS_LABELS = {
   completed: msg`Completed`,
@@ -26,40 +29,70 @@ export const STATUS_LABELS = {
 
 export const balanceRequested = createEvent();
 
-const fetchBalanceFx = createEffect(() => walletApi.getBalance());
-
-export const $balance = createStore<number | null>(null).on(
-  fetchBalanceFx.doneData,
-  (_, balance) => balance.available
+const fetchBalanceFx = createEffect<string, WalletBalance>(() =>
+  walletApi.getBalance()
 );
 
-sample({ clock: balanceRequested, target: fetchBalanceFx });
+const accountChanged = sessionModel.$currentUserId.updates;
+
+const balanceLoaded = sample({
+  clock: fetchBalanceFx.done,
+  source: sessionModel.$currentUserId,
+  filter: (userId, { params }) => userId === params,
+  fn: (_, { result }) => result.available,
+});
+
+export const $balance = createStore<number | null>(null)
+  .on(balanceLoaded, (_, available) => available)
+  .reset(accountChanged);
+
+sample({
+  clock: balanceRequested,
+  source: sessionModel.$currentUserId,
+  filter: (userId): userId is string => userId !== null,
+  target: fetchBalanceFx,
+});
 
 export const depositAddressRequested = createEvent();
 
-const fetchDepositAddressFx = createEffect(() => walletApi.getDepositAddress());
-
-export const $depositAddress = createStore<DepositAddress | null>(null).on(
-  fetchDepositAddressFx.doneData,
-  (_, address) => address
+const fetchDepositAddressFx = createEffect<string, DepositAddress>(() =>
+  walletApi.getDepositAddress()
 );
+const addressLoaded = sample({
+  clock: fetchDepositAddressFx.done,
+  source: sessionModel.$currentUserId,
+  filter: (userId, { params }) => userId === params,
+  fn: (_, { result }) => result,
+});
+
+const addressFailed = sample({
+  clock: fetchDepositAddressFx.fail,
+  source: sessionModel.$currentUserId,
+  filter: (userId, { params }) => userId === params,
+});
+
+export const $depositAddress = createStore<DepositAddress | null>(null)
+  .on(addressLoaded, (_, address) => address)
+  .reset(accountChanged);
 
 export const $depositAddressStatus = createStore<
   'idle' | 'loading' | 'ready' | 'failed'
 >('idle')
   .on(fetchDepositAddressFx, () => 'loading')
-  .on(fetchDepositAddressFx.done, () => 'ready')
-  .on(fetchDepositAddressFx.fail, () => 'failed');
+  .on(addressLoaded, () => 'ready')
+  .on(addressFailed, () => 'failed')
+  .reset(accountChanged);
 
 sample({
   clock: depositAddressRequested,
-  filter: fetchDepositAddressFx.pending.map(pending => !pending),
+  source: combine(
+    sessionModel.$currentUserId,
+    $depositAddressStatus,
+    (userId, status) => (status === 'loading' ? null : userId)
+  ),
+  filter: (userId): userId is string => userId !== null,
   target: fetchDepositAddressFx,
 });
-
-export const withdrawFx = createEffect((request: WithdrawRequest) =>
-  walletApi.withdraw(request)
-);
 
 export const transactionsReset = createEvent();
 
@@ -86,7 +119,10 @@ const fetchPageFx = createEffect(async ({ cursor, type }: PageRequest) =>
   walletApi.getTransactions(cursor, type)
 );
 
-const $generation = createStore(0).on(transactionsReset, value => value + 1);
+const $generation = createStore(0).on(
+  [transactionsReset, accountChanged],
+  value => value + 1
+);
 
 export const $transactions = createStore<Transaction[]>([]);
 const $nextCursor = createStore<string | null>(null);
@@ -105,11 +141,11 @@ export const $isInitialLoad = combine(
   (items, loading, hasMore) => items.length === 0 && loading && hasMore
 );
 
-$transactions.reset(transactionsReset);
-$nextCursor.reset(transactionsReset);
-$hasMore.reset(transactionsReset);
-$transactionsError.reset(transactionsReset);
-$lastRequest.reset(transactionsReset);
+$transactions.reset(transactionsReset, accountChanged);
+$nextCursor.reset(transactionsReset, accountChanged);
+$hasMore.reset(transactionsReset, accountChanged);
+$transactionsError.reset(transactionsReset, accountChanged);
+$lastRequest.reset(transactionsReset, accountChanged);
 
 sample({
   clock: typeFilterChanged,

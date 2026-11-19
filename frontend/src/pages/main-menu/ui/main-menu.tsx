@@ -62,6 +62,7 @@ export const MenuPage = () => {
 
   const shortfall = useShortfallSnack(() => setIsDepositOpen(true));
   const saveOffer = useSaveAddressOffer();
+  const withdraw = useUnit(walletModel.withdrawFx);
 
   useIdlePrefetch();
 
@@ -149,8 +150,8 @@ export const MenuPage = () => {
               open
               onClose={() => setIsWithdrawOpen(false)}
               balance={balance ?? 0}
-              onSubmit={async ({ address, amount, destination }) => {
-                await walletModel.withdrawFx({ address, amount });
+              onSubmit={({ address, amount }) => withdraw({ address, amount })}
+              onSuccess={({ address, destination }) => {
                 setIsWalletOpen(false);
 
                 if (destination === 'address') {
